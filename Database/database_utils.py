@@ -103,4 +103,62 @@ def create_tables(session):
     session.execute(cql_command)
     print("Student_skills table successfully created")
 
+def create_new_student(session, 
+                       email_address, 
+                       school, 
+                       student_id_no, 
+                       first_name, 
+                       last_name, 
+                       phone_number, 
+                       interests, 
+                       career_paths, 
+                       subjects):
+    """
+    Creates a new student in the database, populating the students_skills table with all of the skills if they have subjects
+
+    Args:
+        session (database session): the database session
+        email_address (string): the email address of the student
+        school (string): the school of the student
+        student_id_no (string): the student's ID number
+        first_name (string): the student's first name
+        last_name (string): the student's last name
+        phone_number (string): the student's phone number
+        interests (list): the student's interests
+        career_paths (list): the student's career paths
+        subjects (list): the student's subjects
+
+    Returns:
+        None
+
+    Raises:
+        Description of any errors that are raised.
+    """
+    cql_command = """
+    INSERT INTO students (email_address, school, student_id_no, first_name, last_name, phone_number, interests, career_paths, subjects)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+    """
+
+    session.execute(cql_command, [email_address, school, student_id_no, first_name, last_name, phone_number, interests, career_paths, subjects])
+    print("New student successfully created")
+
+    if len(subjects) > 0:
+        for subject in subjects:
+            cql_command = """
+            SELECT skills FROM subjects
+            WHERE subject_code = %s;
+            """
+
+            skills = session.execute(cql_command, [subject]).one()[0]
+
+            for skill in skills:
+                cql_command = """
+                INSERT INTO student_skills (student_email, subject_code, skill_title, mastery_score, retention_score, need_to_revise)
+                VALUES (%s, %s, %s, %s, %s, %s);
+                """
+
+                session.execute(cql_command, [email_address, subject, skill, 0.0, 0.0, False])
+    
+    print("Student skills successfully created")
+
 
