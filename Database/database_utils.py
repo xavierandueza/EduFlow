@@ -32,8 +32,6 @@ def connect_to_db():
 
     return session
 
-
-
 def create_tables(session):
     """ Creates all of the required tables in the database """
     # Students Table
@@ -72,13 +70,33 @@ def create_tables(session):
     cql_command = """
     CREATE TABLE subjects (
         subject_code text PRIMARY KEY,
-        subject_name text,
-        skills map<text, text>
+        subject_name text
     );
     """
 
     session.execute(cql_command)
     print("Subjects table successfully created")
+
+    # Skills Table
+    cql_command = """
+    DROP TABLE IF EXISTS skills;
+    """
+
+    session.execute(cql_command)
+    print("Skills table successfully dropped")
+
+    cql_command = """
+    CREATE TABLE skills (
+        skill_title text PRIMARY KEY,
+        subject_code text,
+        theory text,
+        dependencies list<text>,
+        decay_value float
+    );
+    """
+
+    session.execute(cql_command)
+    print("Skills table successfully created")
 
     # Student_Skills Table
     cql_command = """
@@ -96,6 +114,7 @@ def create_tables(session):
         mastery_score float,
         retention_score float,
         need_to_revise boolean,
+        decay_value float,
         PRIMARY KEY ((student_email, subject_code), skill_title)
     );
     """
@@ -145,20 +164,97 @@ def create_new_student(session,
     if len(subjects) > 0:
         for subject in subjects:
             cql_command = """
-            SELECT skills FROM subjects
-            WHERE subject_code = %s;
+            SELECT skill_title, decay_value FROM skills
+            WHERE subject_code = %s ALLOW FILTERING;
             """
 
-            skills = session.execute(cql_command, [subject]).one()[0]
+            skills = session.execute(cql_command, [subject])
 
             for skill in skills:
                 cql_command = """
-                INSERT INTO student_skills (student_email, subject_code, skill_title, mastery_score, retention_score, need_to_revise)
-                VALUES (%s, %s, %s, %s, %s, %s);
+                INSERT INTO student_skills (student_email, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value)
+                VALUES (%s, %s, %s, %s, %s, %s, %s);
                 """
 
-                session.execute(cql_command, [email_address, subject, skill, 0.0, 0.0, False])
+                session.execute(cql_command, [email_address, subject, skill.skill_title, 0.0, 0.0, False, skill.decay_value])
     
     print("Student skills successfully created")
 
+def insert_dummy_data(session):
+    """ Inserts dummy data into the database """
+    # Insert dummy math class
+    cql_command = """
+    INSERT INTO subjects (subject_code, subject_name)
+        VALUES ('MAT1000', 'Intro to Maths');
+    """
 
+    session.execute(cql_command)
+
+    cql_command = """
+    INSERT INTO skills (skill_title, subject_code, theory, dependencies, decay_value)
+        VALUES ('Basic Arithmetic', 'MAT1000', '1 + 1 = 2', [], 0.5);
+    """
+    session.execute(cql_command)
+    cql_command = """
+    INSERT INTO skills (skill_title, subject_code, theory, dependencies, decay_value)
+        VALUES ('Matrix Multiplication','MAT1000', 'AA^-1 = I', [], 0.5);
+    """
+    session.execute(cql_command)
+    cql_command = """
+    INSERT INTO skills (skill_title, subject_code, theory, dependencies, decay_value)
+        VALUES ('Advanced Linear Algebra', 'MAT1000', 'boo spooky maths', ['Basic Arithmetic', 'Matrix Multiplication'], 0.5);
+    """
+    session.execute(cql_command)
+    
+    # Insert dummy databases class
+    cql_command = """
+    INSERT INTO subjects (subject_code, subject_name)
+        VALUES ('FIT3171', 'INTRO TO DATABASES');
+    """
+    session.execute(cql_command)
+
+    # Dummy data for the skills
+    cql_command = """
+    INSERT INTO skills (skill_title, subject_code, theory, decay_value)
+        VALUES ('SQL', 'FIT3171', 'SQL is a language used to query databases', 0.5);
+    """
+    session.execute(cql_command)
+    cql_command = """
+    INSERT INTO skills (skill_title, subject_code, theory, dependencies, decay_value)
+        VALUES ('CQL', 'FIT3171', 'CQL is a language used to query databases, which is similar to SQL. However this is Cassandra Query Language', ['SQL'], 0.5);
+    """
+    session.execute(cql_command)
+
+    # Insert dummy students
+    create_new_student(session,
+                    "xand0001@student.monash.edu",
+                    "Monash University",
+                    "28748115",
+                    "Xavier",
+                    "Andueza",
+                    "0456488353",
+                    ["Hiking","Gaming","Politics"],
+                    ["Software Engineering","Data Science"],
+                    ["FIT3171"])
+
+    create_new_student(session,
+                   "sben0007@student.monash.edu",
+                   "Monash Uni",
+                   "20000000",
+                   "Scott",
+                   "Bennett",
+                   "0400000001",
+                    ["Hiking","Gaming","Politics"],
+                    ["Software Engineering","Data Science"],
+                    ["FIT3171"])
+    
+    create_new_student(session,
+                   "aatt0001@student.monash.edu",
+                   "Monash Uni",
+                   "30000000",
+                   "Andrew",
+                   "Atta",
+                   "0400000002",
+                    ["Lifting","Gyming","AI"],
+                    ["Powerlifter","Physio Therapist"],
+                    ["FIT3171","MAT1000"])
