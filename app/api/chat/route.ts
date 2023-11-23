@@ -16,26 +16,26 @@ export async function POST(req: Request) {
 
     let docContext = '';
     if (useRag) {
-      const {data} = await openai.embeddings.create({input: latestMessage, model: 'text-embedding-ada-002'});
+      const {data} = await openai.embeddings.create({input: latestMessage, model: 'text-embedding-ada-002'}); // only use the latest message for the embedding for the vector db search
 
-      const collection = await astraDb.collection(`chat_${similarityMetric}`);
+      const collection = await astraDb.collection(`chat_${similarityMetric}`); // Just connecting to the collection of chat_{similarityMetric} In Astra DB. Basically choosing your table
 
-      const cursor= collection.find(null, {
+      const cursor= collection.find(null, { // null is a query filter here -- we don't actually query for RAG, we use the below sorting and limiting of number of returns
         sort: {
-          $vector: data[0]?.embedding,
+          $vector: data[0]?.embedding, // $vector is for vector search, the data[0] is the first row, and .embedding is the embedding column, so it says to use the embedding column in a longer wording
         },
-        limit: 5,
+        limit: 5, // Limit to 5 results, should only get things that are relevant
       });
       
-      const documents = await cursor.toArray();
+      const documents = await cursor.toArray(); // cast the things I get from my cursor to an Array type.
       
       docContext = `
         START CONTEXT
-        ${documents?.map(doc => doc.content).join("\n")}
+        ${documents?.map(doc => doc.content).join("\n") /*Extracts each row in the array's "content" variable*/}
         END CONTEXT
       `
     }
-    const ragPrompt = [
+    const ragPrompt = [ // Setting up the system prompt
       {
         role: 'system',
         content: `You are an AI assistant answering questions about Cassandra and Astra DB. Format responses using markdown where applicable.
@@ -46,16 +46,16 @@ export async function POST(req: Request) {
     ]
 
 
-    const response = await openai.chat.completions.create(
+    const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
       {
-        model: llm ?? 'gpt-3.5-turbo',
-        stream: true,
-        messages: [...ragPrompt, ...messages],
+        model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
+        stream: true, // streaming YAY
+        messages: [...ragPrompt, ...messages], // really easy to put messages into practice using this. The ...messages is all previous messages, which can be problematic if there are too many messages (hits max token limit)
       }
     );
-    const stream = OpenAIStream(response);
-    return new StreamingTextResponse(stream);
-  } catch (e) {
+    const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
+    return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
+  } catch (e) { // error handling
     throw e;
   }
 }

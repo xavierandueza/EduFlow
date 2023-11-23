@@ -8,8 +8,8 @@ import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
 
 export default function Home() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat();
-  const { useRag, llm, similarityMetric, setConfiguration } = useConfiguration();
+  const { messages, input, handleInputChange, handleSubmit } = useChat(); // imported from the ai/react package, which can be found here: https://www.npmjs.com/package/ai
+  const { useRag, llm, similarityMetric, setConfiguration } = useConfiguration(); // custom useConfiguration hook, good code but only defines how you set config variables, not how you use them
 
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
