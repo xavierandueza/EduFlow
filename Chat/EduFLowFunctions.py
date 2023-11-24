@@ -397,7 +397,7 @@ def mark_student_answer(question,
     
     
     #commmon system prompt
-    system_prompt = """You are an AI evaluator tasked with scoring/assessing a high school student's answer to a given question. Specifically you must identifying errors the student has made. Your evaluation should focus on the accuracy and understanding of the key idea and relevant theory, appropriate to the student's academic level. Here is some context while you mark the student:
+    system_prompt = f"""You are an AI evaluator tasked with scoring/assessing a high school student's answer to a given question. Specifically you must identifying errors the student has made. Your evaluation should focus on the accuracy and understanding of the key idea and relevant theory, appropriate to the student's academic level. Here is some context while you mark the student:
 
     - Key Idea - Assess/Evaluate the student's understanding and expression of this concept: {key_idea}.
     - Description of Key Idea - Use this information to ensure that your evaluation fully encompasses the nuances of the key idea: {key_idea_description}. 
