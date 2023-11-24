@@ -25,8 +25,8 @@ const useConfiguration = () => {
   const [chatState, setChatState] = useState<ChatState>(
     () => getLocalStorageValue('chatState', 'waiting') as ChatState // defaults to the asking state
   );
-  const [skill, setSkill] = useState<string>(
-    () => getLocalStorageValue('skill', '') as string // defaults to no skill for now
+  const [keyIdea, setKeyIdea] = useState<string>(
+    () => getLocalStorageValue('keyIdea', '') as string // defaults to no skill for now
   );
   const [email, setEmail] = useState<string>(
     () => getLocalStorageValue('email', 'xand0001@student.monash.edu') as string // defaults to no skill for now
@@ -37,7 +37,7 @@ const useConfiguration = () => {
     setLlm(llm);
     setSimilarityMetric(similarityMetric);
     setChatState(chatState);
-    setSkill(skill);
+    setKeyIdea(skill);
     setEmail(email);
   }
 
@@ -48,7 +48,7 @@ const useConfiguration = () => {
       localStorage.setItem('llm', llm);
       localStorage.setItem('similarityMetric', similarityMetric);
       localStorage.setItem('chatState', chatState);
-      localStorage.setItem('skill', skill);
+      localStorage.setItem('skill', keyIdea);
       localStorage.setItem('email', email)
     }
   }, [useRag, llm, similarityMetric, chatState]); // so run this if any of the above variables change at all
@@ -58,7 +58,7 @@ const useConfiguration = () => {
     llm,
     similarityMetric,
     chatState,
-    skill,
+    keyIdea,
     email,
     setConfiguration,
   }; // return all of the variables and the function to set them

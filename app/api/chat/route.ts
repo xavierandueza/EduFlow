@@ -60,7 +60,7 @@ function calculateMetricScoreDelta(masteryScore : number, retentionScore: number
   if (answerGrade >= 60) { // if the answer was correct
     return (100.0 - relevantScore)*(answerGrade/100.0)/10.0; // return the delta, rounded up
   } else { // if the answer was incorrect
-    return (answerGrade-100)/10.0
+    return -(relevantScore)/10.0
   }
 }
 
