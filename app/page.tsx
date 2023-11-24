@@ -11,7 +11,7 @@ import React, { FormEvent } from 'react';
 
 export default function Home() {
   const { messages, input, handleInputChange, handleSubmit } = useChat(); // imported from the ai/react package, which can be found here: https://www.npmjs.com/package/ai
-  const { useRag, llm, similarityMetric, chatState, skill, setConfiguration } = useConfiguration(); // custom useConfiguration hook, good code but only defines how you set config variables, not how you use them
+  const { useRag, llm, similarityMetric, chatState, skill, email, setConfiguration } = useConfiguration(); // custom useConfiguration hook, good code but only defines how you set config variables, not how you use them
 
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
@@ -22,7 +22,7 @@ export default function Home() {
 
   useEffect(() => {
     // Force update chatState on component mount
-    setConfiguration(useRag, llm, similarityMetric, 'asking', skill);
+    setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
   }, []); // Empty dependency array to run only once on mount
   
   /*
@@ -60,15 +60,15 @@ export default function Home() {
 
   const handleSend = (e) => {
     console.log(chatState);
-    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, chatState, skill}}});
+    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, chatState, skill, email}}});
     console.log('Chatbot is waiting for a response now');
 
     if (chatState === 'asking') {
       console.log('Changing to waiting');
-      setConfiguration(useRag, llm, similarityMetric, 'waiting', skill);
+      setConfiguration(useRag, llm, similarityMetric, 'waiting', skill, email);
     } else if (chatState === 'waiting') {
       console.log('Changing to asking');
-      setConfiguration(useRag, llm, similarityMetric, 'asking', skill);
+      setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
     } /*else if (chatState === 'grading') {
       console.log('Changing to asking');
       setConfiguration(useRag, llm, similarityMetric, 'asking');
@@ -125,6 +125,7 @@ export default function Home() {
       similarityMetric={similarityMetric}
       chatState={chatState}
       skill={skill}
+      email={email}
       setConfiguration={setConfiguration}
     />
     </>

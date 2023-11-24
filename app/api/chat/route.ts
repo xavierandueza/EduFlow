@@ -19,17 +19,29 @@ async function getSkillFromDB(skill : string) {
   }
 }
 
+async function getStudentFromDB(email : string) {
+  try {
+    const collection = await astraDb.collection('students_vec');
+    const dbResponse = await collection.findOne({ email_address: email });
+    return dbResponse || ''; // Return the response or an empty string if no skill is found
+  } catch (error) {
+    console.error('Error fetching student:', error);
+    return ''; // Return an empty string in case of an error
+  }
+}
+
 export async function POST(req: Request) {
   try {
-    const {messages, useRag, llm, similarityMetric, chatState, skill} = await req.json();
+    const {messages, useRag, llm, similarityMetric, chatState, skill, email} = await req.json();
     // console.log('running the route.ts file');
-    console.log(messages);
-    console.log('Chat State is: ' + chatState);
-    console.log('Skill is: ' + skill);
-
+    // console.log(messages);
+    // console.log('Chat State is: ' + chatState);
+    // console.log('Skill is: ' + skill);
+    // console.log(email);
     const returnedSkill = await getSkillFromDB(skill); // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
-    
-    console.log('Returned skill is: ' + returnedSkill.skill_title); // check the skill response IGNORE ERROR WARNING
+    const returnedStudent = await getStudentFromDB(email); // response from the DB. Has email_address, interests, subjects
+    // console.log(`Returned student with email: ${returnedStudent.email_address} and interests: ${returnedStudent.interests}`);
+    // console.log('Returned skill is: ' + returnedSkill.skill_title); // check the skill response IGNORE ERROR WARNING
     
     const latestMessage = messages[messages?.length - 1]?.content;
 
@@ -39,12 +51,14 @@ export async function POST(req: Request) {
       const systemPrompt = [ // Setting up the system prompt
         {
           "role": "system", 
-          "content": `You are an AI assistant who asks a questions to the user, based off of the given theory:
+          "content": `You are an AI assistant who asks a questions to the student, based off of the given theory:
           THEORY START
           ${returnedSkill.theory}
-          THEORY END` // ignore error warning above, no problem with it
+          THEORY END
+          Where possible, also relate the question to the student's interests, as listed here: ${returnedStudent.interests}` // ignore error warning above, no problem with it
         },
       ]
+      console.log('system prompt is: ' + systemPrompt[0].content)
 
       const fixedMessage = [
         {

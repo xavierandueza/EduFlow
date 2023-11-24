@@ -28,13 +28,17 @@ const useConfiguration = () => {
   const [skill, setSkill] = useState<string>(
     () => getLocalStorageValue('skill', '') as string // defaults to no skill for now
   );
+  const [email, setEmail] = useState<string>(
+    () => getLocalStorageValue('email', 'xand0001@student.monash.edu') as string // defaults to no skill for now
+  );
 
-  const setConfiguration = (rag: boolean, llm: string, similarityMetric: SimilarityMetric, chatState: ChatState, skill : string) => { // a single function that will set all of the config variables
+  const setConfiguration = (rag: boolean, llm: string, similarityMetric: SimilarityMetric, chatState: ChatState, skill : string, email : string) => { // a single function that will set all of the config variables
     setUseRag(rag);
     setLlm(llm);
     setSimilarityMetric(similarityMetric);
     setChatState(chatState);
     setSkill(skill);
+    setEmail(email);
   }
 
   // Persist to localStorage
@@ -45,6 +49,7 @@ const useConfiguration = () => {
       localStorage.setItem('similarityMetric', similarityMetric);
       localStorage.setItem('chatState', chatState);
       localStorage.setItem('skill', skill);
+      localStorage.setItem('email', email)
     }
   }, [useRag, llm, similarityMetric, chatState]); // so run this if any of the above variables change at all
 
@@ -54,6 +59,7 @@ const useConfiguration = () => {
     similarityMetric,
     chatState,
     skill,
+    email,
     setConfiguration,
   }; // return all of the variables and the function to set them
 }

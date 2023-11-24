@@ -13,15 +13,17 @@ interface Props {
   similarityMetric: SimilarityMetric;
   chatState: ChatState;
   skill: string;
-  setConfiguration: (useRag: boolean, llm: string, similarityMetric: SimilarityMetric, chatState : ChatState, skill : string) => void;
+  email: string;
+  setConfiguration: (useRag: boolean, llm: string, similarityMetric: SimilarityMetric, chatState : ChatState, skill : string, email : string) => void;
 }
 
-const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, skill, setConfiguration }: Props) => {
+const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, skill, email, setConfiguration }: Props) => {
   const [rag, setRag] = useState(useRag);
   const [selectedLlm, setSelectedLlm] = useState(llm);
   const [selectedSimilarityMetric, setSelectedSimilarityMetric] = useState<SimilarityMetric>(similarityMetric);
   const [selectedChatState, setChatState] = useState<ChatState>(chatState);
   const [selectedSkill, setSelectedSkill] = useState(skill);
+  const [selectedEmail, setSelectedEmail] = useState(email);
   
   if (!isOpen) return null;
 
@@ -49,13 +51,19 @@ const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, 
     { label: 'SQL', value: 'SQL' }
   ];
 
+  const emailOptions = [
+    { label: 'xand0001@student.monash.edu', value: 'xand0001@student.monash.edu' },
+    { label: 'sben0007@student.monash.edu', value: 'sben0007@student.monash.edu' }
+  ];
+
   const handleSave = () => {
     setConfiguration(
         rag,
         selectedLlm,
         selectedSimilarityMetric,
         selectedChatState,
-        selectedSkill
+        selectedSkill,
+        selectedEmail
     );
     onClose();
   };
@@ -90,7 +98,7 @@ const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, 
             value={selectedSimilarityMetric}
             onSelect={setSelectedSimilarityMetric}
           />
-          <Dropdown
+          <Dropdown // probably want to delete this
             fieldId="Chat State"
             label="Chat State"
             options={chatStateOptions}
@@ -103,6 +111,13 @@ const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, 
             options={skillOptions}
             value={selectedSkill}
             onSelect={setSelectedSkill}
+          />
+          <Dropdown
+            fieldId="Email"
+            label="Email"
+            options={emailOptions}
+            value={selectedEmail}
+            onSelect={setSelectedEmail}
           />
         </div>
         <div className="self-end w-full">
