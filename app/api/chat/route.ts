@@ -30,10 +30,21 @@ async function getStudentFromDB(email : string) {
   }
 }
 
+
+function determineSampleQuestions(relevantScore : number, easyQuestions : string[], mdrtQuestions : string[], hardQuestions : string[]) {
+  if (relevantScore < 100.0/3.0) {
+    return easyQuestions;
+  } else if (relevantScore < 200.0/3.0) {
+    return mdrtQuestions;
+  } else {
+    return hardQuestions;
+  }
+}
+
 async function getStudentSkillFromDB(email : string, skill : string) {
   try {
     const collection = await astraDb.collection('student_skills_vec');
-    const dbResponse = await collection.findOne({ email_address: email, skill_title: skill });
+    const dbResponse = await collection.findOne({ email_address: email, skill: skill });
     return dbResponse || ''; // Return the response or an empty string if no skill is found
   } catch (error) {
     console.error('Error fetching student skill:', error);
@@ -154,44 +165,39 @@ export async function POST(req: Request) {
     // console.log('Chat State is: ' + chatState);
     // console.log('Skill is: ' + skill);
     // console.log(email);
-    console.log(skill);
+    console.log(email);
     const returnedSkill = await getSkillFromDB(skill); // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
-    console.log(`Returned curriculum point is: ${returnedSkill.curriculum_point}
-    Returned skill is: ${returnedSkill.skill}
-    Returned key ideas are: ${returnedSkill.key_ideas} 
-    Returned key ideas summaries are: ${returnedSkill.key_ideas_summaries}
-    Returned easy questions are: ${returnedSkill.easy_questions}
-    Returned mdrt questions are: ${returnedSkill.mdrt_questions}
-    Returned hard questions are: ${returnedSkill.hard_questions}
-    Returned content is: ${returnedSkill.content}
-    `); // check the skill response IGNORE ERROR WARNING
+    console.log(returnedSkill);
 
-    return null;
     const returnedStudent = await getStudentFromDB(email); // response from the DB. Has email_address, interests, subjects
-    const returnedStudentSkill = await getStudentSkillFromDB(email, skill); // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
-    // console.log(`Returned student with email: ${returnedStudent.email_address} and interests: ${returnedStudent.interests}`);
+    console.log(returnedStudent);
     
-    console.log(`Returned student: ${returnedStudentSkill.email_address}
-    subject code: ${returnedStudentSkill.subject_code}
-    skill title: ${returnedStudentSkill.skill_title}
-    mastery score: ${returnedStudentSkill.mastery_score}
-    retention score: ${returnedStudentSkill.retention_score}
-    need to revise: ${returnedStudentSkill.need_to_revise}
-    decay value: ${returnedStudentSkill.decay_value}`);
+    const returnedStudentSkill = await getStudentSkillFromDB(email, skill); // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
+    console.log(returnedStudentSkill);
     
     const latestMessage = messages[messages?.length - 1]?.content;
 
     if (chatState === 'asking') {
-      console.log('asking on the route.ts')
+      var sampleQuestions : string[];
+
+      if (returnedStudentSkill.need_to_revise) {
+        sampleQuestions = determineSampleQuestions(returnedStudentSkill.retention_score, returnedSkill.easy_questions, returnedSkill.mdrt_questions, returnedSkill.hard_questions);
+      } else {
+        sampleQuestions = determineSampleQuestions(returnedStudentSkill.mastery_score, returnedSkill.easy_questions, returnedSkill.mdrt_questions, returnedSkill.hard_questions);
+      }
+      
+      console.log(sampleQuestions);
 
       const systemPrompt = [ // Setting up the system prompt
         {
           "role": "system", 
           "content": `You are an AI assistant who asks a questions to the student, based off of the given theory:
           THEORY START
-          ${returnedSkill.theory}
+          ${returnedSkill.content}
           THEORY END
-          Where possible, also relate the question to the student's interests, as listed here: ${returnedStudent.interests}` // ignore error warning above, no problem with it
+          Where possible, also relate the question to the student's interests, as listed here: ${returnedStudent.interests}
+          Here is a list of sample Questions that you should base your question difficulty off:
+          ${sampleQuestions}` // ignore error warning above, no problem with it
         },
       ]
       // console.log('system prompt is: ' + systemPrompt[0].content)

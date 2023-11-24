@@ -12,6 +12,7 @@ async function main() {
 
     const skillsDocuments = [
         {
+            "subject" : "Biology",
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
             "skill" : "On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles.",
             "key_ideas" : ["On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles."],
@@ -45,6 +46,7 @@ async function main() {
             "dependencies" : []
         },
         {
+            "subject" : "Biology",
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
             "skill" : "For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water.",
             "key_ideas" : ["For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water."],
@@ -82,6 +84,7 @@ async function main() {
             "dependencies" : []
         },
         {
+            "subject" : "Biology",
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
             "skill" : "Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet, raising the posibility that life might exist under the ice-covered surface moons in our solar system.",
             "key_ideas" : ["Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet.", "The discovery of a diverse microbial ecosystem in a subglacial lake in Antarctica raises the possibility that life might exist under the surface ofice-covered moons in our solar system."],
@@ -120,6 +123,7 @@ async function main() {
             "dependencies" : []
         },
         {
+            "subject" : "Biology",
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
             "skill" : "Critical direct evidence of life (as we know it) is the presence of metabolically active cells.",
             "key_ideas" : ["Critical direct evidence of life (as we know it) is the presence of metabolically active cells."],
@@ -172,26 +176,22 @@ async function main() {
         }
     ] 
 
-    const studentSkillsDocuments = [
-        {
-            "email_address" : "xand0001@student.monash.edu",
-            "subject_code" : "FIT3171",
-            "skill_title" : "CQL",
-            "mastery_score" : 0,
-            "retention_score" : 0,
-            "need_to_revise" : false,
-            "decay_value" : 0.5,
-        },
-        {
-            "email_address" : "xand0001@student.monash.edu",
-            "subject_code" : "FIT3171",
-            "skill_title" : "SQL",
-            "mastery_score" : 0,
-            "retention_score" : 0,
-            "need_to_revise" : false,
-            "decay_value" : 0.5,
-        },
-    ] 
+    // create an empty studentsSkillsDocument and loop through skills and append info to get the studentsSkillsDocument fully populated
+    let studentSkillsDocuments = []
+    for (const studentDoc of studentDocuments) {
+        for (const skillsDoc of skillsDocuments) {
+            studentSkillsDocuments.push({
+                "email_address" : studentDoc.email_address,
+                "subject" : skillsDoc.subject,
+                "skill" : skillsDoc.skill,
+                "mastery_score" : 0,
+                "retention_score" : 0,
+                "need_to_revise" : false,
+                "decay_value" : 0.5,
+            })
+        }
+    }
+    console.log(studentSkillsDocuments);
 
     const skills_vec_collection = await astraDb.collection('skills_vec');
     for await (const { curriculum_point, skill, key_ideas, key_idea_summaries, easy_questions, mdrt_questions, hard_questions, content } of skillsDocuments) {
@@ -217,11 +217,11 @@ async function main() {
     }
 
     const students_skills_vec_collection = await astraDb.collection('student_skills_vec');
-    for await (const { email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value} of studentSkillsDocuments) {
+    for await (const { email_address, subject, skill, mastery_score, retention_score, need_to_revise, decay_value} of studentSkillsDocuments) {
         const res = await students_skills_vec_collection.insertOne({
             email_address,
-            subject_code,
-            skill_title,
+            subject,
+            skill,
             mastery_score,
             retention_score,
             need_to_revise,
