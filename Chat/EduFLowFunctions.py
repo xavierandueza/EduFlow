@@ -173,11 +173,12 @@ def check_generated_answer_hallucination(question,
     #system prompt for instructing gpt on how to behave
     system_prompt = f"""As an AI evaluator, your task is to review an AI-generated answer for hallucinations (inaccuracies or fabrications) inaccuracies, or misrepresentations of facts or concepts. You are also tasked with making sure the answer provided by the AI aligns with what the standard to be expected from an Australian {student_year_level} student and is not overly sophisticated. Verify that the answer directly and adequately addresses the question posed, relevant to the student's curriculum.
 
-    If hallucinations are found, return a JSON object that includes the flag "hallucinations" set to true. If no hallucinations are found, return a JSON object that includes the flag "hallucinations" set to false. The JSON object should have the fromat:
+    If hallucinations are found, return a JSON object that includes the flag "hallucinations" set to true and and explaination of what the hallucianation is. If no hallucinations are found, return a JSON object that includes the flag "hallucinations" set to false. Don't just label things as hallucinations if you are not sure. The JSON object should have the fromat:
 
     JSON Format for Output:
     {{
-        "hallucinations": "true/false"
+        "hallucinations": "true/false",
+        "hallucinations_explanation": "explanation of hallucinations"
     }}
 
     Additional System Instructions: {other_system_instructions}"""
