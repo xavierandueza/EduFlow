@@ -64,12 +64,26 @@ function calculateMetricScoreDelta(masteryScore : number, retentionScore: number
   }
 }
 
+async function updateNeedToReviseFlag(email: string, skill: string, needToRevise: boolean) {
+  try {
+    const collection = await astraDb.collection('student_skills_vec');
+    const dbResponse = await collection.updateOne({ email_address: email, skill_title: skill }, {"$set" : {need_to_revise : !needToRevise}});
+    console.log('Updated need to revise flag.')
+    return dbResponse || ''; // Return the response or an empty string if no skill is found
+  } catch (error) {
+    console.error('Error updating need to revise flag:', error);
+    return ''; // Return an empty string in case of an error
+  }
+}
+
 type MetricScores = {
   mastery_score: number;
   retention_score: number;
 };
 
 function calculateNewMetricScores(
+  email: string,
+  skill: string,
   masteryScore: number,
   retentionScore: number,
   answerGrade: number,
@@ -88,7 +102,9 @@ function calculateNewMetricScores(
     };
   } else {
     if (updatedRetentionScore > masteryScore) {
-      // Logic to flip the needToRevise flag if necessary
+      // Flip the needToRevise flag
+      const updateNeedToRevise = updateNeedToReviseFlag(email, skill, needToRevise);
+
       return {
         mastery_score : masteryScore,
         retention_score: masteryScore
@@ -112,7 +128,7 @@ async function updateStudentSkillScores(email : string, skill : string, masteryS
   try {
     const collection = await astraDb.collection('student_skills_vec');
     console.log('About to calculate new metric scores.');
-    const newMetricScores = calculateNewMetricScores(masteryScore, retentionScore, answerGrade, needToRevise);
+    const newMetricScores = calculateNewMetricScores(email, skill, masteryScore, retentionScore, answerGrade, needToRevise);
     console.log('New metric scores are: ' + newMetricScores.mastery_score + ' and ' + newMetricScores.retention_score);
     const dbResponse = await collection.updateOne({ email_address: email, skill_title: skill }, {"$set" : newMetricScores});
     console.log('Updated student skill scores.')
