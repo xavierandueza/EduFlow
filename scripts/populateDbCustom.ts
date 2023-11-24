@@ -160,6 +160,52 @@ async function main() {
             The presence of metabolically active cells is a critical, direct evidence of life. By studying these cells and their activities, we gain insights into the fundamental processes of living organisms and their ability to thrive in diverse environments​​.`,
             "decay_value" : 0.5,
             "dependencies" : []
+        },
+        {
+            "subject" : "Biology",
+            "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
+            "skill" : "Cells are the basic structural and functional units of life.",
+            "key_ideas" : ["Critical direct evidence of life (as we know it) is the presence of metabolically active cells."],
+            "key_idea_summaries" : ["Cells form the structural and functional basis of all living organisms, featuring common components such as the cell membrane, nucleus, and cytoplasm, and are essential for life processes."],
+            "easy_questions" : ["1. Function of cell membrane? 2. Name two cell organelles. 3. Describe an animal cell's shape."],
+            "mdrt_questions" : ["1. Differences between plant and animal cells. 2. Role of mitochondria. 3. Cells' use of nutrients for energy."],
+            "hard_questions" : ["1. Role of cell membrane in cell transport. 2. Details of cellular respiration. 3. Function of the nucleus in cells."],
+            "content" : `Comprehensive Notes on Cells as the Basic Structural and Functional Units of Life
+            1. Cell Theory
+            Definition: Cell theory states that all living things are composed of cells, cells are the basic units of structure and function in living things, and new cells are produced from existing cells.
+            Historical Perspective: Developed by scientists like Matthias Schleiden, Theodor Schwann, and Rudolf Virchow in the 19th century.
+            2. Cell Structure
+            Cell Membrane: A semi-permeable barrier that controls the entry and exit of substances.
+            Cytoplasm: A jelly-like substance where most cellular activities occur.
+            Nucleus: Contains genetic material (DNA) and controls cell activities.
+            Mitochondria: Known as the powerhouse of the cell, responsible for energy production.
+            Ribosomes: Sites of protein synthesis.
+            Endoplasmic Reticulum (ER): Rough ER (with ribosomes) synthesizes proteins, while Smooth ER synthesizes lipids.
+            Golgi Apparatus: Modifies, sorts, and packages proteins and lipids for storage or transport out of the cell.
+            Lysosomes: Contain enzymes for digestion of cellular waste.
+            Vacuoles: Storage for nutrients, waste products, and other substances.
+            3. Cell Types
+            Prokaryotic Cells: Simple structure without a nucleus or membrane-bound organelles (e.g., bacteria).
+            Eukaryotic Cells: Complex cells with a nucleus and organelles (e.g., plant and animal cells).
+            4. Cell Function
+            Metabolism: All chemical reactions involved in maintaining the cell's state.
+            Synthesis of Proteins: Critical for cell function and regulation.
+            Cellular Respiration: Process of converting nutrients into energy (ATP).
+            Cell Division: Process of cell replication (mitosis and meiosis).
+            5. Specialized Cells
+            Adaptation to Function: Different cells have specific structures that match their functions (e.g., red blood cells, nerve cells, muscle cells).
+            Organ System Integration: Specialized cells work together in tissues and organs to perform complex functions.
+            6. Cell Communication
+            Signal Transduction: Cells communicate through chemical signals and receptors.
+            Cellular Responses: Changes in cell behavior or function in response to environmental or internal signals.
+            7. Cellular Transport
+            Passive Transport: Movement of substances across the cell membrane without energy (e.g., diffusion, osmosis).
+            Active Transport: Energy-dependent movement of substances against a concentration gradient.
+            8. Cell Health and Disease
+            Role in Health: Proper cell function is essential for overall health.
+            Disease and Disorders: Abnormal cell function can lead to diseases like cancer, genetic disorders, and infections​.`,
+            "decay_value" : 0.5,
+            "dependencies" : ["On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles.", "For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water.", "Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet, raising the posibility that life might exist under the ice-covered surface moons in our solar system.", "Critical direct evidence of life (as we know it) is the presence of metabolically active cells."]
         }
     ]
 
