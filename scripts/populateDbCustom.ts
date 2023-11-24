@@ -29,7 +29,7 @@ async function main() {
 
     for await (const { skill_title, decay_value, dependencies, subject_code, theory } of skillsDocuments) {
         const res = await collection.insertOne({
-            document_id: skill_title,
+            skill_title,
             decay_value,
             dependencies,
             subject_code,
