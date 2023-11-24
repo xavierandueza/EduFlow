@@ -368,8 +368,8 @@ def provide_feedback(initial_student_score,
     
     return generate_completion(system_prompt, initial_user_prompt, temperature=0.5)
 
-
-#this question needs to be fed 
+# define discuss theory function. This is to be used when the student is asking for additional theory about a question they have just answered or if they have not begun the answer questions. Specifically not to be called if the student has just been prompted with a question and is asking for additional theory. If this happens call 'clarify_question' function instead.
+#this question needs to be fed into the determine_next_action function and managed through the backend properly
 def discuss_theory(key_idea,
                    key_idea_description,
                    student_year_level,
@@ -415,6 +415,7 @@ def discuss_theory(key_idea,
 
 
 #define clarify question function. This is to be used when the student is asking for additional theory about a question they have not yet gotten correct or have not yet attempted 3 times with no right answer.
+#this question needs to be fed into the determine_next_action function and managed through the backend properly
 def clarify_question(key_idea,
                     key_idea_description,
                     student_year_level,
@@ -462,3 +463,40 @@ def clarify_question(key_idea,
     
     return generate_completion(system_prompt, initial_user_prompt, temperature= 0.7)
 
+#student doesn't know the answer to the question and is asking for the solution must use chat history
+def student_doesnt_know():
+    
+    """
+    Asks the student if they would like for some clarification, in which case the clarify_question function should be called, or if they would like the solution to the question, in which case the provide_solution function should be called.
+
+    Returns:
+    str: The solution to the question.
+    """
+
+    #system prompt for instructing gpt
+    system_prompt = f"""You are an AI assistant that has been helping An Australian high school student. They are now asking for the solution to a question you have just asked them. Ask them if they would like for some clarification. If they say yes then call the clarify_question function. If they say no then call the provide_solution function.
+    """
+
+    #initial user prompt
+    initial_user_prompt = ""
+    
+    return generate_completion(system_prompt,initial_user_prompt, temperature= 0.3)
+
+#irrelevant student response function for when the student says something not related to the question
+def irrelevant_student_response():
+        
+        """
+        Provides a response to the student when they say something not related to the question.
+    
+        Returns:
+        str: The response to the student.
+        """
+    
+        #system prompt for instructing gpt
+        system_prompt = f"""You are an AI assistant that has been helping An Australian high school student. They have just said something that is not related to the question you have just asked them. Respond to the student by saying that they are not answering the question and that they should try to answer the question instead.
+        """
+    
+        #initial user prompt
+        initial_user_prompt = ""
+        
+        return generate_completion(system_prompt,initial_user_prompt, temperature= 0.5)
