@@ -14,11 +14,11 @@ async function main() {
         {
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
             "skill" : "On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles.",
-            "key_idea" : "On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles.",
-            "key_idea_summary" : "Extremophiles are organisms that thrive in environments that are considered extremely harsh or uninhabitable for most life forms. They have evolved unique adaptations for survival in conditions like high temperatures, extreme cold, high salt concentrations, acidic or alkaline conditions, and high pressure. Their existence expands our understanding of life's potential and challenges the perceived limits of habitable environments.",
-            "easy_questions" : "1. What is an extremophile? 2. Give an example of an environment where extremophiles can be found. 3. Name one type of extremophile and the condition it thrives in.",
-            "mdrt_questions" : "1. How do halophiles adapt to high salt concentrations? 2. Why are extremophiles important for understanding life on other planets? 3. How do thermophiles adapt to high temperatures?",
-            "hard_questions" : "1. Discuss the role of extremophiles in biotechnology and industry. 2. Explain the biochemical mechanisms of psychrophiles in cold environments. 3. Analyze the evolutionary significance of extremophiles.",
+            "key_ideas" : ["On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles."],
+            "key_idea_summaries" : ["Extremophiles are organisms that thrive in environments that are considered extremely harsh or uninhabitable for most life forms. They have evolved unique adaptations for survival in conditions like high temperatures, extreme cold, high salt concentrations, acidic or alkaline conditions, and high pressure. Their existence expands our understanding of life's potential and challenges the perceived limits of habitable environments."],
+            "easy_questions" : ["1. What is an extremophile? 2. Give an example of an environment where extremophiles can be found. 3. Name one type of extremophile and the condition it thrives in."],
+            "mdrt_questions" : ["1. How do halophiles adapt to high salt concentrations? 2. Why are extremophiles important for understanding life on other planets? 3. How do thermophiles adapt to high temperatures?"],
+            "hard_questions" : ["1. Discuss the role of extremophiles in biotechnology and industry. 2. Explain the biochemical mechanisms of psychrophiles in cold environments. 3. Analyze the evolutionary significance of extremophiles."],
             "content" : `Introduction to Extremophiles
             Definition: Extremophiles are organisms that thrive in environments considered extreme or hostile to most forms of life on Earth.
             Types of Extremophiles: Includes thermophiles (heat lovers), psychrophiles (cold lovers), halophiles (salt lovers), acidophiles (acid lovers), alkaliphiles (base lovers), and piezophiles or barophiles (pressure lovers).
@@ -47,11 +47,11 @@ async function main() {
         {
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
             "skill" : "For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water.",
-            "key_idea" : "For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water.",
-            "key_idea_summary" : "For life to thrive, an energy source, liquid water, necessary chemical elements, and stable environmental conditions are crucial. Energy fuels metabolic processes, water acts as a solvent and transport medium, elements form biomolecules, and stable conditions maintain life processes.",
-            "easy_questions" : "1. What is the primary source of energy for most living organisms on Earth? <br> 2. Why is liquid water essential for life? <br> 3. Name one element that is a fundamental building block of life.",
-            "mdrt_questions" : "1. Explain how energy is used by living organisms. <br> 2. Describe the role of water in transporting substances in cells. <br> 3. Why is carbon considered a versatile element in forming biomolecules?",
-            "hard_questions" : "1. Discuss how environmental conditions like pH and temperature affect living organisms. <br> 2. How do extremophiles adapt to extreme environmental conditions? <br> 3. Explain the significance of the solvent properties of water in biochemical reactions.",
+            "key_ideas" : ["For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water."],
+            "key_idea_summaries" : ["For life to thrive, an energy source, liquid water, necessary chemical elements, and stable environmental conditions are crucial. Energy fuels metabolic processes, water acts as a solvent and transport medium, elements form biomolecules, and stable conditions maintain life processes."],
+            "easy_questions" : ["1. What is the primary source of energy for most living organisms on Earth? <br> 2. Why is liquid water essential for life? <br> 3. Name one element that is a fundamental building block of life."],
+            "mdrt_questions" : ["1. Explain how energy is used by living organisms. <br> 2. Describe the role of water in transporting substances in cells. <br> 3. Why is carbon considered a versatile element in forming biomolecules?"],
+            "hard_questions" : ["1. Discuss how environmental conditions like pH and temperature affect living organisms. <br> 2. How do extremophiles adapt to extreme environmental conditions? <br> 3. Explain the significance of the solvent properties of water in biochemical reactions."],
             "content" : `1. Availability of an Energy Source
     
             Importance: Living organisms need energy for metabolic processes that maintain their living state.
@@ -84,49 +84,11 @@ async function main() {
         {
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
             "skill" : "Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet, raising the posibility that life might exist under the ice-covered surface moons in our solar system.",
-            "key_idea" : "Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet.",
-            "key_idea_summary" : "Description: Discovery of life in extreme environments. Significance: Challenges understanding of life's requirements and adaptability. Implications: Opens new avenues in astrobiology and understanding of extraterrestrial life possibilities.",
-            "easy_questions" : "1. What type of cells were found in Antarctica's subglacial lake? 2. How deep were these cells found? 3. Can these cells perform metabolic activities?",
-            "mdrt_questions" : "1. Why is the discovery of cells in extreme conditions significant? 2. How does this discovery challenge our understanding of life? 3. What are the astrobiology implications of this discovery?",
-            "hard_questions" : "1. Discuss adaptations these cells might have for survival. 2. How could this influence the search for extraterrestrial life? 3. Evaluate the impact on our understanding of life's diversity.",
-            "content" : `Overview:
-            The discovery of living cells in a subglacial lake in Antarctica, and the identification of a diverse microbial ecosystem, provides critical direct evidence of life in extreme environments. These findings are pivotal in understanding life's adaptability and potential existence beyond Earth, specifically under the surface of ice-covered moons in our solar system.
-            
-            Key Concepts:
-            
-            Discovery in Antarctic Subglacial Lake:
-            
-            Living Cells Found: Metabolically active cells were discovered under hundreds of meters of ice in a subglacial lake in Antarctica. This indicates that life can exist and adapt to extreme conditions like immense pressure, cold, and absence of sunlight.
-            Survival Mechanisms: These cells demonstrate unique adaptations to survive, such as specialized metabolic pathways, which may include chemosynthesis, a process of deriving energy from chemical reactions rather than sunlight.
-            Diverse Microbial Ecosystem:
-            
-            Composition: The ecosystem comprises various microbes, each adapted to the cold and dark environment. This diversity shows life's resilience and ability to thrive in conditions previously deemed uninhabitable.
-            Implications for Extraterrestrial Life: This ecosystem raises the possibility of life existing in similar environments elsewhere, notably on ice-covered moons like Europa or Enceladus. These moons have subsurface oceans, potentially similar to the subglacial lakes in Antarctica.
-            Astrobiological Significance:
-            
-            Expanding the Habitable Zone: The findings challenge the traditional understanding of the "habitable zone" for life, which primarily focused on regions where liquid water could exist on the surface.
-            Search for Extraterrestrial Life: It propels the scientific community to consider extreme environments when searching for life on other planets and moons.
-            Research and Exploration:
-            
-            Technological Advances: Studying life in extreme environments requires advanced technology for remote exploration and analysis.
-            Interdisciplinary Approach: The study of life in extreme conditions involves a cross-disciplinary approach, including biology, astrobiology, geology, and environmental science.
-            Educational and Ethical Considerations:
-            
-            Curriculum Integration: These discoveries are vital for educational curricula, offering real-world examples of biological concepts and the adaptability of life.
-            Ethical Implications: The exploration of such environments raises ethical questions about the potential contamination of pristine ecosystems, both on Earth and in space.
-            Conclusion:
-            The presence of life in Antarctica's subglacial lakes not only broadens our understanding of life's diversity on Earth but also has profound implications for the search for life in the universe. It underscores the need for continued exploration and study of extreme environments, both terrestrially and extraterrestrially, expanding our knowledge about the possibilities of life beyond our current comprehension.`,
-            "decay_value" : 0.5,
-            "dependencies" : []
-        },
-        {
-            "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
-            "skill" : "Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet, raising the posibility that life might exist under the ice-covered surface moons in our solar system.",
-            "key_idea" : "The discovery of a diverse microbial ecosystem in a subglacial lake in Antarctica raises the possibility that life might exist under the surface ofice-covered moons in our solar system.",
-            "key_idea_summary" : "Description: Microbes adapted to extreme conditions. Implications for Extraterrestrial Life: Suggests life could exist on similar moons. Research Significance: Propels inquiry into life's sustainability in uninhabitable environments.",
-            "easy_questions" : "1. Name two ice-covered moons where life might exist. 2. What type of ecosystem was discovered in the lake? 3. Are the microbes photosynthetic?",
-            "mdrt_questions" : "1. Relate the discovery in Antarctica to extraterrestrial life possibility. 2. Key characteristics of these microbes? 3. How do microbes obtain energy without sunlight?",
-            "hard_questions" : "1. Compare potential for life in Antarctica's lakes and Europa's ocean. 2. Discuss challenges in researching extreme environmental life. 3. Impact on understanding the habitable zone.",
+            "key_ideas" : ["Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet.", "The discovery of a diverse microbial ecosystem in a subglacial lake in Antarctica raises the possibility that life might exist under the surface ofice-covered moons in our solar system."],
+            "key_idea_summaries" : ["Description: Discovery of life in extreme environments. Significance: Challenges understanding of life's requirements and adaptability. Implications: Opens new avenues in astrobiology and understanding of extraterrestrial life possibilities.", "Description: Microbes adapted to extreme conditions. Implications for Extraterrestrial Life: Suggests life could exist on similar moons. Research Significance: Propels inquiry into life's sustainability in uninhabitable environments."],
+            "easy_questions" : ["1. What type of cells were found in Antarctica's subglacial lake? 2. How deep were these cells found? 3. Can these cells perform metabolic activities?", "1. Name two ice-covered moons where life might exist. 2. What type of ecosystem was discovered in the lake? 3. Are the microbes photosynthetic?"],
+            "mdrt_questions" : ["1. Why is the discovery of cells in extreme conditions significant? 2. How does this discovery challenge our understanding of life? 3. What are the astrobiology implications of this discovery?", "1. Relate the discovery in Antarctica to extraterrestrial life possibility. 2. Key characteristics of these microbes? 3. How do microbes obtain energy without sunlight?"],
+            "hard_questions" : ["1. Discuss adaptations these cells might have for survival. 2. How could this influence the search for extraterrestrial life? 3. Evaluate the impact on our understanding of life's diversity.", "1. Compare potential for life in Antarctica's lakes and Europa's ocean. 2. Discuss challenges in researching extreme environmental life. 3. Impact on understanding the habitable zone."],
             "content" : `Overview:
             The discovery of living cells in a subglacial lake in Antarctica, and the identification of a diverse microbial ecosystem, provides critical direct evidence of life in extreme environments. These findings are pivotal in understanding life's adaptability and potential existence beyond Earth, specifically under the surface of ice-covered moons in our solar system.
             
@@ -160,11 +122,11 @@ async function main() {
         {
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
             "skill" : "Critical direct evidence of life (as we know it) is the presence of metabolically active cells.",
-            "key_idea" : "Critical direct evidence of life (as we know it) is the presence of metabolically active cells.",
-            "key_idea_summary" : "Metabolically active cells are indicators of life, performing functions such as nutrient uptake, DNA synthesis, and protein synthesis. Presence of such cells, as seen in lake water samples, confirms life and active cell division​",
-            "easy_questions" : "1. What is a primary indicator of life in a biological context? 2. Define 'metabolically active cells.' 3. Give one example of a metabolic activity performed by living cells.",
-            "mdrt_questions" : "1. Why is thymidine used to test for the presence of living cells? 2. How does the synthesis of proteins in cells indicate their metabolic activity? 3. Describe the process by which cells incorporate thymidine into their DNA.",
-            "hard_questions" : "1. Discuss how the presence of metabolically active cells can be used to assess life in extreme environments. 2. Explain the significance of protein synthesis in understanding cell metabolism. 3. Analyze how the uptake and incorporation of thymidine into DNA can be indicative of cell division and life.",
+            "key_ideas" : ["Critical direct evidence of life (as we know it) is the presence of metabolically active cells."],
+            "key_idea_summaries" : ["Metabolically active cells are indicators of life, performing functions such as nutrient uptake, DNA synthesis, and protein synthesis. Presence of such cells, as seen in lake water samples, confirms life and active cell division​"],
+            "easy_questions" : ["1. What is a primary indicator of life in a biological context? 2. Define 'metabolically active cells.' 3. Give one example of a metabolic activity performed by living cells."],
+            "mdrt_questions" : ["1. Why is thymidine used to test for the presence of living cells? 2. How does the synthesis of proteins in cells indicate their metabolic activity? 3. Describe the process by which cells incorporate thymidine into their DNA."],
+            "hard_questions" : ["1. Discuss how the presence of metabolically active cells can be used to assess life in extreme environments. 2. Explain the significance of protein synthesis in understanding cell metabolism. 3. Analyze how the uptake and incorporation of thymidine into DNA can be indicative of cell division and life."],
             "content" : `Overview
             Metabolically active cells are a fundamental indicator of life. These cells are involved in numerous biological processes, including nutrient uptake, DNA synthesis, and protein synthesis, which are essential for maintaining life and ensuring cell division.
             Key Details
@@ -232,12 +194,12 @@ async function main() {
     ] 
 
     const skills_vec_collection = await astraDb.collection('skills_vec');
-    for await (const { curriculum_point, skill, key_idea, key_idea_summary, easy_questions, mdrt_questions, hard_questions, content } of skillsDocuments) {
+    for await (const { curriculum_point, skill, key_ideas, key_idea_summaries, easy_questions, mdrt_questions, hard_questions, content } of skillsDocuments) {
         const res = await skills_vec_collection.insertOne({
             curriculum_point,
             skill,
-            key_idea,
-            key_idea_summary,
+            key_ideas,
+            key_idea_summaries,
             easy_questions,
             mdrt_questions,
             hard_questions,
