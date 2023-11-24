@@ -95,7 +95,7 @@ def generate_question(key_idea,
     Example Questions: {question_examples}
     """
 
-    return generate_completion(system_prompt, initial_user_prompt, temperature=0.5)
+    return generate_completion(system_prompt, initial_user_prompt, temperature=1)
 
 
 #Generates an answer to the Model's own question. This is for accuracy purposes
@@ -141,7 +141,7 @@ def answer_question(question,
     #initial user prompt
     initial_user_prompt = f"Please provide a concise answer to this question, considering the student's academic level: {question}"
 
-    return generate_completion(system_prompt, initial_user_prompt, temperature=0.9)
+    return generate_completion(system_prompt, initial_user_prompt, temperature=1)
 
 
 #Check the answer of the generated response to ensure it has not hallucinated
