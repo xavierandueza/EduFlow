@@ -12,14 +12,16 @@ interface Props {
   llm: string;
   similarityMetric: SimilarityMetric;
   chatState: ChatState;
-  setConfiguration: (useRag: boolean, llm: string, similarityMetric: SimilarityMetric, chatState : ChatState) => void;
+  skill: string;
+  setConfiguration: (useRag: boolean, llm: string, similarityMetric: SimilarityMetric, chatState : ChatState, skill : string) => void;
 }
 
-const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, setConfiguration }: Props) => {
+const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, skill, setConfiguration }: Props) => {
   const [rag, setRag] = useState(useRag);
   const [selectedLlm, setSelectedLlm] = useState(llm);
   const [selectedSimilarityMetric, setSelectedSimilarityMetric] = useState<SimilarityMetric>(similarityMetric);
   const [selectedChatState, setChatState] = useState<ChatState>(chatState);
+  const [selectedSkill, setSelectedSkill] = useState(skill);
   
   if (!isOpen) return null;
 
@@ -40,12 +42,20 @@ const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, 
     { label: 'grading', value: 'grading' }
   ];
 
+  // eventually want to pull this from the database, but for now just hard-code
+  const skillOptions = [
+    { label: '', value: '' },
+    { label: 'CQL', value: 'CQL' },
+    { label: 'SQL', value: 'SQL' }
+  ];
+
   const handleSave = () => {
     setConfiguration(
         rag,
         selectedLlm,
         selectedSimilarityMetric,
-        selectedChatState
+        selectedChatState,
+        selectedSkill
     );
     onClose();
   };
@@ -86,6 +96,13 @@ const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, 
             options={chatStateOptions}
             value={selectedChatState}
             onSelect={setChatState}
+          />
+          <Dropdown
+            fieldId="Skill"
+            label="Skill"
+            options={skillOptions}
+            value={selectedSkill}
+            onSelect={setSelectedSkill}
           />
         </div>
         <div className="self-end w-full">

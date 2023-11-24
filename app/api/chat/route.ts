@@ -8,11 +8,30 @@ const openai = new OpenAI({
 
 const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
 
+async function getSkillFromDB(skill : string) {
+  try {
+    const collection = await astraDb.collection('skills');
+    const dbResponse = await collection.findOne({ skill_title: skill });
+    return dbResponse || ''; // Return the response or an empty string if no skill is found
+  } catch (error) {
+    console.error('Error fetching skill:', error);
+    return ''; // Return an empty string in case of an error
+  }
+}
+
+
 export async function POST(req: Request) {
   try {
-    const {messages, useRag, llm, similarityMetric, chatState} = await req.json();
-    console.log('running the route.ts file');
-    console.log(chatState);
+    const {messages, useRag, llm, similarityMetric, chatState, skill} = await req.json();
+    // console.log('running the route.ts file');
+    // console.log(messages);
+    console.log('Chat State is: ' + chatState);
+    console.log('Skill is: ' + skill);
+
+    const returnedSkill = await getSkillFromDB(skill); 
+
+    console.log('Returned skill is: ' + returnedSkill); // check the skill response
+    
     const latestMessage = messages[messages?.length - 1]?.content;
 
     // set up the system prompt
