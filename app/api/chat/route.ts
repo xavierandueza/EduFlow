@@ -41,6 +41,89 @@ async function getStudentSkillFromDB(email : string, skill : string) {
   }
 }
 
+function calculateMetricScoreDelta(masteryScore : number, retentionScore: number, answerGrade : number, needToRevise : boolean) {
+  console.log('Calculating metric score delta');
+  console.log('Mastery score is: ' + masteryScore);
+  console.log('Retention score is: ' + retentionScore);
+  console.log('Answer grade is: ' + answerGrade);
+  console.log('Type of answer grade is: ' + typeof(answerGrade));
+  console.log('Need to revise is: ' + needToRevise);
+  
+  let relevantScore: number;
+
+  if (needToRevise) { // calculate the delta from the retentionScore, not the mastery score
+    relevantScore = retentionScore;
+  } else {
+    relevantScore = masteryScore;
+  }
+
+  if (answerGrade >= 60) { // if the answer was correct
+    return (100.0 - relevantScore)*(answerGrade/100.0)/10.0; // return the delta, rounded up
+  } else { // if the answer was incorrect
+    return (answerGrade-100)/10.0
+  }
+}
+
+type MetricScores = {
+  mastery_score: number;
+  retention_score: number;
+};
+
+function calculateNewMetricScores(
+  masteryScore: number,
+  retentionScore: number,
+  answerGrade: number,
+  needToRevise: boolean
+): MetricScores {
+  console.log('About to calculate new metric score delta.');
+  const metricScoreDelta = calculateMetricScoreDelta(masteryScore, retentionScore, answerGrade, needToRevise);
+  console.log('Metric score delta is: ' + metricScoreDelta);
+  const updatedMasteryScore = Math.max(masteryScore + metricScoreDelta, 0);
+  const updatedRetentionScore = Math.max(retentionScore + metricScoreDelta, 0);
+
+  if (!needToRevise) {
+    return {
+      mastery_score: updatedMasteryScore,
+      retention_score: updatedRetentionScore
+    };
+  } else {
+    if (updatedRetentionScore > masteryScore) {
+      // Logic to flip the needToRevise flag if necessary
+      return {
+        mastery_score : masteryScore,
+        retention_score: masteryScore
+      };
+    }
+
+    return {
+      mastery_score : masteryScore,
+      retention_score: updatedRetentionScore
+    };
+  }
+}
+
+async function updateStudentSkillScores(email : string, skill : string, masteryScore : number, retentionScore : number, needToRevise : boolean, answerGrade : number) {
+  if (masteryScore === null) {
+    masteryScore = 0;
+  } 
+  if (retentionScore === null) {
+    retentionScore = 0;
+  }
+  try {
+    const collection = await astraDb.collection('student_skills_vec');
+    console.log('About to calculate new metric scores.');
+    const newMetricScores = calculateNewMetricScores(masteryScore, retentionScore, answerGrade, needToRevise);
+    console.log('New metric scores are: ' + newMetricScores.mastery_score + ' and ' + newMetricScores.retention_score);
+    const dbResponse = await collection.updateOne({ email_address: email, skill_title: skill }, {"$set" : newMetricScores});
+    console.log('Updated student skill scores.')
+    return dbResponse || ''; // Return the response or an empty string if no skill is found
+  } catch (error) {
+    console.error('Error updating student skill:', error);
+    return ''; // Return an empty string in case of an error
+  }
+}
+
+
 
 export async function POST(req: Request) {
   try {
@@ -100,14 +183,14 @@ export async function POST(req: Request) {
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
 
     } else if (chatState === 'waiting') {
-      console.log('in route.ts waiting')
-      console.log('latest question was: ' + messages.slice(-2)[0].content)
-      console.log('Answer was: ' + latestMessage)
+      // console.log('in route.ts waiting')
+      // console.log('latest question was: ' + messages.slice(-2)[0].content)
+      // console.log('Answer was: ' + latestMessage)
 
       const gradeSystemPrompt = [ // Setting up the system prompt
         {
           "role": "system", 
-          "content": `You are an AI assistant who is given an answer to a question to give a score out of 100. Return it in the following JSON format:
+          "content": `You are an AI assistant who is given an answer to a question to give a score out of 100. Do not provide any feedback, and only give the score out of 100 in the following JSON format: 
           {
             "score" : insert_score_here
           }
@@ -136,18 +219,20 @@ export async function POST(req: Request) {
           messages: [...gradeSystemPrompt, ...userAnswer], // combine the system prompt with the latest message
         }
       );
-      console.log('grade is: ' + grade.choices[0].message.content)
-      let jsonObject: any;
+      let gradeJsonObject: any;
 
       try {
-        jsonObject = JSON.parse(grade.choices[0].message.content);
-        console.log('Successfully parsed JSON: ' + jsonObject);
-        console.log('grade is: ', jsonObject.score);
+        gradeJsonObject = JSON.parse(grade.choices[0].message.content);
+        console.log('Successfully parsed JSON: ' + gradeJsonObject);
+        console.log('grade is: ', gradeJsonObject.score);
       } catch (error) {
-        jsonObject = { score: null };
+        gradeJsonObject = { score: null };
         console.log('Error parsing JSON: ', error);
         console.log('Original content:', grade.choices[0].message.content);
       }
+
+      const updateScores = await updateStudentSkillScores(email, skill, returnedStudentSkill.mastery_score, returnedStudentSkill.retention_score, returnedStudentSkill.need_to_revise, gradeJsonObject.score);
+      console.log('Updated scores: ' + updateScores);
 
       const feedbackSystemPrompt = [
         {
@@ -163,7 +248,7 @@ export async function POST(req: Request) {
           ${returnedSkill.theory}
           THEORY END
 
-          ANSWER SCORE OUT OF 100: ${jsonObject.score} 
+          ANSWER SCORE OUT OF 100: ${gradeJsonObject.score} 
           .`
         }
       ]
