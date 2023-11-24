@@ -60,7 +60,21 @@ export default function Home() {
 
   const handleSend = (e) => {
     console.log(chatState);
-    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric}}});
+    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, chatState}}});
+    console.log('Chatbot is waiting for a response now');
+
+    if (chatState === 'asking') {
+      console.log('Changing to waiting');
+      setConfiguration(useRag, llm, similarityMetric, 'waiting');
+    } else if (chatState === 'waiting') {
+      console.log('Changing to asking');
+      setConfiguration(useRag, llm, similarityMetric, 'asking');
+    } /*else if (chatState === 'grading') {
+      console.log('Changing to asking');
+      setConfiguration(useRag, llm, similarityMetric, 'asking');
+    }
+    */
+
   }
 
   return (
