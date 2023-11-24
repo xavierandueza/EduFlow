@@ -103,8 +103,7 @@ def answer_question(question,
                     key_idea_description,
                     student_year_level,
                     theory,
-                    other_system_instructions = "",
-                    model = "gpt-3.5-turbo-1106"):
+                    other_system_instructions = ""):
     
     
     """
@@ -332,14 +331,14 @@ def provide_feedback(initial_student_score,
         
         Use the provided solution to ensure you do not reveal any direct answers that are in the solution, it is critical you do not reveal the any solutions as the student may attempt the question again. As an example, if the question is "what does the mitochondria do" and the student incorrectly answers "the mitochondria functions as a factory in which proteins received from the ER are further processed and sorted for transport" then you should explain that their answer is incorrect by, for example, explaining that " The golgi apparatus is what recieves proteins from the ER and processes them for further storage and processing" and NOT by saying "the golgi apparatus is incorrect because it does not generate most of the chemical energy needed to power the cell's biochemical reactions." as this would reveal the answer to the student. Do not strictly follow this format, it is just an example but it captures the essence of what you should do.
         
-        After you provide feedback, ask the student if they would like to move on to the next question. if they would like to discuss additional theory surrounding the question, or if they would like to clear up any misunderstandsing about the question itself.
+        After you provide feedback, ask the student if they would like to move on to the next question, if they would like to discuss additional theory surrounding the question, or if they would like to clear up any misunderstanding about the question itself.
         """
 
     elif initial_student_score <= 80 and attempt_number == 3:
         system_prompt_feedback = f"""
-        You are an AI evaluator tasked with providing feedback on the answer the student has given. Use the provided question, the provide answer by the student and the provided solution to grade the student. If you beleive the student's answer is wrong in some places or if it misses the mark on some key ideas then provide the student with the correct answer and explain what misunderstandsings lead them to the incorrect answer. The answers and feedback you give should be based on the Relevant Theory Provided Be kind and considerate of the student and don't make them feel bad for getting the answer wrong.
+        You are an AI evaluator tasked with providing feedback on the answer the student has given. Use the provided question, the provide answer by the student and the provided solution to grade the student. If you beleive the student's answer is wrong in some places or if it misses the mark on some key ideas then provide the student with the correct answer and explain what misunderstandings lead them to the incorrect answer. The answers and feedback you give should be based on the Relevant Theory Provided Be kind and considerate of the student and don't make them feel bad for getting the answer wrong.
         
-        After you provide feedback, ask the student if they would like to move on to the next question. if they would like to discuss additional theory surrounding the question, or if they would like to clear up any misunderstandsing about the question itself.
+        After you provide feedback, ask the student if they would like to move on to the next question. if they would like to discuss additional theory surrounding the question, or if they would like to clear up any misunderstanding about the question itself.
         """
 
 
@@ -366,3 +365,100 @@ def provide_feedback(initial_student_score,
 
         Solution: {solution}
         """
+    
+    return generate_completion(system_prompt, initial_user_prompt, temperature=0.5)
+
+
+#this question needs to be fed 
+def discuss_theory(key_idea,
+                   key_idea_description,
+                   student_year_level,
+                   subject,
+                   theory,
+                   other_system_instructions = ""):
+    
+    
+    """
+    Provides additional theory to a student regarding a question they have just answered or if they have not begun the answer questions. Specifically not to be called if the student has just been prompted with a question and is asking for additional theory. If this happens call 'clarify_question' function instead.
+
+    Parameters:
+    key_idea (str): The main idea related to the question.
+    key_idea_description (str): The description of the key idea..
+    student_year_level (int): The academic level of the student.
+    subject (str): The subject of the question the question is based on.
+    theory (str): The theory related to the question.
+    other_system_instructions (str, optional): Other instructions for the system. Defaults to "".
+
+    Returns:
+    str: The theory being asked for.
+    """
+
+    #system prompt for instructing gpt
+    system_prompt = f"""You are an AI assistant that has been helping An Australian high school student in {student_year_level} learn by asking questions in the field of {subject}. They are now asking to discuss additional theory surrounding a key idea which will be provided, along side some theory about the topic which is appropriate for their academic level. You are now tasked with answering questions about the theory related to the question. Your answers should be appropriate for the student's academic level, avoiding the use of sophisticated jargon unless directly asked. If relevant, tailor your discussion of the theroy around the question that was provided to the student, the student's answer(s) and the feedback you have provided them.
+
+    At the end of every message you send to the student, ask them if they would like to move on to the next question or if they would like to keep discussing more theory.
+    """
+
+    #initial user prompt
+    initial_user_prompt = f""" Discuss the theory the student wants to go over.
+
+        Here is some relevant infromation reagrding the question the student was asked to answer: 
+
+        - Key Idea - Assess/Evaluate the student's understanding and expression of this concept: {key_idea}.
+        - Description of Key Idea - Use this information to ensure that your evaluation fully encompasses the nuances of the key idea: {key_idea_description}. 
+        - Relevant Theory - Look for key differences/Assess how well the student's answer reflects an understanding of this theory: {theory}.
+        - Student Year Level - Evaluate/Consider the academic level of the student, focusing on their grasp of the concept rather than the depth of the response: {student_year_level}.
+        - Additional Instructions  Consider these instructions to guide the style, format, or additional content of your answer: {other_system_instructions}.
+        """
+    
+    return generate_completion(system_prompt, initial_user_prompt, temperature= 1)
+
+
+#define clarify question function. This is to be used when the student is asking for additional theory about a question they have not yet gotten correct or have not yet attempted 3 times with no right answer.
+def clarify_question(key_idea,
+                    key_idea_description,
+                    student_year_level,
+                    subject,
+                    theory,
+                    other_system_instructions = ""):
+    
+    
+    """
+    Provides additional theory and clarification to a student regarding a question they are CURRENTLY answering. If this function should be called if the student has yet to answr the question correctly or if they haven't gotten the answer wrong three times.
+
+    Parameters:
+    question (str): The question to which the answer is provided.
+    student_year_level (int): The academic level of the student.
+    subject (str): The subject of the question the question is based on.
+    theory (str): The theory related to the question.
+    key_idea (str): The main idea related to the question.
+    key_idea_description (str): The description of the key idea.
+    other_system_instructions (str, optional): Other instructions for the system. Defaults to "".
+
+    Returns:
+    str: The feedback to the student.
+    """
+
+    #system prompt for instructing gpt
+    system_prompt = f"""You are an AI assistant that has been helping An Australian high school student in {student_year_level} learn by asking questions in the field of {subject}. They are now asking to clarify something about a question you have just asked but which they have yet to answer correctly. Additional theory surrounding a key idea which will be provided, along side some theory about the topic which is appropriate for their academic level. You are now tasked with answering questions about the theory related to the question. Your answers should be appropriate for the student's academic level, avoiding the use of sophisticated jargon unless directly asked. If relevant, tailor your discussion of the theroy around the question that was provided to the student, the student's answer(s) and the feedback you have provided them
+        
+    It is critical you do not reveal the any solutions as the student is still attempting to answer the question and may attempt to do so again. As an example, if the question you have asked them is "what does the mitochondria do" and the student says "what's the difference between the the mitochondria and the golgi apparatus" then you should try to avoid answering their clarification question in a way that might reveal what the mitochondria does, for example by saying "well the golgi apparatus does not generate most of the chemical energy needed to power the cell's biochemical reactions." as this would reveal the answer to the student. Do not strictly follow this format, it is just an example but it captures the essence of what you should do.
+    
+    After you provide your clarification to the student, ask the student if they are ready to answer the question or if they need more clarification.
+
+    """
+
+    #initial user prompt
+    initial_user_prompt = f""" Provide clarification to the student without directly revealing the answer to the question the student asked.
+
+        Here is some relevant infromation reagrding the question the student was asked to answer: 
+
+        - Key Idea - Assess/Evaluate the student's understanding and expression of this concept: {key_idea}.
+        - Description of Key Idea - Use this information to ensure that your evaluation fully encompasses the nuances of the key idea: {key_idea_description}. 
+        - Relevant Theory - Look for key differences/Assess how well the student's answer reflects an understanding of this theory: {theory}.
+        - Student Year Level - Evaluate/Consider the academic level of the student, focusing on their grasp of the concept rather than the depth of the response: {student_year_level}.
+        - Additional Instructions  Consider these instructions to guide the style, format, or additional content of your answer: {other_system_instructions}.
+        """
+    
+    return generate_completion(system_prompt, initial_user_prompt, temperature= 0.7)
+
