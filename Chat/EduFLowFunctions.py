@@ -4,6 +4,7 @@ from openai import OpenAI
 client = OpenAI(api_key=os.environ["EDUFLOW_OPENAI_API_KEY"])
 
 
+
 #define generic completion general function for easy of use and clean code
 def generate_completion(system_prompt, initial_user_prompt, model="gpt-3.5-turbo-1106", max_tokens = None, temperature = 1):
     """
