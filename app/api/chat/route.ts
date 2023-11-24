@@ -64,10 +64,14 @@ function calculateMetricScoreDelta(masteryScore : number, retentionScore: number
   }
 }
 
-async function updateNeedToReviseFlag(email: string, skill: string, needToRevise: boolean) {
+async function updateNeedToReviseFlag(email: string, skill: string, needToRevise: boolean, decayValue : number) {
   try {
+    if (needToRevise) { // we have just finished our revision, so halve the decay value
+       decayValue = decayValue/2.0;
+    }
+    // still missing the ability to update the 
     const collection = await astraDb.collection('student_skills_vec');
-    const dbResponse = await collection.updateOne({ email_address: email, skill_title: skill }, {"$set" : {need_to_revise : !needToRevise}});
+    const dbResponse = await collection.updateOne({ email_address: email, skill_title: skill }, {"$set" : {need_to_revise : !needToRevise, decay_value : decayValue}});
     console.log('Updated need to revise flag.')
     return dbResponse || ''; // Return the response or an empty string if no skill is found
   } catch (error) {
@@ -87,7 +91,8 @@ function calculateNewMetricScores(
   masteryScore: number,
   retentionScore: number,
   answerGrade: number,
-  needToRevise: boolean
+  needToRevise: boolean,
+  decayValue: number
 ): MetricScores {
   console.log('About to calculate new metric score delta.');
   const metricScoreDelta = calculateMetricScoreDelta(masteryScore, retentionScore, answerGrade, needToRevise);
@@ -103,7 +108,7 @@ function calculateNewMetricScores(
   } else {
     if (updatedRetentionScore > masteryScore) {
       // Flip the needToRevise flag
-      const updateNeedToRevise = updateNeedToReviseFlag(email, skill, needToRevise);
+      const updateNeedToRevise = updateNeedToReviseFlag(email, skill, needToRevise, decayValue);
 
       return {
         mastery_score : masteryScore,
@@ -118,7 +123,7 @@ function calculateNewMetricScores(
   }
 }
 
-async function updateStudentSkillScores(email : string, skill : string, masteryScore : number, retentionScore : number, needToRevise : boolean, answerGrade : number) {
+async function updateStudentSkillScores(email : string, skill : string, masteryScore : number, retentionScore : number, needToRevise : boolean, decayValue : number, answerGrade : number) {
   if (masteryScore === null) {
     masteryScore = 0;
   } 
@@ -128,7 +133,7 @@ async function updateStudentSkillScores(email : string, skill : string, masteryS
   try {
     const collection = await astraDb.collection('student_skills_vec');
     console.log('About to calculate new metric scores.');
-    const newMetricScores = calculateNewMetricScores(email, skill, masteryScore, retentionScore, answerGrade, needToRevise);
+    const newMetricScores = calculateNewMetricScores(email, skill, masteryScore, retentionScore, answerGrade, needToRevise, decayValue);
     console.log('New metric scores are: ' + newMetricScores.mastery_score + ' and ' + newMetricScores.retention_score);
     const dbResponse = await collection.updateOne({ email_address: email, skill_title: skill }, {"$set" : newMetricScores});
     console.log('Updated student skill scores.')
@@ -247,7 +252,7 @@ export async function POST(req: Request) {
         console.log('Original content:', grade.choices[0].message.content);
       }
 
-      const updateScores = await updateStudentSkillScores(email, skill, returnedStudentSkill.mastery_score, returnedStudentSkill.retention_score, returnedStudentSkill.need_to_revise, gradeJsonObject.score);
+      const updateScores = await updateStudentSkillScores(email, skill, returnedStudentSkill.mastery_score, returnedStudentSkill.retention_score, returnedStudentSkill.need_to_revise, returnedStudentSkill.decay_value, gradeJsonObject.score);
       console.log('Updated scores: ' + updateScores);
 
       const feedbackSystemPrompt = [
