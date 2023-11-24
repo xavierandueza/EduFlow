@@ -61,7 +61,6 @@ def generate_question(key_idea,
     other_system_instructions (str, optional): Other instructions for the system. Defaults to "".
     student_interests (list, optional): A list of the student's interests. Defaults to [].
     student_career_goals (list, optional): A list of the student's career goals. Defaults to [].
-    model (str, optional): The model used to generate the question. Defaults to "gpt-3.5-turbo-1106".
 
     Returns:
     str: The question for the student to answer.
@@ -69,7 +68,7 @@ def generate_question(key_idea,
 
 
     #System prompt for instructing gpt on how to respond
-    system_prompt = f"""As an AI tailored for educational support, your task is to craft a question suitable for a high school student, incorporating these key elements:
+    system_prompt = f"""As an AI tailored for educational support, your task is to craft a question suitable for an Australian highschool student, incorporating these key elements:
 
     - Central Concept - Develop a question that thoroughly explores this idea: {key_idea}.
     - Detailed Explanation of the Key Idea - Ensure the question aligns with these complexities and nuances: {key_idea_description}.
@@ -95,10 +94,7 @@ def generate_question(key_idea,
     Example Questions: {question_examples}
     """
 
-
-
     return generate_completion(system_prompt, initial_user_prompt, temperature=0.5)
-
 
 
 #Generates an answer to the Model's own question. This is for accuracy purposes
@@ -112,7 +108,7 @@ def answer_question(question,
     
     
     """
-    Generates an answer for a given question one would see in a highschool textbook or exam.
+    Generates an answer for a given question one would see in an Australian highschool textbook or exam.
 
     Parameters:
     question (str): The question to be answered.
@@ -129,7 +125,7 @@ def answer_question(question,
     """
 
     # Sytem prompt for instructing gpt on how to behave
-    system_prompt = f"""As an AI designed to assist in educational contexts, your task is to provide an accurate and comprehensive answer to a high school level question. You should base your answer on the following detailed information:
+    system_prompt = f"""As an AI designed to assist in educational contexts, your task is to provide an accurate answer to an Australian highschool level question to a depth that would be exepected from a student in {student_year_level}. You should base your answer on the following detailed information:
 
     - Key Idea: {key_idea}. This is the primary concept that the question is exploring.
     - Detailed Description of Key Idea: {key_idea_description}. Use this information to ensure that your answer fully encompasses the nuances of the key idea.
@@ -145,10 +141,7 @@ def answer_question(question,
     #initial user prompt
     initial_user_prompt = f"Please provide a concise answer to this question, considering the student's academic level: {question}"
 
-    #generatre answer
-    generated_answer = generate_completion(system_prompt, initial_user_prompt, temperature=0.9)
-
-    return generated_answer
+    return generate_completion(system_prompt, initial_user_prompt, temperature=0.9)
 
 
 #Check the answer of the generated response to ensure it has not hallucinated
@@ -157,8 +150,8 @@ def check_generated_answer_hallucination(question,
                                         theory,
                                         key_idea,
                                         key_idea_description,
-                                        other_system_instructions = "",
-                                        model="gpt-3.5-turbo-1106"):
+                                        student_year_level,
+                                        other_system_instructions = ""):
     
     
     """
@@ -171,20 +164,14 @@ def check_generated_answer_hallucination(question,
     theory (str): The theory related to the question.
     key_idea (str): The main idea related to the question.
     key_idea_description (str): The description of the key idea.
+    student_year_level (int): The academic level of the student.
     other_system_instructions (str, optional): Other instructions for the system. Defaults to "".
     model (str, optional): The model used to mark the answer. Defaults to "gpt-4".
     """
     
 
     #system prompt for instructing gpt on how to behave
-    system_prompt = f"""As an AI evaluator, your task is to review an AI-generated answer for hallucinations (inaccuracies or fabrications).
-    
-    - Key Idea: {key_idea}. Assess the AI-generated answer for any inaccuracies or fabrications related to this concept.
-    - Relevant Theory: {theory}. Look for any inaccuracies or fabrications related to this theory.
-    - Detailed Description of Key Idea: {key_idea_description}. Use this information to ensure that your evaluation fully encompasses the nuances of the key idea.
-    - Additional Instructions: {other_system_instructions}. Consider these instructions to guide the style, format, or additional content of your answer.
-    - Review Focus: Check the AI-generated answer for any hallucinations, inaccuracies, or misrepresentations of facts or concepts.
-    - Alignment with Question: Verify that the answer directly and adequately addresses the question posed, relevant to the student's curriculum.
+    system_prompt = f"""As an AI evaluator, your task is to review an AI-generated answer for hallucinations (inaccuracies or fabrications) inaccuracies, or misrepresentations of facts or concepts. You are also tasked with making sure the answer provided by the AI aligns with what the standard to be expected from an Australian {student_year_level} student and is not overly sophisticated. Verify that the answer directly and adequately addresses the question posed, relevant to the student's curriculum.
 
     If hallucinations are found, return a JSON object that includes the flag "hallucinations" set to true. If no hallucinations are found, return a JSON object that includes the flag "hallucinations" set to false. The JSON object should have the fromat:
 
@@ -197,161 +184,22 @@ def check_generated_answer_hallucination(question,
 
 
     #initial user prompt    
-    initial_user_prompt = f"""Evaluate the following AI-generated answer. Check for any inaccuracies or hallucinations in the following answer. to the question, and return a JSON object with the result:
+    initial_user_prompt = f"""Evaluate the following AI-generated answer. Provide feedback on the answer's accuracy and appropriateness for the specified academic level. You should base your evaluation on the following detailed information: 
+    
+    - Key Idea: {key_idea}. Assess the AI-generated answer for any inaccuracies or fabrications related to this concept.
+    - Relevant Theory: {theory}. Look for any inaccuracies or fabrications related to this theory.
+    - Detailed Description of Key Idea: {key_idea_description}. Use this information to ensure that your evaluation fully encompasses the nuances of the key idea.
+    - Additional Instructions: {other_system_instructions}. Consider these instructions to guide the style, format, or additional content of your answer.
+    - 
 
     Question: {question}
+
     AI-Generated Answer: {generated_answer}
 
-    Provide feedback on the answer's accuracy and appropriateness for the specified academic level."""
-
-
-    hallucination_check = generated_answer = generate_completion(system_prompt, initial_user_prompt, temperature=0.2)
-
-    return hallucination_check
-
-#define a function which marks an answer and provides a mark out of 100 and a justification for the mark without specifically providing feedback. Uses solution as as reference.
-def mark_student_answer_wtih_sol(question,
-                                student_answer,
-                                student_year_level,
-                                theory,
-                                key_idea,
-                                solution = None,
-                                other_system_instructions = "",
-                                model="gpt-3.5-turbo-1106"):
-    
     """
-    Marks an answer for a given question and provides a justification, formatted as JSON.
-
-    Parameters:
-    question (str): The question to which the answer is provided.
-    student answer (str): The answer to the question.
-    solution (str): The solution to the question.
-    theory (str): The theory related to the question.
-    key_idea (str): The main idea related to the question.
-    key_idea_description (str): The description of the key idea.
-    other_system_instructions (str, optional): Other instructions for the system. Defaults to "".
-    model (str, optional): The model used to mark the answer. Defaults to "gpt-4".
-
-    Returns:
-    str: The marked answer and justification, formatted as JSON.
-    """
-    # system prompt for instructing gpt
-    
-    system_prompt = f"""You are an AI evaluator tasked with scoring a high school student's answer and identifying errors, with the output formatted as a JSON object. Your evaluation should reference the provided solution for accuracy, but keep in mind the student's academic level.
-
-    - Key Idea: {key_idea}. Assess the student's understanding compared to the AI solution.
-    - Relevant Theory: {theory}. Look for key differences in the student's understanding of this theory.
-    - Provided Solution: Use this as a benchmark for accuracy, not depth.
-    - Student Year Level: {student_year_level}. Evaluate the student's answer for correctness appropriate to their level, not for depth matching the AI solution.
-    - Here are some other relevant instructions: {other_system_instructions}. 
-
-    Your task is to create a JSON object that includes a score out of 100 and a breakdown of the student's mistakes or misconceptions. Do not reveal the correct answer in your feedback. Focus on explaining the errors in relation to the key idea and theory, considering the student's academic level, and ensuring you do not reveal the solution.
-
-    JSON Format for Output:
-    {{
-        "score": "your_score_here",
-        "errors": [
-            {"error": "specific_error_or_misconception", "explanation": "why_this_is_incorrect"}
-        ]
-    }}
-
-    Additional System Instructions: {other_system_instructions}"""
 
 
-    initial_user_prompt = f"""Provide a score and a breakdown of errors in the student's response, formatted as a JSON object. Compare the student's answer to the AI solution, focusing on accuracy appropriate for their academic level:
-
-    Question: {question}
-
-    Student Answer: {student_answer}
-    
-    AI-Provided Solution: {solution}
-
-    Generate a JSON object with the score and detailed error analysis, keeping in mind the student's year level and without revealing the correct answer."""
-
-
-    #generate mark with justification
-    student_mark = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": initial_user_prompt},
-        ],
-        temperature = 0.7
-    )
-
-    return student_mark
-
-
-
-#function which generates a mark for a student answer and provides feedback. does NOT use solution as a reference.
-
-def mark_student_answer_without_sol(question,
-                                answer,
-                                student_year_level,
-                                theory,
-                                key_idea,
-                                key_idea_description,
-                                other_system_instructions = "",
-                                model="gpt-3.5-turbo-1106"):
-    """
-    Marks an answer for a given question and provides a justification, formatted as JSON. Does not use solution as a reference but instead relys off provided theory only.
-
-    Parameters:
-    question (str): The question to which the answer is provided.
-    student answer (str): The answer to the question.
-    solution (str): The solution to the question.
-    theory (str): The theory related to the question.
-    key_idea (str): The main idea related to the question.
-    key_idea_description (str): The description of the key idea.
-    other_system_instructions (str, optional): Other instructions for the system. Defaults to "".
-    model (str, optional): The model used to mark the answer. Defaults to "gpt-4".
-
-    Returns:
-    str: The marked answer and justification, formatted as JSON.
-    """
-    
-    #system prompt for instructing gpt
-    system_prompt = f"""You are an AI evaluator tasked with assessing a high school student's answer. Your evaluation should focus on the accuracy and understanding of the key idea and relevant theory, appropriate to the student's academic level. The output should be formatted as a JSON object.
-
-    - Key Idea: {key_idea}. Evaluate the student's understanding and expression of this concept.
-    - Relevant Theory: {theory}. Assess how well the student's answer reflects an understanding of this theory.
-    - Detailed Description of Key Idea: {key_idea_description}. Use this information to ensure that your evaluation fully encompasses the nuances of the key idea.
-    - Student Year Level: {student_year_level}. The evaluation should consider the academic level of the student, focusing on their grasp of the concept rather than the depth of the response.
-    - Additional Instructions: {other_system_instructions}. Consider these instructions to guide the style, format, or additional content of your answer.
-
-    Create a JSON object that includes a score out of 100 and identifies specific areas of misunderstanding or errors in the student's response. Your feedback should highlight these areas without providing direct solutions, and explain why they are incorrect or incomplete, in a manner suitable for the student's educational level.
-
-    JSON Format for Output:
-    {{
-        "score": "your_score_here",
-        "errors": [
-            {"error": "specific_error_or_misconception", "explanation": "why_this_is_incorrect"}
-            // Add more error objects as needed
-        ]
-    }}
-
-    Additional System Instructions: {other_system_instructions}"""
-
-
-    #initial user prompt
-    initial_user_prompt = f"""Score the student's response and identify any errors or misconceptions, formatted as a JSON object. Focus on the accuracy and understanding of the key idea and relevant theory, considering the student's academic level:
-
-    Question: {question}
-
-    Student Answer: {answer}
-
-    Construct a JSON object with a score and error analysis, ensuring that the feedback is appropriate for the student's year level and does not provide direct solutions."""
-    
-    student_mark = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": initial_user_prompt},
-        ],
-        temperature = 0.7
-    )
-
-    return student_mark
+    return generate_completion(system_prompt, initial_user_prompt, temperature=0.3)
 
 #Grade the student without specifically providing feedback. Uses if solution is provided it uses as a reference.
 def mark_student_answer(question,
@@ -376,16 +224,15 @@ def mark_student_answer(question,
     key_idea (str): The main idea related to the question.
     key_idea_description (str): The description of the key idea. Required if solution is None.
     solution (str, optional): The solution to the question. Defaults to None.
-    
     other_system_instructions (str, optional): Additional instructions for the system. Defaults to "".
 
     Returns:
     str: The marked answer and justification, formatted as JSON.
     """
 
-    #If we 
+    #If solution is provided, use it as a reference otherwise use key_idea_description and theory mainly. 
     if solution == None:
-        # Logic from mark_student_answer_with_sol
+        #no changes necessary in this case
         additional_system_prompt_info = ""
 
         additional_initial_user_prompt_info = ""
@@ -397,31 +244,36 @@ def mark_student_answer(question,
     
     
     #commmon system prompt
-    system_prompt = f"""You are an AI evaluator tasked with scoring/assessing a high school student's answer to a given question. Specifically you must identifying errors the student has made. Your evaluation should focus on the accuracy and understanding of the key idea and relevant theory, appropriate to the student's academic level. Here is some context while you mark the student:
-
-    - Key Idea - Assess/Evaluate the student's understanding and expression of this concept: {key_idea}.
-    - Description of Key Idea - Use this information to ensure that your evaluation fully encompasses the nuances of the key idea: {key_idea_description}. 
-    - Relevant Theory - Look for key differences/Assess how well the student's answer reflects an understanding of this theory: {theory}.
-    - Student Year Level - Evaluate/Consider the academic level of the student, focusing on their grasp of the concept rather than the depth of the response: {student_year_level}.
+    system_prompt = f"""You are an AI evaluator tasked with scoring/assessing an Australian highschool student's answer to a given question. Specifically you must identifying errors the student has made. Your evaluation should focus on the accuracy and understanding of the key idea and relevant theory, appropriate to the student's academic level.
 
     {additional_system_prompt_info}
 
-    Your task is to create a JSON object that includes a score out of 100 and a breakdown of the student's mistakes or misconceptions. If you point out an error in the student's answer DO NOT reveal the correct answer as feedback. Simply explain where the student's misunderstanding is and comes from. Focus on explaining the errors in relation to the key idea and theory and be considerate of the student's academic level. Do not reveal direct solutions.
+    Your task is to create a JSON object that includes a score out of 100 and a breakdown of the student's mistakes or misconceptions. Importantly, If the student's answer is mostly correct then do not provide errors simply for the sake of it. Only provide errors if they are present and relevant to the key idea and theory or if the student clearly didn't understand the concept at all. If the student's answer is correct and doens't miss any key ideas then provide a score of at least 80, using your descretion of what the score should be as well as the relevant errors. If there are no errors then provide a score of 100 and provide no errors"
 
     Additional System Instructions: {other_system_instructions}
 
     The JSON Format should be Outputted like this:
     {{
         "errors": [
-            {{"explanation of error": "error_explanation_variable", "error": "specific_error_variable"}}
+            {{"explanation of error": "error_explanation_variable", "error": "the specfic error they made"}}
             // additional error objects can be added here
         ],
         "score": "the_score_variable"
     }}
     """
 
+    #The purpose asking for the errors and explinations of errors is to ensure the system is not hallucinating and is providing a score that fits the issue.
+
     #initial user prompt
     initial_user_prompt = f"""Score the student's response and identify any errors or misconceptions, formatted as a JSON object. Focus on the accuracy and understanding of the key idea and relevant theory, considering the student's academic level:
+
+    Here is some context while you mark the student:
+
+    - Key Idea - Assess/Evaluate the student's understanding and expression of this concept: {key_idea}.
+    - Description of Key Idea - Use this information to ensure that your evaluation fully encompasses the nuances of the key idea: {key_idea_description}. 
+    - Relevant Theory - Look for key differences/Assess how well the student's answer reflects an understanding of this theory: {theory}.
+    - Student Year Level - Evaluate/Consider the academic level of the student, focusing on their grasp of the concept rather than the depth of the response: {student_year_level}.
+    - Additional Instructions  Consider these instructions to guide the style, format, or additional content of your answer: {other_system_instructions}.
 
     Question: {question}
 
@@ -429,38 +281,30 @@ def mark_student_answer(question,
 
     {additional_initial_user_prompt_info}
 
-    Construct a JSON object with a score out of 100 and error analysis, ensuring that the feedback is appropriate for the student's year level and does not provide direct solutions."""
+    Construct a JSON object with a score out of 100 and error analysis."""
 
 
-
-    # The common logic for generating a mark with justification
-    student_mark = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": initial_user_prompt},
-        ],
-        temperature = 0.7
-    )
-
-    return student_mark
+    return generate_completion(system_prompt, initial_user_prompt, temperature=0.5)
 
 
-
-
-def provide_feedback(question,
-                    student_answer,
-                    solution,
-                    student_year_level,
-                    theory,
-                    key_idea,
-                    key_idea_description,
-                    other_system_instructions = "",
-                    model="gpt-3.5-turbo-1106"):
+def provide_feedback(initial_student_score, 
+                     attempt_number,
+                     question,
+                     student_answer,
+                     solution,
+                     student_year_level,
+                     theory,
+                     key_idea,
+                     key_idea_description,
+                     other_system_instructions = ""):
+    
+    
     """
-    Provides feedback to a student based on their answer to a question.
+    Provides feedback to a student based on their answer to a question. The type of feedback provided is based on the score of the student.
 
     Parameters:
+    intial_student_score (int): The score the student recieved from the initial marking.
+    attempt_number (int): The number of attempts the student has made at the question. Maxium of 3.
     question (str): The question to which the answer is provided.
     student answer (str): The answer to the question.
     solution (str): The solution to the question.
@@ -473,17 +317,51 @@ def provide_feedback(question,
     Returns:
     str: The feedback to the student.
     """
+
+    if initial_student_score >= 80 and attempt_number != 3:
+        system_prompt_feedback = f"""
+        You are an AI evaluator tasked with providing feedback on the answer the student has given. Another AI evaluator has graded the student's answer and given them a score of {initial_student_score} out of 100. Please use the provided question, the provide answer the student has given and the provided solution to determine if there are any minor mistakes the student has made. If there are mistakes, congratulate the student on their mostly correct answer and provide an explaination of what they missed and where the misconceptions lie. If the student's answer is completely correct in that they don't miss any key ideas then simply congratulate the student. Your evaluation should focus on the accuracy and understanding of the key idea and relevant theory, appropriate to the student's academic level.
+        
+        At the end of your message and feedback ask the student if they would like to move on to the next question or if they would like to discuss additional theory about the question.
+        """
+    
+    elif initial_student_score <= 80 and attempt_number != 3:
+        system_prompt_feedback = f"""
+        You are an AI evaluator tasked with providing feedback on the answer the student has given. Your evaluation should focus on the accuracy and understanding of the key idea and relevant theory, appropriate to the student's academic level. Use the provided question, the provide answer by the student the provided solution to grade the student. Your feedback should highlight any errors or misconceptions without providing direct solutions. Explain what the student has gotten incorrect in a manner suitable for the student's educational level. If you point out an error in the student's answer DO NOT reveal the correct answer as feedback. Simply explain where the student's misunderstandings lie. Focus on explaining the errors in relation to the key idea and theory. Be considerate of the fact that student's answer should be of an appropriate depth and sophistication for someone at a {student_year_level} level and that you should not expect them to answer with anything more sophisticated. Be kind and encouraging in your feedback.
+        
+        Use the provided solution to ensure you do not reveal any direct answers that are in the solution, it is critical you do not reveal the any solutions as the student may attempt the question again. As an example, if the question is "what does the mitochondria do" and the student incorrectly answers "the mitochondria functions as a factory in which proteins received from the ER are further processed and sorted for transport" then you should explain that their answer is incorrect by, for example, explaining that " The golgi apparatus is what recieves proteins from the ER and processes them for further storage and processing" and NOT by saying "the golgi apparatus is incorrect because it does not generate most of the chemical energy needed to power the cell's biochemical reactions." as this would reveal the answer to the student. Do not strictly follow this format, it is just an example but it captures the essence of what you should do.
+        
+        After you provide feedback, ask the student if they would like to move on to the next question. if they would like to discuss additional theory surrounding the question, or if they would like to clear up any misunderstandsing about the question itself.
+        """
+
+    elif initial_student_score <= 80 and attempt_number == 3:
+        system_prompt_feedback = f"""
+        You are an AI evaluator tasked with providing feedback on the answer the student has given. Use the provided question, the provide answer by the student and the provided solution to grade the student. If you beleive the student's answer is wrong in some places or if it misses the mark on some key ideas then provide the student with the correct answer and explain what misunderstandsings lead them to the incorrect answer. The answers and feedback you give should be based on the Relevant Theory Provided Be kind and considerate of the student and don't make them feel bad for getting the answer wrong.
+        
+        After you provide feedback, ask the student if they would like to move on to the next question. if they would like to discuss additional theory surrounding the question, or if they would like to clear up any misunderstandsing about the question itself.
+        """
+
+
     #system prompt for instructing gpt
-    system_prompt = f"""You are an AI evaluator tasked with providing feedback to a high school student. Your feedback should focus on the accuracy and understanding of the key idea and relevant theory, appropriate to the student's academic level.
+    system_prompt = f"""An Australian high school student in {student_year_level} will provide their solution to a question that they have been asked. 
 
-    - Key Idea: {key_idea}. Assess the student's understanding and expression of this concept.
-    - Relevant Theory: {theory}. Evaluate how well the student's answer reflects an understanding of this theory.
-    - Detailed Description of Key Idea: {key_idea_description}. Use this information to ensure that your feedback fully encompasses the nuances of the key idea.
-    - Student Year Level: {student_year_level}. The feedback should consider the academic level of the student, focusing on their grasp of the concept rather than the depth of the response.
-    - Additional Instructions: {other_system_instructions}. Consider these instructions to guide the style, format, or additional content of your answer.
-
-    Your task is to provide feedback to the student, formatted as a JSON object. Your feedback should highlight any errors or misconceptions without providing direct solutions, and explain why they are incorrect or incomplete, in a manner suitable for the student's educational level."""
-
+    {system_prompt_feedback}
+    """
 
     #initial user prompt
-    initial_user_prompt = f"""Provide feedback to the student, formatted as"""
+    initial_user_prompt = f""" Provide feedback on the student's answer in the format described.
+
+        Here is some relevant infromation reagrding the question the student was asked to answer: 
+
+        - Key Idea - Assess/Evaluate the student's understanding and expression of this concept: {key_idea}.
+        - Description of Key Idea - Use this information to ensure that your evaluation fully encompasses the nuances of the key idea: {key_idea_description}. 
+        - Relevant Theory - Look for key differences/Assess how well the student's answer reflects an understanding of this theory: {theory}.
+        - Student Year Level - Evaluate/Consider the academic level of the student, focusing on their grasp of the concept rather than the depth of the response: {student_year_level}.
+        - Additional Instructions  Consider these instructions to guide the style, format, or additional content of your answer: {other_system_instructions}.
+        
+        Question: {question}
+
+        Student Answer: {student_answer}
+
+        Solution: {solution}
+        """

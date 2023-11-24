@@ -4,7 +4,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "generate_question",
-            "description": "Generates a question for a highschool student to answer.",
+            "description": "Generates a question for an Australian highschool student to answer.",
             "parameters": {
                 "type": "object",
                 "properties": {
