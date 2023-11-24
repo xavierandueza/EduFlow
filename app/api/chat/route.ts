@@ -30,6 +30,18 @@ async function getStudentFromDB(email : string) {
   }
 }
 
+async function getStudentSkillFromDB(email : string, skill : string) {
+  try {
+    const collection = await astraDb.collection('student_skills_vec');
+    const dbResponse = await collection.findOne({ email_address: email, skill_title: skill });
+    return dbResponse || ''; // Return the response or an empty string if no skill is found
+  } catch (error) {
+    console.error('Error fetching student skill:', error);
+    return ''; // Return an empty string in case of an error
+  }
+}
+
+
 export async function POST(req: Request) {
   try {
     const {messages, useRag, llm, similarityMetric, chatState, skill, email} = await req.json();
@@ -40,8 +52,16 @@ export async function POST(req: Request) {
     // console.log(email);
     const returnedSkill = await getSkillFromDB(skill); // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
     const returnedStudent = await getStudentFromDB(email); // response from the DB. Has email_address, interests, subjects
+    const returnedStudentSkill = await getStudentSkillFromDB(email, skill); // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
     // console.log(`Returned student with email: ${returnedStudent.email_address} and interests: ${returnedStudent.interests}`);
     // console.log('Returned skill is: ' + returnedSkill.skill_title); // check the skill response IGNORE ERROR WARNING
+    console.log(`Returned student: ${returnedStudentSkill.email_address}
+    subject code: ${returnedStudentSkill.subject_code}
+    skill title: ${returnedStudentSkill.skill_title}
+    mastery score: ${returnedStudentSkill.mastery_score}
+    retention score: ${returnedStudentSkill.retention_score}
+    need to revise: ${returnedStudentSkill.need_to_revise}
+    decay value: ${returnedStudentSkill.decay_value}`);
     
     const latestMessage = messages[messages?.length - 1]?.content;
 
@@ -58,7 +78,7 @@ export async function POST(req: Request) {
           Where possible, also relate the question to the student's interests, as listed here: ${returnedStudent.interests}` // ignore error warning above, no problem with it
         },
       ]
-      console.log('system prompt is: ' + systemPrompt[0].content)
+      // console.log('system prompt is: ' + systemPrompt[0].content)
 
       const fixedMessage = [
         {
@@ -84,10 +104,13 @@ export async function POST(req: Request) {
       console.log('latest question was: ' + messages.slice(-2)[0].content)
       console.log('Answer was: ' + latestMessage)
 
-      const systemPrompt = [ // Setting up the system prompt
+      const gradeSystemPrompt = [ // Setting up the system prompt
         {
           "role": "system", 
-          "content": `You are an AI assistant who is given an answer to a question to give a score out of 100 and follow this with justification. 
+          "content": `You are an AI assistant who is given an answer to a question to give a score out of 100. Return it in the following JSON format:
+          {
+            "score" : insert_score_here
+          }
           The question and relevant theory are as follows:
           QUESTION START
           ${messages.slice(-2)[0].content}
@@ -96,8 +119,7 @@ export async function POST(req: Request) {
           THEORY START
           ${returnedSkill.theory}
           THEORY END
-          
-          Word your feedback to be read by the individual answering the question, ie 2nd person.`
+          .`
         },
       ]
 
@@ -108,12 +130,50 @@ export async function POST(req: Request) {
         },
       ]
       
+      const grade = await openai.chat.completions.create( // Actually sending the request to OpenAI
+        {
+          model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
+          messages: [...gradeSystemPrompt, ...userAnswer], // combine the system prompt with the latest message
+        }
+      );
+      console.log('grade is: ' + grade.choices[0].message.content)
+      let jsonObject: any;
+
+      try {
+        jsonObject = JSON.parse(grade.choices[0].message.content);
+        console.log('Successfully parsed JSON: ' + jsonObject);
+        console.log('grade is: ', jsonObject.score);
+      } catch (error) {
+        jsonObject = { score: null };
+        console.log('Error parsing JSON: ', error);
+        console.log('Original content:', grade.choices[0].message.content);
+      }
+
+      const feedbackSystemPrompt = [
+        {
+          "role": "system", 
+          "content": `You are an AI assistant who is given an answer to a question, and the score it was provided out of 100.
+          Provide feedback to the student on their answer, and word this in the 2nd person, as if the student is reading it.
+          The question and relevant theory are as follows:
+          QUESTION START
+          ${messages.slice(-2)[0].content}
+          QUESTION END
+          
+          THEORY START
+          ${returnedSkill.theory}
+          THEORY END
+
+          ANSWER SCORE OUT OF 100: ${jsonObject.score} 
+          .`
+        }
+      ]
+
       // Create the response
       const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
         {
           model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
           stream: true, // streaming YAY
-          messages: [...systemPrompt, ...userAnswer], // combine the system prompt with the latest message
+          messages: [...feedbackSystemPrompt], // combine the system prompt with the latest message
         }
       );
       

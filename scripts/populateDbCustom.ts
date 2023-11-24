@@ -8,6 +8,7 @@ async function main() {
 
     await astraDb.createCollection('skills_vec');
     await astraDb.createCollection('students_vec');
+    await astraDb.createCollection('student_skills_vec');
 
     const skillsDocuments = [
         {
@@ -39,6 +40,27 @@ async function main() {
         }
     ] 
 
+    const studentSkillsDocuments = [
+        {
+            "email_address" : "xand0001@student.monash.edu",
+            "subject_code" : "FIT3171",
+            "skill_title" : "CQL",
+            "mastery_score" : 0,
+            "retention_score" : 0,
+            "need_to_revise" : false,
+            "decay_value" : 0.5,
+        },
+        {
+            "email_address" : "xand0001@student.monash.edu",
+            "subject_code" : "FIT3171",
+            "skill_title" : "SQL",
+            "mastery_score" : 0,
+            "retention_score" : 0,
+            "need_to_revise" : false,
+            "decay_value" : 0.5,
+        },
+    ] 
+
     const skills_vec_collection = await astraDb.collection('skills_vec');
     for await (const { skill_title, decay_value, dependencies, subject_code, theory } of skillsDocuments) {
         const res = await skills_vec_collection.insertOne({
@@ -56,6 +78,19 @@ async function main() {
             email_address,
             interests,
             subjects
+        });
+    }
+
+    const students_skills_vec_collection = await astraDb.collection('student_skills_vec');
+    for await (const { email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value} of studentSkillsDocuments) {
+        const res = await students_skills_vec_collection.insertOne({
+            email_address,
+            subject_code,
+            skill_title,
+            mastery_score,
+            retention_score,
+            need_to_revise,
+            decay_value
         });
     }
 }
