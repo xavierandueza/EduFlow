@@ -245,7 +245,7 @@ def mark_student_answer_wtih_sol(question,
     - Student Year Level: {student_year_level}. Evaluate the student's answer for correctness appropriate to their level, not for depth matching the AI solution.
     - Here are some other relevant instructions: {other_system_instructions}. 
 
-    Your task is to create a JSON object that includes a score out of 100 and a breakdown of the student's mistakes or misconceptions. Do not reveal the correct answer in your feedback. Focus on explaining the errors in relation to the key idea and theory, considering the student's academic level.
+    Your task is to create a JSON object that includes a score out of 100 and a breakdown of the student's mistakes or misconceptions. Do not reveal the correct answer in your feedback. Focus on explaining the errors in relation to the key idea and theory, considering the student's academic level, and ensuring you do not reveal the solution.
 
     JSON Format for Output:
     {{
@@ -337,10 +337,11 @@ def mark_student_answer_without_sol(question,
     initial_user_prompt = f"""Score the student's response and identify any errors or misconceptions, formatted as a JSON object. Focus on the accuracy and understanding of the key idea and relevant theory, considering the student's academic level:
 
     Question: {question}
+
     Student Answer: {answer}
 
-    Construct a JSON object with a score and detailed error analysis, ensuring that the feedback is appropriate for the student's year level and does not provide direct solutions."""
-
+    Construct a JSON object with a score and error analysis, ensuring that the feedback is appropriate for the student's year level and does not provide direct solutions."""
+    
     student_mark = client.chat.completions.create(
         model=model,
         messages=[
@@ -352,8 +353,97 @@ def mark_student_answer_without_sol(question,
 
     return student_mark
 
-#Use grade of the student on task a well as the feedback provided in mark_student_answer_with_sol and mark_student_answer_without_sol to determine what the next step should be. Correct, incorrect (not 3rd attempt) or incorrect (3rd attempt).
+#Grade the student without specifically providing feedback. Uses if solution is provided it uses as a reference.
+def mark_student_answer(question,
+                        student_answer,
+                        student_year_level,
+                        theory,
+                        key_idea,
+                        key_idea_description,
+                        solution=None,
+                        other_system_instructions=""):
+    
 
+    """
+    Marks a student's answer to a question, providing a score and justification formatted as JSON. 
+    The function adapts based on whether a solution is provided as a reference.
+    
+    Parameters:
+    question (str): The question to which the answer is provided.
+    student_answer (str): The student's answer to the question.
+    student_year_level (str): The academic level of the student.
+    theory (str): The theory related to the question.
+    key_idea (str): The main idea related to the question.
+    key_idea_description (str): The description of the key idea. Required if solution is None.
+    solution (str, optional): The solution to the question. Defaults to None.
+    
+    other_system_instructions (str, optional): Additional instructions for the system. Defaults to "".
+
+    Returns:
+    str: The marked answer and justification, formatted as JSON.
+    """
+
+    #If we 
+    if solution == None:
+        # Logic from mark_student_answer_with_sol
+        additional_system_prompt_info = ""
+
+        additional_initial_user_prompt_info = ""
+
+    else:
+        additional_system_prompt_info = "You will be provided the full solution to the question which you can use as a benchmark for assessing the student's answer. Please be mindful though that the solution should only be used as a reference and not as a direct comparison. The student's answer should be assessed based on the accuracy and understanding of the key idea and relevant theory, appropriate to the student's academic level, not the depth of their answer in coparision to the solution."
+
+        additional_initial_user_prompt_info = f" Use this solution as a benchmark to compare to the student's answer, being mindful of the accuracy and depth appropriate for their academic level: {solution}"
+    
+    
+    #commmon system prompt
+    system_prompt = """You are an AI evaluator tasked with scoring/assessing a high school student's answer to a given question. Specifically you must identifying errors the student has made. Your evaluation should focus on the accuracy and understanding of the key idea and relevant theory, appropriate to the student's academic level. Here is some context while you mark the student:
+
+    - Key Idea - Assess/Evaluate the student's understanding and expression of this concept: {key_idea}.
+    - Description of Key Idea - Use this information to ensure that your evaluation fully encompasses the nuances of the key idea: {key_idea_description}. 
+    - Relevant Theory - Look for key differences/Assess how well the student's answer reflects an understanding of this theory: {theory}.
+    - Student Year Level - Evaluate/Consider the academic level of the student, focusing on their grasp of the concept rather than the depth of the response: {student_year_level}.
+
+    {additional_system_prompt_info}
+
+    Your task is to create a JSON object that includes a score out of 100 and a breakdown of the student's mistakes or misconceptions. If you point out an error in the student's answer DO NOT reveal the correct answer as feedback. Simply explain where the student's misunderstanding is and comes from. Focus on explaining the errors in relation to the key idea and theory and be considerate of the student's academic level. Do not reveal direct solutions.
+
+    Additional System Instructions: {other_system_instructions}
+
+    The JSON Format should be Outputted like this:
+    {{
+        "errors": [
+            {{"explanation of error": "error_explanation_variable", "error": "specific_error_variable"}}
+            // additional error objects can be added here
+        ],
+        "score": "the_score_variable"
+    }}
+    """
+
+    #initial user prompt
+    initial_user_prompt = f"""Score the student's response and identify any errors or misconceptions, formatted as a JSON object. Focus on the accuracy and understanding of the key idea and relevant theory, considering the student's academic level:
+
+    Question: {question}
+
+    Student Answer: {student_answer}
+
+    {additional_initial_user_prompt_info}
+
+    Construct a JSON object with a score out of 100 and error analysis, ensuring that the feedback is appropriate for the student's year level and does not provide direct solutions."""
+
+
+
+    # The common logic for generating a mark with justification
+    student_mark = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": initial_user_prompt},
+        ],
+        temperature = 0.7
+    )
+
+    return student_mark
 
 
 
@@ -396,4 +486,4 @@ def provide_feedback(question,
 
 
     #initial user prompt
-    initial_user_prompt = f"""Provide feedback to the student, formatted as
+    initial_user_prompt = f"""Provide feedback to the student, formatted as"""
