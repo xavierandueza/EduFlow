@@ -10,10 +10,59 @@ const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.
 
 export async function POST(req: Request) {
   try {
-    const {messages, useRag, llm, similarityMetric} = await req.json();
+    const {messages, useRag, llm, similarityMetric, chatState} = await req.json();
+    console.log('running the route.ts file')
 
     const latestMessage = messages[messages?.length - 1]?.content;
 
+    // set up the system prompt
+    const systemPrompt = [ // Setting up the system prompt
+    {
+      role: 'system',
+      content: `You are an AI assistant who writes short haikus on flowers. Format responses using markdown where applicable.`,
+    },
+    ]
+
+    if (chatState === 'asking') {
+      console.log('asking on the route.ts')
+      
+      // set up the system prompt
+      const systemPrompt = [ // Setting up the system prompt
+        {
+          role: 'system',
+          content: `You are an AI assistant who writes short haikus on flowers. Format responses using markdown where applicable.`,
+        },
+      ]
+
+      const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
+        {
+          model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
+          stream: true, // streaming YAY
+          messages: [{ role: "system", content: "You are an AI assistant who writes short haikus on flowers. Format responses using markdown where applicable"}], // really easy to put messages into practice using this. The ...messages is all previous messages, which can be problematic if there are too many messages (hits max token limit)
+        }
+      );
+      
+      const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
+      return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
+
+    } else if (chatState === 'waiting') {
+      console.log('waiting')
+      const systemPrompt = [ // Setting up the system prompt
+      {
+        role: 'system',
+        content: `You are an AI assistant who writes short haikus on flowers. Format responses using markdown where applicable.`,
+      },
+    ]
+    } else if (chatState === 'grading') {
+      console.log('waiting')
+      const systemPrompt = [ // Setting up the system prompt
+      {
+        role: 'system',
+        content: `You are an AI assistant who writes short haikus on flowers. Format responses using markdown where applicable.`,
+      },
+    ]
+    }
+    
     let docContext = '';
     if (useRag) {
       const {data} = await openai.embeddings.create({input: latestMessage, model: 'text-embedding-ada-002'}); // only use the latest message for the embedding for the vector db search
@@ -45,12 +94,11 @@ export async function POST(req: Request) {
       },
     ]
 
-
     const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
       {
         model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
         stream: true, // streaming YAY
-        messages: [...ragPrompt, ...messages], // really easy to put messages into practice using this. The ...messages is all previous messages, which can be problematic if there are too many messages (hits max token limit)
+        messages: [...systemPrompt, ...messages], // really easy to put messages into practice using this. The ...messages is all previous messages, which can be problematic if there are too many messages (hits max token limit)
       }
     );
     const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file

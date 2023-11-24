@@ -6,10 +6,12 @@ import Footer from '../components/Footer';
 import Configure from '../components/Configure';
 import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
+import React, { FormEvent } from 'react';
+
 
 export default function Home() {
   const { messages, input, handleInputChange, handleSubmit } = useChat(); // imported from the ai/react package, which can be found here: https://www.npmjs.com/package/ai
-  const { useRag, llm, similarityMetric, setConfiguration } = useConfiguration(); // custom useConfiguration hook, good code but only defines how you set config variables, not how you use them
+  const { useRag, llm, similarityMetric, chatState, setConfiguration } = useConfiguration(); // custom useConfiguration hook, good code but only defines how you set config variables, not how you use them
 
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
@@ -19,10 +21,45 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Force update chatState on component mount
+    setConfiguration(useRag, llm, similarityMetric, 'asking');
+  }, []); // Empty dependency array to run only once on mount
+  
+  /*
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
+  
+  useEffect(() => {
+    if (chatState === 'asking') {
+      // Place the code you want to execute here
+      console.log(chatState);
+      const syntheticEvent = {
+        preventDefault: () => {},
+        target: {
+          // You might need to add other properties that handleSubmit expects from the event
+          userInput: {
+            value: 'Hello'
+          }
+        }
+      } as unknown as FormEvent<HTMLFormElement>;
+  
+      handleSubmit(syntheticEvent, { options: { body: { useRag, llm, similarityMetric, chatState: 'asking' } } });
+      // Rest of your code
+      setConfiguration(useRag, llm, similarityMetric, 'waiting');
+      console.log('Chatbot is waiting for a response now');
+  
+      // Example: Automatically sending a response or performing an action
+      // You might want to call a function or set state here
+    } else if (chatState === 'waiting') {
+      console.log('Chatbot is waiting for a response');
+    
+    }
+  }, [chatState]); // Add chatState as a dependency, what it looks out for to execute code on change.
+  */
 
   const handleSend = (e) => {
+    console.log(chatState);
     handleSubmit(e, { options: { body: { useRag, llm, similarityMetric}}});
   }
 
@@ -72,6 +109,7 @@ export default function Home() {
       useRag={useRag}
       llm={llm}
       similarityMetric={similarityMetric}
+      chatState={chatState}
       setConfiguration={setConfiguration}
     />
     </>

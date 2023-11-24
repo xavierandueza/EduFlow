@@ -3,6 +3,7 @@ import Dropdown from "./Dropdown";
 import Toggle from "./Toggle";
 import Footer from "./Footer";
 import { SimilarityMetric } from "../app/hooks/useConfiguration";
+import { ChatState } from "../app/hooks/useConfiguration";
 
 interface Props {
   isOpen: boolean;
@@ -10,13 +11,15 @@ interface Props {
   useRag: boolean;
   llm: string;
   similarityMetric: SimilarityMetric;
-  setConfiguration: (useRag: boolean, llm: string, similarityMetric: SimilarityMetric) => void;
+  chatState: ChatState;
+  setConfiguration: (useRag: boolean, llm: string, similarityMetric: SimilarityMetric, chatState : ChatState) => void;
 }
 
-const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfiguration }: Props) => {
+const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, setConfiguration }: Props) => {
   const [rag, setRag] = useState(useRag);
   const [selectedLlm, setSelectedLlm] = useState(llm);
   const [selectedSimilarityMetric, setSelectedSimilarityMetric] = useState<SimilarityMetric>(similarityMetric);
+  const [selectedChatState, setChatState] = useState<ChatState>(chatState);
   
   if (!isOpen) return null;
 
@@ -31,11 +34,18 @@ const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigur
     { label: 'Dot Product', value: 'dot_product' }
   ];
 
+  const chatStateOptions = [
+    { label: 'asking', value: 'asking' },
+    { label: 'waiting', value: 'waiting' },
+    { label: 'grading', value: 'grading' }
+  ];
+
   const handleSave = () => {
     setConfiguration(
         rag,
         selectedLlm,
-        selectedSimilarityMetric
+        selectedSimilarityMetric,
+        selectedChatState
     );
     onClose();
   };
@@ -69,6 +79,13 @@ const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigur
             options={similarityMetricOptions}
             value={selectedSimilarityMetric}
             onSelect={setSelectedSimilarityMetric}
+          />
+          <Dropdown
+            fieldId="Chat State"
+            label="Chat State"
+            options={chatStateOptions}
+            value={selectedChatState}
+            onSelect={setChatState}
           />
         </div>
         <div className="self-end w-full">
