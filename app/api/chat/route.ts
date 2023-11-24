@@ -82,7 +82,7 @@ async function updateNeedToReviseFlag(email: string, skill: string, needToRevise
     }
     // still missing the ability to update the 
     const collection = await astraDb.collection('student_skills_vec');
-    const dbResponse = await collection.updateOne({ email_address: email, skill_title: skill }, {"$set" : {need_to_revise : !needToRevise, decay_value : decayValue}});
+    const dbResponse = await collection.updateOne({ email_address: email, skill: skill }, {"$set" : {need_to_revise : !needToRevise, decay_value : decayValue}});
     console.log('Updated need to revise flag.')
     return dbResponse || ''; // Return the response or an empty string if no skill is found
   } catch (error) {
@@ -146,7 +146,7 @@ async function updateStudentSkillScores(email : string, skill : string, masteryS
     console.log('About to calculate new metric scores.');
     const newMetricScores = calculateNewMetricScores(email, skill, masteryScore, retentionScore, answerGrade, needToRevise, decayValue);
     console.log('New metric scores are: ' + newMetricScores.mastery_score + ' and ' + newMetricScores.retention_score);
-    const dbResponse = await collection.updateOne({ email_address: email, skill_title: skill }, {"$set" : newMetricScores});
+    const dbResponse = await collection.updateOne({ email_address: email, skill: skill }, {"$set" : newMetricScores});
     console.log('Updated student skill scores.')
     return dbResponse || ''; // Return the response or an empty string if no skill is found
   } catch (error) {
@@ -154,8 +154,6 @@ async function updateStudentSkillScores(email : string, skill : string, masteryS
     return ''; // Return an empty string in case of an error
   }
 }
-
-
 
 export async function POST(req: Request) {
   try {
@@ -188,7 +186,7 @@ export async function POST(req: Request) {
       
       console.log(sampleQuestions);
 
-      const systemPrompt = [ // Setting up the system prompt
+      const systemPrompt = [ // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
         {
           "role": "system", 
           "content": `You are an AI assistant who asks a questions to the student, based off of the given theory:
@@ -225,6 +223,7 @@ export async function POST(req: Request) {
       // console.log('in route.ts waiting')
       // console.log('latest question was: ' + messages.slice(-2)[0].content)
       // console.log('Answer was: ' + latestMessage)
+      console.log(`Question was: ${messages.slice(-2)[0].content}`)
 
       const gradeSystemPrompt = [ // Setting up the system prompt
         {
@@ -239,7 +238,7 @@ export async function POST(req: Request) {
           QUESTION END
           
           THEORY START
-          ${returnedSkill.theory}
+          ${returnedSkill.content}
           THEORY END
           .`
         },
