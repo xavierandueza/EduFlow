@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   try {
     const {messages, useRag, llm, similarityMetric, chatState, skill} = await req.json();
     // console.log('running the route.ts file');
-    // console.log(messages);
+    console.log(messages);
     console.log('Chat State is: ' + chatState);
     console.log('Skill is: ' + skill);
 
@@ -35,27 +35,21 @@ export async function POST(req: Request) {
 
     if (chatState === 'asking') {
       console.log('asking on the route.ts')
-      
-      // Create the response
-      const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
-        {
-          model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
-          stream: true, // streaming YAY
-          messages: [{"role": "system", "content": "You are an AI assistant who asks a simple math question to the user. Simply ask the question when the user types a question to you."},
-                    {"role" : "user", "content": "ask me the question"}], // really easy to put messages into practice using this. The ...messages is all previous messages, which can be problematic if there are too many messages (hits max token limit)
-        }
-      );
-      
-      const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
-      return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
-
-    } else if (chatState === 'waiting') {
-      console.log('in route.ts waiting')
 
       const systemPrompt = [ // Setting up the system prompt
         {
           "role": "system", 
-          "content": "You are an AI assistant who grades answers to questions that the user has provided. Give the answer a grade between 0 and 100, and provide feedback to the user on their answer. Word the feedback to be read directly by the user."
+          "content": `You are an AI assistant who asks a questions to the user, based off of the given theory:
+          THEORY START
+          ${returnedSkill.theory}
+          THEORY END` // ignore error warning above, no problem with it
+        },
+      ]
+
+      const fixedMessage = [
+        {
+          "role": "user",
+          "content": "Ask me a question"
         },
       ]
       
@@ -64,7 +58,48 @@ export async function POST(req: Request) {
         {
           model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
           stream: true, // streaming YAY
-          messages: [...systemPrompt, ...messages.slice(-2)],
+          messages: [...systemPrompt, ...fixedMessage], // ignore error warning here, it works just fine
+        }
+      );
+      
+      const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
+      return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
+
+    } else if (chatState === 'waiting') {
+      console.log('in route.ts waiting')
+      console.log('latest question was: ' + messages.slice(-2)[0].content)
+      console.log('Answer was: ' + latestMessage)
+
+      const systemPrompt = [ // Setting up the system prompt
+        {
+          "role": "system", 
+          "content": `You are an AI assistant who is given an answer to a question to give a score out of 100 and follow this with justification. 
+          The question and relevant theory are as follows:
+          QUESTION START
+          ${messages.slice(-2)[0].content}
+          QUESTION END
+          
+          THEORY START
+          ${returnedSkill.theory}
+          THEORY END
+          
+          Word your feedback to be read by the individual answering the question, ie 2nd person.`
+        },
+      ]
+
+      const userAnswer = [
+        {
+          "role": "user",
+          "content": latestMessage
+        },
+      ]
+      
+      // Create the response
+      const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
+        {
+          model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
+          stream: true, // streaming YAY
+          messages: [...systemPrompt, ...userAnswer], // combine the system prompt with the latest message
         }
       );
       
