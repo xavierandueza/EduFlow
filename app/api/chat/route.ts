@@ -11,7 +11,7 @@ const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.
 async function getSkillFromDB(skill : string) {
   try {
     const collection = await astraDb.collection('skills_vec');
-    const dbResponse = await collection.findOne({ skill_title: skill });
+    const dbResponse = await collection.findOne({ skill: skill });
     return dbResponse || ''; // Return the response or an empty string if no skill is found
   } catch (error) {
     console.error('Error fetching skill:', error);
@@ -154,11 +154,23 @@ export async function POST(req: Request) {
     // console.log('Chat State is: ' + chatState);
     // console.log('Skill is: ' + skill);
     // console.log(email);
+    console.log(skill);
     const returnedSkill = await getSkillFromDB(skill); // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
+    console.log(`Returned curriculum point is: ${returnedSkill.curriculum_point}
+    Returned skill is: ${returnedSkill.skill}
+    Returned key ideas are: ${returnedSkill.key_ideas} 
+    Returned key ideas summaries are: ${returnedSkill.key_ideas_summaries}
+    Returned easy questions are: ${returnedSkill.easy_questions}
+    Returned mdrt questions are: ${returnedSkill.mdrt_questions}
+    Returned hard questions are: ${returnedSkill.hard_questions}
+    Returned content is: ${returnedSkill.content}
+    `); // check the skill response IGNORE ERROR WARNING
+
+    return null;
     const returnedStudent = await getStudentFromDB(email); // response from the DB. Has email_address, interests, subjects
     const returnedStudentSkill = await getStudentSkillFromDB(email, skill); // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
     // console.log(`Returned student with email: ${returnedStudent.email_address} and interests: ${returnedStudent.interests}`);
-    // console.log('Returned skill is: ' + returnedSkill.skill_title); // check the skill response IGNORE ERROR WARNING
+    
     console.log(`Returned student: ${returnedStudentSkill.email_address}
     subject code: ${returnedStudentSkill.subject_code}
     skill title: ${returnedStudentSkill.skill_title}

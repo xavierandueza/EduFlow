@@ -74,8 +74,11 @@ export default function Home() {
       setConfiguration(useRag, llm, similarityMetric, 'asking');
     }
     */
-
   }
+
+  useEffect(() => {
+    console.log(skill)
+  }, [skill]);
 
   return (
     <>
