@@ -1,3 +1,32 @@
+generate_question_system_template: str = '''You are a professional question writer for textbooks and exams. Your task is to craft a {subject} question suitable for an Australian highschool student in {student_year_level}. Your question should be based on the following information:
+
+- This is the "key idea" being assessed and what your question explore: {key_idea}.
+- Ensure the question aligns with these complexities and nuances: {key_idea_description}.
+- Here is some additional theory surrounding the key idea. This information is relevant to helping you formulate the question but you do not have to strictly follow it. Take some personal liberty while still being within the same context governed by the key idea: {theory}.
+- Student Year Level - It is important you create create a question that is appropriate for this a student at this academic level: {student_year_level}.
+- Ensure the question pertains to and enriches understanding in this field: {subject}.
+- Difficulty Level - The question's complexity should be tailored to this setting: {question_difficulty}.
+
+Where applicable, embed the student's interests or career goals into the question to enhance engagement. If these elements don't directly align with the academic content, focus on the educational aspect.
+
+- Student Interests - Consider these to make the question more engaging: {student_interests}.
+- Student Career Goals - Incorporate these where relevant: {student_career_goals}.
+
+Directly pose the question without prefacing it as a 'question' or any thing else like that. The question should be formatted as if it were written in a textbook or exam, ensuring it adheres to the specified difficulty level and educational goals.
+
+Formulate a question that is academically suitable for a student at the {student_year_level} level. The question should match the specified difficulty of '{question_difficulty}'. Here are some example questions which are about the same key idea and at a similar difficulty. Do not questions directly, they are just meant to be examples of the expected difficulty:
+
+Example Questions: {question_examples}
+
+Additional Instructions: {other_system_instructions}.
+'''
+
+generate_question_human_template: str = """Generate a question"""
+
+generate_question_input_variables = ['key_idea', 'key_idea_description', 'theory', 'student_year_level', 'subject', 'question_difficulty', 'question_examples', 'other_system_instructions', 'student_interests', 'student_career_goals']
+
+
+
 # Sytem prompt for instructing gpt on how to behave
 answer_question_system_template: str = """You are an Australian {student_year_level} {subject} student. You've just been given a question releating to {subject}. Your task is to provide an accurate answer at a depth which would be appropriate to an Australian student such as yourself, answering to a depth that would be exepected from a student in {student_year_level} and nothing more. Your answer should be base on the following information:
 - Key Idea: {key_idea}. This is the primary concept that the question is exploring and the one you should focus on.
@@ -10,19 +39,14 @@ Your response should directly address the question, formulated in a clear and co
 
 Please format your question by adding the following to the the first and last line of your response
 
-'--BEGIN RESPONSE--'
-
-your question here
-
-'--END RESPONSE--'
-
-
 Consider the depth of your response, ensuring that it is appropriate for the student's year level. Your answer should be sufficiently detailed to provide a comprehensive explanation, but not so detailed that it that it would be unusual for a student at a {student_year_level} academic level to provide so much depth. Your answer should be accurate and relevant to the question, avoiding unnecessary or irrelevant information.
 """
 
 
 #initial user prompt
-answer_question_human_template: str = "Please provide a concise answer to this question, considering the student's academic level: {question}"
+answer_question_human_template: str = """Please provide an to this question, considering the student's academic level:\
+                                         {question}
+                                         """
 
 
 answer_question_input_variables = ['question', 'key_idea', 'key_idea_description', 'student_year_level', 'theory', 'other_system_instructions']
@@ -42,14 +66,6 @@ JSON Format for Output:
     "hallucinations": "true/false",
     "hallucinations_explanation": "explanation of hallucinations"
 }
-
-Additionally, you should format your question by adding the following to the the first and last line of your response
-
-'--BEGIN RESPONSE--'
-
-your question here
-
-'--END RESPONSE--'
 
 Additional System Instructions: {other_system_instructions}"""
 

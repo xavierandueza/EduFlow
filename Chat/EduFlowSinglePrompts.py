@@ -71,7 +71,7 @@ str: The question for the student to answer.
 
 #System prompt for instructing gpt on how to respond
 
-generate_question_human_template: str= f"""You are a professional question writer for textbooks and exams. Your task is to craft a {{subject}} question suitable for an Australian highschool student in {{student_year_level}}. Your question should be based on the following information:
+generate_question_human_template: str= """You are a professional question writer for textbooks and exams. Your task is to craft a {{subject}} question suitable for an Australian highschool student in {{student_year_level}}. Your question should be based on the following information:
 
 - This is the "key idea" being assessed and what your question explore: {{key_idea}}.
 - Ensure the question aligns with these complexities and nuances: {{key_idea_description}}.
