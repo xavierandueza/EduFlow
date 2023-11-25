@@ -94,9 +94,9 @@ export default function Home() {
       // console.log('Dependencies are valid');
     } else {
       // console.log('Dependencies are not valid');
-      var message = 'Warning, before you continue, the following dependencies are not valid:\n';
+      var message = `Warning, before you continue, you aren't yet proficient enough in the following dependencies::\n`;
       for (var i = 0; i < dependencyCheck.invalidDependencies.length; i++) {
-        message += `${dependencyCheck.invalidDependencies[i]} SCORE: ${dependencyCheck.invalidDependenciesScores[i]}\n`;
+        message += `${dependencyCheck.invalidDependencies[i]}\nWe recommend you practice these skills more before continuing`;
       }
       alert(message);
     }

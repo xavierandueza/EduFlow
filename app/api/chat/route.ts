@@ -20,6 +20,7 @@ function determineSampleQuestions(relevantScore : number, easyQuestions : string
 }
 
 interface Skill {
+  subject: string;
   curriculum_point: string;
   skill: string;
   skill_description: string;
@@ -87,16 +88,25 @@ export async function POST(req: Request) {
       const systemPrompt = [ // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
         {
           "role": "system", 
-          "content": `You are an AI assistant who asks a questions to the student, based off of the given theory:
-          THEORY START
-          ${returnedSkill.content}
-          THEORY END
-          Where possible, also relate the question to the student's interests, as listed here: ${returnedStudent.interests}
-          Here is a list of sample Questions that you should base your question difficulty off:
-          ${sampleQuestions}
-          Here is a list of questions that have already been asked. Avoid asking the same question again:
-          ${questions}
-          ` // ignore error warning above, no problem with it
+          "content": `You are a professional question writer for textbooks and exams. Your task is to craft a ${returnedSkill.skill} question suitable for an Australian highschool student in year 10-11. Your question should be based on the following information:
+
+          - This is the "key idea" being assessed and what your question explore: ${returnedSkill.key_ideas}.
+          - Ensure the question aligns with these complexities and nuances: ${returnedSkill.key_idea_summaries}.
+          - Here is some additional theory surrounding the key idea. This information is relevant to helping you formulate the question but you do not have to strictly follow it. Take some personal liberty while still being within the same context governed by the key idea: ${returnedSkill.content}.
+          - Student Year Level - It is important you create create a question that is appropriate for this a student at this academic level: Years 10-11.
+          - Ensure the question pertains to and enriches understanding in this field: ${returnedSkill.subject}.
+          - Difficulty Level - The question's complexity should be similar to those of the following sample questions: ${sampleQuestions}.
+          
+          Where applicable, embed the student's interests into the question to enhance engagement, however don't force it if it doesn't fit well. If these elements don't directly align with the academic content, focus on the educational aspect.
+          
+          - Student Interests - Consider these to make the question more engaging: ${returnedStudent.interests}.
+          
+          Directly pose the question without prefacing it as a 'question' or any thing else like that. The question should be formatted as if it were written in a textbook or exam, ensuring it adheres to the specified difficulty level and educational goals.
+          
+          Formulate a question that is academically suitable for a student at the Years 10-11 level. Here are some example questions which are about the same key idea and at a similar difficulty. Do not use sample questions directly, they are just meant to be examples of the expected difficulty. Do not return your question in quotes.
+
+          Do not make the question entirely focussed on the users interest - the question should be about the academic content.
+          `
         },
       ]
       // console.log('system prompt is: ' + systemPrompt[0].content)
