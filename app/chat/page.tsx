@@ -1,13 +1,15 @@
 "use client";
 import {useEffect, useRef, useState, useCallback} from 'react';
-import Bubble from '../components/Bubble';
+import Bubble from '../../components/Bubble'
 import { useChat } from 'ai/react';
-import Footer from '../components/Footer';
-import Configure from '../components/Configure';
+import Footer from '../../components/Footer';
+import Configure from '../../components/Configure';
 // import ThemeButton from '../components/ThemeButton';
-import useConfiguration from './hooks/useConfiguration';
+import useConfiguration from '../hooks/useConfiguration';
 import React, { FormEvent } from 'react';
-import ProgressBar from '../components/ProgressBar';
+import ProgressBar from '../../components/ProgressBar';
+import { useSearchParams } from 'next/navigation';
+
 
 // Debounce function
 function debounce(func, wait) {
@@ -25,7 +27,7 @@ function debounce(func, wait) {
 const getRelevantChangeIndicator = (messages) => {
   // Implement logic to determine if a relevant change has occurred
   // For example, return the length of the messages array or a timestamp of the last relevant message
-  console.log('Messages length: ' + messages.length)
+  // console.log('Messages length: ' + messages.length)
   return messages.length;
 };
 
@@ -35,58 +37,58 @@ export default function Home() {
   const relevantChangeIndicator = getRelevantChangeIndicator(messages);
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
-  const [displaySkill, setDisplaySkill] = useState(skill);
+
+  // retrieve the studentSkill from the server
+  const [studentSkill, setStudentSkill] = useState({
+    id: '',
+    email_address: '',
+    subject: '',
+    skill: '',
+    mastery_score: 0,
+    retention_score: 0,
+    need_to_revise: false,
+    decay_value: 0.5,
+  });
+
+  // getting the search params from the url
+  const searchParams = useSearchParams();
+  const _id = searchParams.get('_id');
+  // console.log('The _id is: ' + _id)
+  // console.log('The type of id is: ' + typeof(_id));
+
+  const fetchStudentSkill = async () => {
+    // console.log('entered fetching student skill function')
+    try {
+      const response = await fetch('/api/getStudentSkill', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ _id })
+      });
+      const data = await response.json();
+      // console.log('Successfully retrieved the student skill')
+      // console.log(studentSkill)
+      setStudentSkill(data);
+    } catch (error) {
+      console.error('Error fetching student skill:', error);
+    }
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const [masteryScore, setMasteryScore] = useState(null);
-
-  // Async function to fetch the mastery score
-  const fetchMasteryScore = async () => {
-    try {
-      console.log('About to try and fetch mastery score')
-      const response = await fetch('/api/getMasteryScore', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, skill })
-      }); // Assuming retrieveMetricScore is your function to fetch the score
-      const score = await response.json(); // Adjust this line based on how your data is returned
-      console.log('Successfully retrieved the mastery score');
-      console.log(`Mastery score is: ${score.masteryScore}`);
-      setMasteryScore(score.masteryScore);
-    } catch (error) {
-      console.error('Error fetching mastery score:', error);
-    }
-  };
-
   // Use useEffect to call the fetch function when the component mounts
   useEffect(() => {
-    setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
-    fetchMasteryScore();
+    fetchStudentSkill();
   }, []); // Empty dependency array to run only once on mount
 
   useEffect(() => {
-    if (chatState === 'asking') { // only fetch if we are waiting for a response and it came in
-      console.log('Waiting and messages increased by 1 so lets increase score')
-      fetchMasteryScore();
-    }
+    fetchStudentSkill();
   }, [relevantChangeIndicator]); // when messages increases in length (a new message) we call 
 
-  useEffect(() => {
-    console.log('chatState is: ' + chatState);
-  }, [chatState]);
-
   const handleDependencies = (dependencyCheck) => {
-    /*
-    console.log(`Dependencies retrieved: 
-    ${dependencyCheck.skill}
-    ${dependencyCheck.dependencies}
-    ${dependencyCheck.email}`);
-    */
   
     if (dependencyCheck.areDependenciesValid) {
       // console.log('Dependencies are valid');
@@ -101,56 +103,46 @@ export default function Home() {
   };
 
   const checkDependencies = useCallback(async () => {
+    // Ensure both email and skill are defined and not empty before making the call
+    if (!studentSkill.email_address || !studentSkill.skill) {
+      console.log('Skipping dependency check - email or skill is undefined or empty');
+      return;
+    }
+  
     try {
-      // console.log('About to try and fetch dependencies');
+      console.log('Fetching dependencies');
       const response = await fetch('/api/checkDependencies', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email, skill })
+        body: JSON.stringify({ email: studentSkill.email_address, skill: studentSkill.skill })
       });
       const data = await response.json();
-      // console.log('Successfully retrieved the data');
       handleDependencies(data);
     } catch (error) {
       console.error('Error fetching dependencies:', error);
     }
-  }, [skill]); // Dependencies for useCallback
-
+  }, [studentSkill.email_address, studentSkill.skill]); // Update dependencies
+  
   const debouncedCheckDependencies = useCallback(debounce(checkDependencies, 500), [checkDependencies]);
-
-  useEffect(() => {
-    // Call the debounced version inside useEffect
-    debouncedCheckDependencies();
-  }, [debouncedCheckDependencies]); // Dependency is the debounced function itself
   
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    console.log('Skill changed to: ' + skill + ' fetching mastery score');
-    fetchMasteryScore();
-    setDisplaySkill(skill);
-  }, [skill]);
+    debouncedCheckDependencies();
+  }, [debouncedCheckDependencies]);  // Dependency is the debounced function itself
 
   const handleSend = (e) => {
     // console.log(chatState);
-    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, chatState, skill, email}}});
+    handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, chatState, email: studentSkill.email, skill: studentSkill.skill}}});
     // console.log('Chatbot is waiting for a response now');
 
     if (chatState === 'asking') {
-      console.log('Changing to waiting');
+      // console.log('Changing to waiting');
       setConfiguration(useRag, llm, similarityMetric, 'waiting', skill, email);
     } else if (chatState === 'waiting') {
-      console.log('Changing to asking');
+      // console.log('Changing to asking');
       setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
-    } /*else if (chatState === 'grading') {
-      console.log('Changing to asking');
-      setConfiguration(useRag, llm, similarityMetric, 'asking');
-    }
-    */
+    } 
   }
 
   return (
@@ -160,7 +152,7 @@ export default function Home() {
         <div className='chatbot-header pb-6'>
           <div className='flex justify-between'>
             <div className='flex items-center gap-2'>
-              <h1 className='chatbot-text-primary text-xl md:text-2xl font-medium' style={{ marginBottom: '15px' }}>{displaySkill}</h1>
+              <h1 className='chatbot-text-primary text-xl md:text-2xl font-medium' style={{ marginBottom: '15px' }}>{studentSkill.skill}</h1>
             </div>
             <div className='flex gap-1'>
               <button onClick={() => setConfigureOpen(true)}>
@@ -172,7 +164,7 @@ export default function Home() {
           </div>
           <div className = 'flex justify-between'>
             <div className='flex items-center gap-2'>
-              <ProgressBar score={masteryScore} width="200px" backgroundColor="#388a91" />
+              <ProgressBar score={studentSkill.mastery_score} width="200px" backgroundColor="#388a91" />
             </div>
           </div>
           <p className="chatbot-text-secondary-inverse text-sm md:text-base mt-2 md:mt-4">When you are ready, say that you're ready, and you will be asked a question. Provide an answer, and you will receive some feedback on your answer. After you've read your feedback, say you're ready for the next question to go again and increase your mastery!</p>

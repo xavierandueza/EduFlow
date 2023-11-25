@@ -38,15 +38,15 @@ export default async function InvoicesTable({
           <div className="md:hidden">
             {studentSkills?.map((studentSkill) => (
               <div
-                key={studentSkill.id}
+                key={studentSkill._id}
                 className="mb-2 w-full rounded-md bg-white p-4"
               >
                 <div className="flex items-center justify-between border-b pb-4">
                   <div>
                     <div className="mb-2 flex items-center">
-                      <p>{studentSkill.subject}</p>
+                      <p>{studentSkill.skill}</p>
                     </div>
-                    <p className="text-sm text-gray-500">{studentSkill.skill}</p>
+                    <p className="text-sm text-gray-500">{studentSkill.subject}</p>
                   </div>
                   <NeedToReviseStatus needToRevise={studentSkill.need_to_revise} />
                 </div>
@@ -65,10 +65,10 @@ export default async function InvoicesTable({
             <thead className="rounded-lg text-left text-sm font-normal">
               <tr>
                 <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                  Subject
+                  Skill
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Skill
+                  Subject
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
                   Mastery Score
@@ -84,16 +84,16 @@ export default async function InvoicesTable({
             <tbody className="bg-white">
               {studentSkills?.map((studentSkill) => (
                 <tr
-                  key={studentSkill.id}
+                  key={studentSkill._id}
                   className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
                 >
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex items-center gap-3">
-                      <p>{studentSkill.subject}</p>
+                      <a href={`/chat?_id=${studentSkill._id}`}>{studentSkill.skill}</a>
                     </div>
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {studentSkill.skill}
+                    {studentSkill.subject}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {studentSkill.mastery_score}
