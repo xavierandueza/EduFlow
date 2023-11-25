@@ -19,15 +19,46 @@ function determineSampleQuestions(relevantScore : number, easyQuestions : string
   }
 }
 
+interface Skill {
+  curriculum_point: string;
+  skill: string;
+  skill_description: string;
+  key_ideas: string[];
+  key_idea_summaries: string[];
+  easy_questions: string[];
+  mdrt_questions: string[];
+  hard_questions: string[];
+  content: string;
+  dependencies: string[];
+  // ... any other properties
+}
+
+interface Student {
+  email_address: string;
+  interests: string[];
+  subjects: string[];
+}
+
+interface StudentSkill {
+  email_address: string;
+  subject: string;
+  skill: string;
+  mastery_score: number;
+  retention_score: number;
+  need_to_revise: boolean;
+  decay_value: number;
+  // ... any other properties
+}
+
 export async function POST(req: Request) {
   try {
     const {messages, llm, chatState, skill, email} = await req.json();
 
-    const returnedSkill = await getSkillFromDB(skill, astraDb); // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
+    const returnedSkill = await getSkillFromDB(skill, astraDb) as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
 
-    const returnedStudent = await getStudentFromDB(email, astraDb); // response from the DB. Has email_address, interests, subjects
+    const returnedStudent = await getStudentFromDB(email, astraDb) as Student; // response from the DB. Has email_address, interests, subjects
     
-    const returnedStudentSkill = await getStudentSkillFromDB(email, skill, astraDb); // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
+    const returnedStudentSkill = await getStudentSkillFromDB(email, skill, astraDb) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
     
     const latestMessage = messages[messages?.length - 1]?.content;
 
