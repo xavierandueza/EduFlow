@@ -162,7 +162,7 @@ export default function Home() {
               <ProgressBar score={studentSkill.mastery_score} width="200px" backgroundColor="#388a91" />
             </div>
           </div>
-          <p className="chatbot-text-secondary-inverse text-sm md:text-base mt-2 md:mt-4">When you are ready, say that you're ready, and you will be asked a question. Provide an answer, and you will receive some feedback on your answer. After you've read your feedback, say you're ready for the next question to go again and increase your mastery!</p>
+          <p className="chatbot-text-secondary-inverse text-sm md:text-base mt-2 md:mt-4">{`When you are ready, say that you\'re ready, and you will be asked a question. Provide an answer, and you will receive some feedback on your answer. After you\'ve read your feedback, say you\'re ready for the next question to go again and increase your mastery!`</p>
         </div>
         <div className='flex-1 relative overflow-y-auto my-4 md:my-6'>
           <div className='absolute w-full overflow-x-hidden'>
