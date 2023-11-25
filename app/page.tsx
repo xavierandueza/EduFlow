@@ -23,13 +23,57 @@ export default function Home() {
   useEffect(() => {
     // Force update chatState on component mount
     setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
+
   }, []); // Empty dependency array to run only once on mount
+
+  useEffect(() => {
+    console.log(`skill is: ${skill}`)
+    console.log(`email is: ${email}`)
+    const checkDependencies = async () => {
+      try {
+        console.log('About to try and fetch dependencies')
+        const response = await fetch('/api/checkDependencies',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, skill })
+          });  // Fetch the dependencies from the server
+        const data = await response.json();
+        console.log('Successfully retrieved the data');
+        handleDependencies(data);
+      } catch (error) {
+        console.error('Error fetching dependencies:', error);
+        return null;
+      }
+    };
+
+    checkDependencies();
+  }, [skill, email]);
+
+  const handleDependencies = (dependencyCheck) => {
+    console.log(`Dependencies retrieved: 
+    ${dependencyCheck.skill}
+    ${dependencyCheck.dependencies}
+    ${dependencyCheck.email}`);
   
-  /*
+    if (dependencyCheck.areDependenciesValid) {
+      console.log('Dependencies are valid');
+    } else {
+      console.log('Dependencies are not valid');
+      var message = 'Warning, before you continue, the following dependencies are not valid:\n';
+      for (var i = 0; i < dependencyCheck.invalidDependencies.length; i++) {
+        message += `${dependencyCheck.invalidDependencies[i]} SCORE: ${dependencyCheck.invalidDependenciesScores[i]}\n`;
+      }
+      alert(message);
+    }
+  };
+  
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  
+  /*
   useEffect(() => {
     if (chatState === 'asking') {
       // Place the code you want to execute here
