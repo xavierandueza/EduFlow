@@ -14,7 +14,8 @@ async function main() {
         {
             "subject" : "Biology",
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
-            "skill" : "On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles.",
+            "skill" : "Extremophiles on Earth",
+            "skill_description" : "On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles.",
             "key_ideas" : ["On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles."],
             "key_idea_summaries" : ["Extremophiles are organisms that thrive in environments that are considered extremely harsh or uninhabitable for most life forms. They have evolved unique adaptations for survival in conditions like high temperatures, extreme cold, high salt concentrations, acidic or alkaline conditions, and high pressure. Their existence expands our understanding of life's potential and challenges the perceived limits of habitable environments."],
             "easy_questions" : ["1. What is an extremophile? 2. Give an example of an environment where extremophiles can be found. 3. Name one type of extremophile and the condition it thrives in."],
@@ -48,7 +49,8 @@ async function main() {
         {
             "subject" : "Biology",
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
-            "skill" : "For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water.",
+            "skill" : "Life's Essential Conditions",
+            "skill_description" : "For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water.",
             "key_ideas" : ["For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water."],
             "key_idea_summaries" : ["For life to thrive, an energy source, liquid water, necessary chemical elements, and stable environmental conditions are crucial. Energy fuels metabolic processes, water acts as a solvent and transport medium, elements form biomolecules, and stable conditions maintain life processes."],
             "easy_questions" : ["1. What is the primary source of energy for most living organisms on Earth? <br> 2. Why is liquid water essential for life? <br> 3. Name one element that is a fundamental building block of life."],
@@ -86,7 +88,8 @@ async function main() {
         {
             "subject" : "Biology",
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
-            "skill" : "Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet, raising the posibility that life might exist under the ice-covered surface moons in our solar system.",
+            "skill" : "Antarctic Subglacial Life",
+            "skill_description" : "Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet, raising the posibility that life might exist under the ice-covered surface moons in our solar system.",
             "key_ideas" : ["Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet.", "The discovery of a diverse microbial ecosystem in a subglacial lake in Antarctica raises the possibility that life might exist under the surface ofice-covered moons in our solar system."],
             "key_idea_summaries" : ["Description: Discovery of life in extreme environments. Significance: Challenges understanding of life's requirements and adaptability. Implications: Opens new avenues in astrobiology and understanding of extraterrestrial life possibilities.", "Description: Microbes adapted to extreme conditions. Implications for Extraterrestrial Life: Suggests life could exist on similar moons. Research Significance: Propels inquiry into life's sustainability in uninhabitable environments."],
             "easy_questions" : ["1. What type of cells were found in Antarctica's subglacial lake? 2. How deep were these cells found? 3. Can these cells perform metabolic activities?", "1. Name two ice-covered moons where life might exist. 2. What type of ecosystem was discovered in the lake? 3. Are the microbes photosynthetic?"],
@@ -125,7 +128,8 @@ async function main() {
         {
             "subject" : "Biology",
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
-            "skill" : "Critical direct evidence of life (as we know it) is the presence of metabolically active cells.",
+            "skill" : "Evidence of Life",
+            "skill_description" : "Critical direct evidence of life (as we know it) is the presence of metabolically active cells.",
             "key_ideas" : ["Critical direct evidence of life (as we know it) is the presence of metabolically active cells."],
             "key_idea_summaries" : ["Metabolically active cells are indicators of life, performing functions such as nutrient uptake, DNA synthesis, and protein synthesis. Presence of such cells, as seen in lake water samples, confirms life and active cell division​"],
             "easy_questions" : ["1. What is a primary indicator of life in a biological context? 2. Define 'metabolically active cells.' 3. Give one example of a metabolic activity performed by living cells."],
@@ -164,7 +168,8 @@ async function main() {
         {
             "subject" : "Biology",
             "curriculum_point" : "Cells as the basic structural feature of life on Earth, including the distinction between prokaryotic and eukaryotic cells",
-            "skill" : "Cells are the basic structural and functional units of life.",
+            "skill" : "Cellular Units of Life",
+            "skill_description" : "Cells are the basic structural and functional units of life.",
             "key_ideas" : ["Critical direct evidence of life (as we know it) is the presence of metabolically active cells."],
             "key_idea_summaries" : ["Cells form the structural and functional basis of all living organisms, featuring common components such as the cell membrane, nucleus, and cytoplasm, and are essential for life processes."],
             "easy_questions" : ["1. Function of cell membrane? 2. Name two cell organelles. 3. Describe an animal cell's shape."],
@@ -250,10 +255,11 @@ async function main() {
     console.log(studentSkillsDocuments);
 
     const skills_vec_collection = await astraDb.collection('skills_vec');
-    for await (const { curriculum_point, skill, key_ideas, key_idea_summaries, easy_questions, mdrt_questions, hard_questions, content, dependencies } of skillsDocuments) {
+    for await (const { curriculum_point, skill, skill_description, key_ideas, key_idea_summaries, easy_questions, mdrt_questions, hard_questions, content, dependencies } of skillsDocuments) {
         const res = await skills_vec_collection.insertOne({
             curriculum_point,
             skill,
+            skill_description,
             key_ideas,
             key_idea_summaries,
             easy_questions,

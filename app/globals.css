@@ -7,8 +7,8 @@
   --text-primary-inverse: #090909;
   --text-secondary: #A6AAAE;
   --text-secondary-inverse: #494A4D;
-  --background-bubble-primary: #611C9B;
-  --background-bubble-secondary: #F7F7F7;
+  --background-bubble-primary: #388a91;
+  --background-bubble-secondary: #388a91;
   --border-primary: #CED0D2;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
@@ -109,7 +109,7 @@ body {
   text-align: left;
   display: inline-block;
   position: relative;
-  color: var(--text-secondary-inverse);
+  color: var(--text-primary);
   background-color: var(--background-bubble-secondary);
   border-radius: 10px;
   border-bottom-left-radius: 0px;

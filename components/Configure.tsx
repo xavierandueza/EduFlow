@@ -46,15 +46,11 @@ const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, 
 
   // eventually want to pull this from the database, but for now just hard-code
   const skillOptions = [
-    { label: 'SQL', value: 'SQL' },
-    { label: 'On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles.', value: 'On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles.' },
-    { label: 'For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water.', value: 'For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water.' },
-    { label: 'Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet, raising the posibility that life might exist under the ice-covered surface moons in our solar system.',
-      value: 'Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet, raising the posibility that life might exist under the ice-covered surface moons in our solar system.' },
-    { label: 'Critical direct evidence of life (as we know it) is the presence of metabolically active cells.',
-      value: 'Critical direct evidence of life (as we know it) is the presence of metabolically active cells.' },
-      { label: 'Cells are the basic structural and functional units of life.',
-      value: 'Cells are the basic structural and functional units of life.' }
+    { label: 'Extremophiles on Earth', value: 'Extremophiles on Earth' },
+    { label: 'Life\'s Essential Conditions', value: 'Life\'s Essential Conditions' },
+    { label: 'Antarctic Subglacial Life', value: 'Antarctic Subglacial Life' },
+    { label: 'Evidence of Life', value: 'Evidence of Life' },
+    { label: 'Cellular Units of Life', value: 'Cellular Units of Life' }
   ];
 
   const emailOptions = [
