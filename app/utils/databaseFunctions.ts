@@ -1,5 +1,8 @@
 import { AstraDB } from "@datastax/astra-db-ts";
 
+// connect to the astraDb instance
+const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
+
 async function getSkillFromDB(skill : string, astraDb : AstraDB) {
     try {
       const collection = await astraDb.collection('skills_vec');
@@ -31,6 +34,17 @@ async function getStudentSkillFromDB(email : string, skill : string, astraDb : A
         console.error('Error fetching student skill:', error);
         return ''; // Return an empty string in case of an error
     }
+}
+
+async function getStudentSkillFromDBAll(email : string, astraDb : AstraDB) {
+  try {
+      const collection = await astraDb.collection('student_skills_vec');
+      const dbResponse = await collection.findOne({ email_address: email, skill: skill });
+      return dbResponse || ''; // Return the response or an empty string if no skill is found
+  } catch (error) {
+      console.error('Error fetching student skill:', error);
+      return ''; // Return an empty string in case of an error
+  }
 }
 
 async function updateNeedToReviseFlag(email: string, skill: string, needToRevise: boolean, decayValue : number, astraDb : AstraDB) {
