@@ -8,8 +8,8 @@ async function getStudentSkillFromDB(_id : string) {
     try {
         const collection = await astraDb.collection('student_skills_vec');
         const dbResponse = await collection.findOne({ _id: _id });
-        console.log("The dbResponse is: ")
-        console.log(dbResponse);
+        // console.log("The dbResponse is: ")
+        // console.log(dbResponse);
         return dbResponse || ''; // Return the response or an empty string if no skill is found
     } catch (error) {
         console.error('Error fetching student skill:', error);

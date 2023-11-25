@@ -21,22 +21,13 @@ function determineSampleQuestions(relevantScore : number, easyQuestions : string
 
 export async function POST(req: Request) {
   try {
-    const {messages, useRag, llm, similarityMetric, chatState, skill, email} = await req.json();
-    // console.log('running the route.ts file');
-    // console.log(messages);
-    // console.log('Chat State is: ' + chatState);
-    // console.log('Skill is: ' + skill);
-    // console.log(email);
-    // console.log ('useRag is: ' + useRag);
-    // console.log(email);
+    const {messages, llm, chatState, skill, email} = await req.json();
+
     const returnedSkill = await getSkillFromDB(skill, astraDb); // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
-    // console.log(returnedSkill);
 
     const returnedStudent = await getStudentFromDB(email, astraDb); // response from the DB. Has email_address, interests, subjects
-    // console.log(returnedStudent);
     
     const returnedStudentSkill = await getStudentSkillFromDB(email, skill, astraDb); // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
-    // console.log(returnedStudentSkill);
     
     const latestMessage = messages[messages?.length - 1]?.content;
 
@@ -50,6 +41,17 @@ export async function POST(req: Request) {
       }
       
       // console.log(sampleQuestions);
+      const questions: string[] = [];
+
+      if (messages.length > 2)
+      {
+        // Questions have been asked before
+        for (let i = 1; i < messages.length; i += 4) {
+          questions.push(messages[i].content);
+        }
+      }
+
+      console.log(`Questions are: ${questions}`)
 
       const systemPrompt = [ // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
         {
@@ -60,7 +62,10 @@ export async function POST(req: Request) {
           THEORY END
           Where possible, also relate the question to the student's interests, as listed here: ${returnedStudent.interests}
           Here is a list of sample Questions that you should base your question difficulty off:
-          ${sampleQuestions}` // ignore error warning above, no problem with it
+          ${sampleQuestions}
+          Here is a list of questions that have already been asked. Avoid asking the same question again:
+          ${questions}
+          ` // ignore error warning above, no problem with it
         },
       ]
       // console.log('system prompt is: ' + systemPrompt[0].content)

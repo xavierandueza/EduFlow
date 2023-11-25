@@ -68,9 +68,17 @@ body {
 }
 
 .chatbot-input {
-  color: var(--text-primary-inverse);
-  border: 1px solid var(--border-primary);
+  min-height: 40px; /* Initial height */
+  width: 100%; /* Full width */
+  padding: 10px; /* Padding inside the textarea */
+  border: 1px solid #ccc; /* Border properties */
+  border-radius: 4px; /* Rounded corners */
+  resize: none; /* Disable manual resize */
+  overflow-y: hidden; /* Hide the scrollbar initially */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  /* Add other styling as per your design */
 }
+
 
 .chatbot-input::placeholder {
   color: var(--text-secondary);
@@ -210,4 +218,15 @@ body {
 
 .vercel-link hr {
   border-color: var(--border-primary);
+}
+
+.bg-388a91 {
+  background-color: #388a91;
+}
+.border-388a91 {
+  border-color: #388a91;
+}
+
+.bg-17363f {
+  background-color: #17363f;
 }

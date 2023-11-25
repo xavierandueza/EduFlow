@@ -53,9 +53,7 @@ export default async function InvoicesTable({
                 </div>
                 <div className="flex w-full items-center justify-between pt-4">
                   <div>
-                    <p className="text-xl font-medium">
-                      <ProgressBar score={studentSkill.mastery_score} width="200px" backgroundColor="#388a91" />
-                    </p>
+                    <ProgressBar score={studentSkill.mastery_score} width="200px" backgroundColor="#388a91" />
                     <ProgressBar score={studentSkill.retention_score} width="200px" backgroundColor="#388a91" />
                   </div>
                 </div>

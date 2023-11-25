@@ -1,11 +1,8 @@
 import Pagination from '../../ui/skills/pagination';
 import Search from '../../ui/search';
 import Table from '../../ui/skills/table';
-import { CreateInvoice } from '../../ui/skills/buttons'; 
-import { lusitana } from '../../ui/fonts'; 
 import { Suspense } from 'react';
 import { InvoicesTableSkeleton } from '../../ui/skeletons';
-import { fetchInvoicesPages } from '../../lib/data';
  
 export default async function Page({
   searchParams,

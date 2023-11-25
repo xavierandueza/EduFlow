@@ -15,7 +15,7 @@ async function checkDependencies(email: string, skill : string) {
     // console.log(`skill is: ${skill}`);
     // console.log(`email is: ${email}`);
     const returnedSkill = await getSkillFromDB(skill, astraDb);
-    console.log(returnedSkill);
+    // console.log(returnedSkill);
     // console.log(returnedSkill);
     // if the length of the student dependencies is 0, then return the JSON object
     if (returnedSkill.dependencies.length === 0) {
