@@ -12,8 +12,8 @@ type Dependencies = {
 
 async function checkDependencies(email: string, skill : string) {
     // get the student skill
-    console.log(`skill is: ${skill}`);
-    console.log(`email is: ${email}`);
+    // console.log(`skill is: ${skill}`);
+    // console.log(`email is: ${email}`);
     const returnedSkill = await getSkillFromDB(skill, astraDb);
     console.log(returnedSkill);
     // console.log(returnedSkill);

@@ -85,7 +85,9 @@ export default function Home() {
   }, []); // Empty dependency array to run only once on mount
 
   useEffect(() => {
+    console.log('New message received, fetching student skill again')
     fetchStudentSkill();
+    console.log(studentSkill)
   }, [relevantChangeIndicator]); // when messages increases in length (a new message) we call 
 
   const handleDependencies = (dependencyCheck) => {
