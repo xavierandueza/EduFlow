@@ -30,6 +30,9 @@ from langchain.prompts.prompt import PromptTemplate
 # student_score (int): The score given to the student's answer. Defaults to None.
 
 
+
+
+
 def prompt_parser(system_prompt,input_variables):
     
     """
@@ -45,114 +48,97 @@ def prompt_parser(system_prompt,input_variables):
     return prompt_template,system_prompt
 
 
-#question which generates content for a student to learn about a key idea
-def generate_question(key_idea="",
-                      key_idea_description="",
-                      theory="",
-                      student_year_level="",
-                      subject="",
-                      question_difficulty="",
-                      question_examples = [],
-                      other_system_instructions = "",
-                      student_interests = [],
-                      student_career_goals = []):
+   
     
-    
-    
-    """
-    Generates a question for a student based on various inputs.
+generate_question_system_template: str= """
+Generates a question for a student based on various inputs.
 
-    Parameters:
-    key_idea (str): The concept(s) on which the generated question should be about.
-    key_idea_description (str): The further description of the key idea.
-    theory (str): Additional theory related to the key idea.
-    student_year_level (int): The year level of the student.
-    subject (str): The subject of the question is based on.
-    question_difficulty (str): The difficulty level of the question.
-    question_examples (str): Examples questions that are about the same key idea and at a similar difficulty.
-    other_system_instructions (str, optional): Other instructions for the system. Defaults to "".
-    student_interests (list, optional): A list of the student's interests. Defaults to [].
-    student_career_goals (list, optional): A list of the student's career goals. Defaults to [].
+Parameters:
+key_idea (str): The concept(s) on which the generated question should be about.
+key_idea_description (str): The further description of the key idea.
+theory (str): Additional theory related to the key idea.
+student_year_level (int): The year level of the student.
+subject (str): The subject of the question is based on.
+question_difficulty (str): The difficulty level of the question.
+question_examples (str): Examples questions that are about the same key idea and at a similar difficulty.
+other_system_instructions (str, optional): Other instructions for the system. Defaults to "".
+student_interests (list, optional): A list of the student's interests. Defaults to [].
+student_career_goals (list, optional): A list of the student's career goals. Defaults to [].
 
-    Returns:
-    str: The question for the student to answer.
-    """
+Returns:
+str: The question for the student to answer.
+"""
 
-    #System prompt for instructing gpt on how to respond
-    
-    prompt = f"""You are a professional question writer for textbooks and exams. Your task is to craft a {{subject}} question suitable for an Australian highschool student in {{student_year_level}}. Your question should be based on the following information:
+#System prompt for instructing gpt on how to respond
 
-    - This is the "key idea" being assessed and what your question explore: {{key_idea}}.
-    - Ensure the question aligns with these complexities and nuances: {{key_idea_description}}.
-    - Here is some additional theory surrounding the key idea. This information is relevant to helping you formulate the question but you do not have to strictly follow it. Take some personal liberty while still being within the same context governed by the key idea: {{theory}}.
-    - Student Year Level - It is important you create create a question that is appropriate for this a studdent at this academic level: {{student_year_level}}.
-    - Ensure the question pertains to and enriches understanding in this field: {{subject}}.
-    - Difficulty Level - The question's complexity should be tailored to this setting: {{question_difficulty}}.
+generate_question_human_template: str= f"""You are a professional question writer for textbooks and exams. Your task is to craft a {{subject}} question suitable for an Australian highschool student in {{student_year_level}}. Your question should be based on the following information:
 
-    Where applicable, embed the student's interests or career goals into the question to enhance engagement. If these elements don't directly align with the academic content, focus on the educational aspect.
+- This is the "key idea" being assessed and what your question explore: {{key_idea}}.
+- Ensure the question aligns with these complexities and nuances: {{key_idea_description}}.
+- Here is some additional theory surrounding the key idea. This information is relevant to helping you formulate the question but you do not have to strictly follow it. Take some personal liberty while still being within the same context governed by the key idea: {{theory}}.
+- Student Year Level - It is important you create create a question that is appropriate for this a studdent at this academic level: {{student_year_level}}.
+- Ensure the question pertains to and enriches understanding in this field: {{subject}}.
+- Difficulty Level - The question's complexity should be tailored to this setting: {{question_difficulty}}.
 
-    - Student Interests - Consider these to make the question more engaging: {{student_interests}}.
-    - Student Career Goals - Incorporate these where relevant: {{student_career_goals}}.
+Where applicable, embed the student's interests or career goals into the question to enhance engagement. If these elements don't directly align with the academic content, focus on the educational aspect.
 
-    Directly pose the question without prefacing it as a 'question' or any thing else like that. The question should be formatted as if it were written in a textbook or exam, ensuring it adheres to the specified difficulty level and educational goals.
+- Student Interests - Consider these to make the question more engaging: {{student_interests}}.
+- Student Career Goals - Incorporate these where relevant: {{student_career_goals}}.
 
-    Formulate a question that is academically suitable for a student at the {{student_year_level}} level. The question should match the specified difficulty of '{{question_difficulty}}'. Here are some example questions which are about the same key idea and at a similar difficulty. Do not questions directly, they are just meant to be examples of the expected difficulty:
+Directly pose the question without prefacing it as a 'question' or any thing else like that. The question should be formatted as if it were written in a textbook or exam, ensuring it adheres to the specified difficulty level and educational goals.
 
-    Example Questions: {{question_examples}}
+Formulate a question that is academically suitable for a student at the {{student_year_level}} level. The question should match the specified difficulty of '{{question_difficulty}}'. Here are some example questions which are about the same key idea and at a similar difficulty. Do not questions directly, they are just meant to be examples of the expected difficulty:
 
-    Please format your question by adding the following to the the first and last line of your response: 
+Example Questions: {{question_examples}}
 
-    '--BEGIN RESPONSE--'
+Please format your question by adding the following to the the first and last line of your response: 
 
-    your question here
+'--BEGIN RESPONSE--'
 
-    '--END RESPONSE--'
+your question here
 
-    Additional Instructions: {{other_system_instructions}}.
-    """
+'--END RESPONSE--'
 
-    input_variables = ['key_idea', 'key_idea_description', 'theory', 'student_year_level', 'subject', 'question_difficulty', 'question_examples', 'other_system_instructions', 'student_interests', 'student_career_goals']
+Additional Instructions: {{other_system_instructions}}.
+"""
 
-    human_message = """Please provide a question formatted as instructed"""
+generate_question_input_variables = ['key_idea', 'key_idea_description', 'theory', 'student_year_level', 'subject', 'question_difficulty', 'question_examples', 'other_system_instructions', 'student_interests', 'student_career_goals']
 
-    return prompt, input_variables, human_message
+generate_question_human_template: = """Please provide a question formatted as inst"""
+
 
 #Generates an answer to the Model's own question. This is for accuracy purposes
 
-def answer_question():
 
-    # Sytem prompt for instructing gpt on how to behave
-    system_prompt = f"""You are an Australian {{student_year_level}} {{subject}} student. You've just been given a question releating to {{subject}}. Your task is to provide an accurate answer at a depth which would be appropriate to an Australian student such as yourself, answering to a depth that would be exepected from a student in {{student_year_level}} and nothing more. Your answer should be base on the following information:
+# Sytem prompt for instructing gpt on how to behave
+answer_question_system_template: str = f"""You are an Australian {{student_year_level}} {{subject}} student. You've just been given a question releating to {{subject}}. Your task is to provide an accurate answer at a depth which would be appropriate to an Australian student such as yourself, answering to a depth that would be exepected from a student in {{student_year_level}} and nothing more. Your answer should be base on the following information:
 
-    - Key Idea: {{key_idea}}. This is the primary concept that the question is exploring and the one you should focus on.
-    - Detailed Description of Key Idea: {{key_idea_description}}. Use this information to ensure that your answer fully encompasses the nuances of the key idea.
-    - Relevant Theory: {{theory}}. This is additional information surrounding the 'key idea'. It may or may not necessarily be directly related, use your own discretion.
-    - Student Year Level: {{student_year_level}}. Tailor the sophistication and depth of your answer to be appropriate for a student at this academic level.
-    - Additional Instructions: {{other_system_instructions}}. Consider these instructions to guide the style, format, or additional content of your answer.
+- Key Idea: {{key_idea}}. This is the primary concept that the question is exploring and the one you should focus on.
+- Detailed Description of Key Idea: {{key_idea_description}}. Use this information to ensure that your answer fully encompasses the nuances of the key idea.
+- Relevant Theory: {{theory}}. This is additional information surrounding the 'key idea'. It may or may not necessarily be directly related, use your own discretion.
+- Student Year Level: {{student_year_level}}. Tailor the sophistication and depth of your answer to be appropriate for a student at this academic level.
+- Additional Instructions: {{other_system_instructions}}. Consider these instructions to guide the style, format, or additional content of your answer.
 
-    Your response should directly address the question, formulated in a clear and concise manner, suitable for the specified student year level. Avoid prefacing your response with 'Answer:' or similar qualifiers. Instead, provide a straightforward explanation or solution as one would respond in an exam or to a textbook question.
+Your response should directly address the question, formulated in a clear and concise manner, suitable for the specified student year level. Avoid prefacing your response with 'Answer:' or similar qualifiers. Instead, provide a straightforward explanation or solution as one would respond in an exam or to a textbook question.
 
-    Please format your question by adding the following to the the first and last line of your response
+Please format your question by adding the following to the the first and last line of your response
 
-    '--BEGIN RESPONSE--'
+'--BEGIN RESPONSE--'
 
-    your question here
+your question here
 
-    '--END RESPONSE--'
-
-
-    Consider the depth of your response, ensuring that it is appropriate for the student's year level. Your answer should be sufficiently detailed to provide a comprehensive explanation, but not so detailed that it that it would be unusual for a student at a {{student_year_level}} academic level to provide so much depth. Your answer should be accurate and relevant to the question, avoiding unnecessary or irrelevant information.
-    """
+'--END RESPONSE--'
 
 
-    #initial user prompt
-    initial_user_prompt = f"Please provide a concise answer to this question, considering the student's academic level: {{question}}"
+Consider the depth of your response, ensuring that it is appropriate for the student's year level. Your answer should be sufficiently detailed to provide a comprehensive explanation, but not so detailed that it that it would be unusual for a student at a {{student_year_level}} academic level to provide so much depth. Your answer should be accurate and relevant to the question, avoiding unnecessary or irrelevant information.
+"""
 
 
-    input_variables = ['question', 'key_idea', 'key_idea_description', 'student_year_level', 'theory', 'other_system_instructions']
+#initial user prompt
+answer_qeustion_human_template: str = f"Please provide a concise answer to this question, considering the student's academic level: {{question}}"
 
 
-    return prompt_parser(system_prompt, initial_user_prompt, input_variables)
+answer_question_input_variables = ['question', 'key_idea', 'key_idea_description', 'student_year_level', 'theory', 'other_system_instructions']
 
 
 #Check the answer of the generated response to ensure it has not hallucinated
@@ -430,6 +416,8 @@ def irrelevant_student_response():
     input_variables = []
 
     return prompt_parser(system_prompt, initial_user_prompt, input_variables)
+
+test: str = """{ayyaba}"""y
 
 
 functions_list = ['answer_question', 'check_generated_answer_hallucination', 'clarify_question', 'discuss_theory', 'generate_question', 'get_function_parameters', 'irrelevant_student_response', 'mark_student_answer', 'prompt_parser', 'provide_feedback', 'student_doesnt_know']
