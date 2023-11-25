@@ -14,10 +14,10 @@ import clsx from 'clsx';
 const links = [
   { name: 'Home', href: '/dashboard'},
   {
-    name: 'Invoices',
-    href: '/dashboard/invoices',
+    name: 'Skills',
+    href: '/dashboard/skills',
   },
-  { name: 'Customers', href: '/dashboard/customers'},
+  { name: 'Live Class', href: '/dashboard/live_class'},
 ];
 
 export default function NavLinks() {

@@ -113,7 +113,7 @@ function PaginationArrow({
 
   const icon =
     direction === 'left' ? (
-      <p>Previous</p>
+      <p>Prev</p>
     ) : (
       <p>Next</p>
     );

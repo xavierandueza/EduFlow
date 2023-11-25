@@ -1,7 +1,8 @@
-import Image from 'next/image';
+// import Image from 'next/image';
 import NeedToReviseStatus from './status';
-import { formatDateToLocal, formatCurrency } from '../../lib/utils';
+// import { formatDateToLocal, formatCurrency } from '../../lib/utils';
 import { getStudentSkillFromDBAll } from '../../utils/databaseFunctions';
+import ProgressBar from '../../../components/ProgressBar';
 
 export default async function InvoicesTable({
   query,
@@ -43,9 +44,9 @@ export default async function InvoicesTable({
               >
                 <div className="flex items-center justify-between border-b pb-4">
                   <div>
-                    <div className="mb-2 flex items-center">
-                      <p>{studentSkill.skill}</p>
-                    </div>
+                  <div className="mb-2 flex items-center">
+                    <p className="font-bold hover:text-blue-600">{studentSkill.skill}</p>
+                  </div>
                     <p className="text-sm text-gray-500">{studentSkill.subject}</p>
                   </div>
                   <NeedToReviseStatus needToRevise={studentSkill.need_to_revise} />
@@ -53,9 +54,9 @@ export default async function InvoicesTable({
                 <div className="flex w-full items-center justify-between pt-4">
                   <div>
                     <p className="text-xl font-medium">
-                      {studentSkill.mastery_score}
+                      <ProgressBar score={studentSkill.mastery_score} width="200px" backgroundColor="#388a91" />
                     </p>
-                    <p>{studentSkill.retention_score}</p>
+                    <ProgressBar score={studentSkill.retention_score} width="200px" backgroundColor="#388a91" />
                   </div>
                 </div>
               </div>
@@ -89,17 +90,19 @@ export default async function InvoicesTable({
                 >
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex items-center gap-3">
-                      <a href={`/chat?_id=${studentSkill._id}`}>{studentSkill.skill}</a>
+                      <a href={`/chat?_id=${studentSkill._id}`} className="hover:text-blue-600">
+                        {studentSkill.skill}
+                      </a>
                     </div>
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {studentSkill.subject}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {studentSkill.mastery_score}
+                    <ProgressBar score={studentSkill.mastery_score} width="100px" backgroundColor="#388a91" />
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {studentSkill.retention_score}
+                    <ProgressBar score={studentSkill.retention_score} width="100px" backgroundColor="#388a91" />
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     <NeedToReviseStatus needToRevise={studentSkill.need_to_revise} />
