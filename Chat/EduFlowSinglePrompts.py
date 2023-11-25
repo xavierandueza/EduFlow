@@ -6,6 +6,7 @@ from langchain.prompts.chat import (
     AIMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+from langchain.prompts.prompt import PromptTemplate
 
 #The below functions have the followining properties
 
@@ -29,7 +30,7 @@ from langchain.prompts.chat import (
 # student_score (int): The score given to the student's answer. Defaults to None.
 
 
-def prompt_parser(system_prompt, initial_user_prompt, input_variables):
+def prompt_parser(system_prompt,input_variables):
     
     """
     converts the system_prompt and initial_user_prompt into a list of ChatPromptTemplates to be used in langchain
@@ -38,20 +39,48 @@ def prompt_parser(system_prompt, initial_user_prompt, input_variables):
 
     # function_params = list(get_function_parameters(func).keys())
 
-    system_message_prompt = SystemMessagePromptTemplate.from_template(template = system_prompt,
-                                                                      input_variables = input_variables)
-                                                                      
-    initial_message_prompt = HumanMessagePromptTemplate.from_template(template = initial_user_prompt,
-                                                                      input_variables = input_variables)
 
-    return [system_message_prompt, initial_message_prompt]
+    prompt_template = PromptTemplate(input_variables = input_variables, template = system_prompt)
+
+    return prompt_template,system_prompt
 
 
 #question which generates content for a student to learn about a key idea
-def generate_question():
+def generate_question(key_idea="",
+                      key_idea_description="",
+                      theory="",
+                      student_year_level="",
+                      subject="",
+                      question_difficulty="",
+                      question_examples = [],
+                      other_system_instructions = "",
+                      student_interests = [],
+                      student_career_goals = []):
+    
+    
+    
+    """
+    Generates a question for a student based on various inputs.
+
+    Parameters:
+    key_idea (str): The concept(s) on which the generated question should be about.
+    key_idea_description (str): The further description of the key idea.
+    theory (str): Additional theory related to the key idea.
+    student_year_level (int): The year level of the student.
+    subject (str): The subject of the question is based on.
+    question_difficulty (str): The difficulty level of the question.
+    question_examples (str): Examples questions that are about the same key idea and at a similar difficulty.
+    other_system_instructions (str, optional): Other instructions for the system. Defaults to "".
+    student_interests (list, optional): A list of the student's interests. Defaults to [].
+    student_career_goals (list, optional): A list of the student's career goals. Defaults to [].
+
+    Returns:
+    str: The question for the student to answer.
+    """
 
     #System prompt for instructing gpt on how to respond
-    system_prompt = f"""You are a professional question writer for textbooks and exams. Your task is to craft a {{subject}} question suitable for an Australian highschool student in {{student_year_level}}. Your question should be based on the following information:
+    
+    prompt = f"""You are a professional question writer for textbooks and exams. Your task is to craft a {{subject}} question suitable for an Australian highschool student in {{student_year_level}}. Your question should be based on the following information:
 
     - This is the "key idea" being assessed and what your question explore: {{key_idea}}.
     - Ensure the question aligns with these complexities and nuances: {{key_idea_description}}.
@@ -67,8 +96,12 @@ def generate_question():
 
     Directly pose the question without prefacing it as a 'question' or any thing else like that. The question should be formatted as if it were written in a textbook or exam, ensuring it adheres to the specified difficulty level and educational goals.
 
+    Formulate a question that is academically suitable for a student at the {{student_year_level}} level. The question should match the specified difficulty of '{{question_difficulty}}'. Here are some example questions which are about the same key idea and at a similar difficulty. Do not questions directly, they are just meant to be examples of the expected difficulty:
+
+    Example Questions: {{question_examples}}
+
     Please format your question by adding the following to the the first and last line of your response: 
-    
+
     '--BEGIN RESPONSE--'
 
     your question here
@@ -78,19 +111,14 @@ def generate_question():
     Additional Instructions: {{other_system_instructions}}.
     """
 
-
-    #initial user prompt
-    initial_user_prompt =f"""Formulate a question that is academically suitable for a student at the{{student_year_level}} level. The question should match the specified difficulty of '{{question_difficulty}}'. Here are some example questions which are about the same key idea and at a similar difficulty. Do not questions directly, they are just meant to be examples of the expected difficulty:
-
-    Example Questions: {{question_examples}}
-    """
-
     input_variables = ['key_idea', 'key_idea_description', 'theory', 'student_year_level', 'subject', 'question_difficulty', 'question_examples', 'other_system_instructions', 'student_interests', 'student_career_goals']
 
-    return prompt_parser(system_prompt, initial_user_prompt, input_variables)
+    human_message = """Please provide a question formatted as instructed"""
 
+    return prompt, input_variables, human_message
 
 #Generates an answer to the Model's own question. This is for accuracy purposes
+
 def answer_question():
 
     # Sytem prompt for instructing gpt on how to behave
