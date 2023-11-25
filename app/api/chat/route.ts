@@ -28,15 +28,15 @@ export async function POST(req: Request) {
     // console.log('Skill is: ' + skill);
     // console.log(email);
     // console.log ('useRag is: ' + useRag);
-    console.log(email);
+    // console.log(email);
     const returnedSkill = await getSkillFromDB(skill, astraDb); // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
-    console.log(returnedSkill);
+    // console.log(returnedSkill);
 
     const returnedStudent = await getStudentFromDB(email, astraDb); // response from the DB. Has email_address, interests, subjects
-    console.log(returnedStudent);
+    // console.log(returnedStudent);
     
     const returnedStudentSkill = await getStudentSkillFromDB(email, skill, astraDb); // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
-    console.log(returnedStudentSkill);
+    // console.log(returnedStudentSkill);
     
     const latestMessage = messages[messages?.length - 1]?.content;
 
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
         sampleQuestions = determineSampleQuestions(returnedStudentSkill.mastery_score, returnedSkill.easy_questions, returnedSkill.mdrt_questions, returnedSkill.hard_questions);
       }
       
-      console.log(sampleQuestions);
+      // console.log(sampleQuestions);
 
       const systemPrompt = [ // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
         {
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
       // console.log('in route.ts waiting')
       // console.log('latest question was: ' + messages.slice(-2)[0].content)
       // console.log('Answer was: ' + latestMessage)
-      console.log(`Question was: ${messages.slice(-2)[0].content}`)
+      // console.log(`Question was: ${messages.slice(-2)[0].content}`)
 
       const gradeSystemPrompt = [ // Setting up the system prompt
         {
@@ -126,16 +126,16 @@ export async function POST(req: Request) {
 
       try {
         gradeJsonObject = JSON.parse(grade.choices[0].message.content);
-        console.log('Successfully parsed JSON: ' + gradeJsonObject);
-        console.log('grade is: ', gradeJsonObject.score);
+        // console.log('Successfully parsed JSON: ' + gradeJsonObject);
+        // console.log('grade is: ', gradeJsonObject.score);
       } catch (error) {
         gradeJsonObject = { score: null };
-        console.log('Error parsing JSON: ', error);
-        console.log('Original content:', grade.choices[0].message.content);
+        // console.log('Error parsing JSON: ', error);
+        // console.log('Original content:', grade.choices[0].message.content);
       }
 
       const updateScores = await updateStudentSkillScores(email, skill, returnedStudentSkill.mastery_score, returnedStudentSkill.retention_score, returnedStudentSkill.need_to_revise, returnedStudentSkill.decay_value, gradeJsonObject.score, astraDb);
-      console.log('Updated scores: ' + updateScores);
+      // console.log('Updated scores: ' + updateScores);
 
       const feedbackSystemPrompt = [
         {
@@ -169,7 +169,7 @@ export async function POST(req: Request) {
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
       
     } else if (chatState === 'grading') {
-      console.log('waiting')
+      // console.log('waiting')
       const systemPrompt = [ // Setting up the system prompt
       {
         role: 'system',

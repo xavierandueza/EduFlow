@@ -13,10 +13,10 @@ type Dependencies = {
 async function checkDependencies(email: string, skill : string) {
     // get the student skill
     const returnedSkill = await getSkillFromDB(skill, astraDb);
-    console.log(returnedSkill);
+    // console.log(returnedSkill);
     // if the length of the student dependencies is 0, then return the JSON object
     if (returnedSkill.dependencies.length === 0) {
-        console.log("no dependencies to check")
+        // console.log("no dependencies to check")
         return {
             areDependenciesValid: true,
             invalidDependencies: [],
@@ -24,7 +24,7 @@ async function checkDependencies(email: string, skill : string) {
         };
     }
     else {
-        console.log("Checking dependencies")
+        // console.log("Checking dependencies")
         // create the initial json object
         const dependencies: Dependencies = {
             areDependenciesValid: true,
@@ -37,8 +37,8 @@ async function checkDependencies(email: string, skill : string) {
             const dependencyStudentSkill = await getStudentSkillFromDB(email, dependency, astraDb);
             // check if the dependency is valid
             if (dependencyStudentSkill.mastery_score < 40.0) {
-                console.log(`Invalid dependency: ${dependency}
-                With mastery score of: ${dependencyStudentSkill.mastery_score}`)
+                /* console.log(`Invalid dependency: ${dependency}
+                With mastery score of: ${dependencyStudentSkill.mastery_score}`) */
                 // modify the inital json object
                 dependencies.areDependenciesValid = false;
                 dependencies.invalidDependencies.push(dependency);
@@ -46,13 +46,13 @@ async function checkDependencies(email: string, skill : string) {
             }
         }
         // return the json object
-        console.log(dependencies)
+        // console.log(dependencies)
         return dependencies;
     }
 } 
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    console.log("Checking dependencies in the handler function")
+    // console.log("Checking dependencies in the handler function")
 
     const { email, skill } = req.body;
 

@@ -21,11 +21,17 @@ function debounce(func, wait) {
   };
 }
 
+const getRelevantChangeIndicator = (messages) => {
+  // Implement logic to determine if a relevant change has occurred
+  // For example, return the length of the messages array or a timestamp of the last relevant message
+  console.log('Messages length: ' + messages.length)
+  return messages.length;
+};
 
 export default function Home() {
   const { messages, input, handleInputChange, handleSubmit } = useChat(); // imported from the ai/react package, which can be found here: https://www.npmjs.com/package/ai
   const { useRag, llm, similarityMetric, chatState, skill, email, setConfiguration } = useConfiguration(); // custom useConfiguration hook, good code but only defines how you set config variables, not how you use them
-
+  const relevantChangeIndicator = getRelevantChangeIndicator(messages);
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
 
@@ -33,16 +39,57 @@ export default function Home() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const [masteryScore, setMasteryScore] = useState(null);
+
+  // Async function to fetch the mastery score
+  const fetchMasteryScore = async () => {
+    try {
+      console.log('About to try and fetch mastery score')
+      const response = await fetch('/api/getMasteryScore', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, skill })
+      }); // Assuming retrieveMetricScore is your function to fetch the score
+      const score = await response.json(); // Adjust this line based on how your data is returned
+      console.log('Successfully retrieved the mastery score');
+      console.log(`Mastery score is: ${score.masteryScore}`);
+      setMasteryScore(score.masteryScore);
+    } catch (error) {
+      console.error('Error fetching mastery score:', error);
+    }
+  };
+
+  // Use useEffect to call the fetch function when the component mounts
+  useEffect(() => {
+    setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
+    fetchMasteryScore();
+  }, []); // Empty dependency array to run only once on mount
+
+  useEffect(() => {
+    if (chatState === 'asking') { // only fetch if we are waiting for a response and it came in
+      console.log('Waiting and messages increased by 1 so lets increase score')
+      fetchMasteryScore();
+    }
+  }, [relevantChangeIndicator]); // when messages increases in length (a new message) we call 
+
+  useEffect(() => {
+    console.log('chatState is: ' + chatState);
+  }, [chatState]);
+
   const handleDependencies = (dependencyCheck) => {
+    /*
     console.log(`Dependencies retrieved: 
     ${dependencyCheck.skill}
     ${dependencyCheck.dependencies}
     ${dependencyCheck.email}`);
+    */
   
     if (dependencyCheck.areDependenciesValid) {
-      console.log('Dependencies are valid');
+      // console.log('Dependencies are valid');
     } else {
-      console.log('Dependencies are not valid');
+      // console.log('Dependencies are not valid');
       var message = 'Warning, before you continue, the following dependencies are not valid:\n';
       for (var i = 0; i < dependencyCheck.invalidDependencies.length; i++) {
         message += `${dependencyCheck.invalidDependencies[i]} SCORE: ${dependencyCheck.invalidDependenciesScores[i]}\n`;
@@ -53,7 +100,7 @@ export default function Home() {
 
   const checkDependencies = useCallback(async () => {
     try {
-      console.log('About to try and fetch dependencies');
+      // console.log('About to try and fetch dependencies');
       const response = await fetch('/api/checkDependencies', {
         method: 'POST',
         headers: {
@@ -62,17 +109,12 @@ export default function Home() {
         body: JSON.stringify({ email, skill })
       });
       const data = await response.json();
-      console.log('Successfully retrieved the data');
+      // console.log('Successfully retrieved the data');
       handleDependencies(data);
     } catch (error) {
       console.error('Error fetching dependencies:', error);
     }
   }, [skill]); // Dependencies for useCallback
-
-  useEffect(() => {
-    // Force update chatState on component mount
-    // setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
-  }, []); // Empty dependency array to run only once on mount
 
   const debouncedCheckDependencies = useCallback(debounce(checkDependencies, 500), [checkDependencies]);
 
@@ -84,39 +126,11 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  /*
-  useEffect(() => {
-    if (chatState === 'asking') {
-      // Place the code you want to execute here
-      console.log(chatState);
-      const syntheticEvent = {
-        preventDefault: () => {},
-        target: {
-          // You might need to add other properties that handleSubmit expects from the event
-          userInput: {
-            value: 'Hello'
-          }
-        }
-      } as unknown as FormEvent<HTMLFormElement>;
-  
-      handleSubmit(syntheticEvent, { options: { body: { useRag, llm, similarityMetric, chatState: 'asking' } } });
-      // Rest of your code
-      setConfiguration(useRag, llm, similarityMetric, 'waiting');
-      console.log('Chatbot is waiting for a response now');
-  
-      // Example: Automatically sending a response or performing an action
-      // You might want to call a function or set state here
-    } else if (chatState === 'waiting') {
-      console.log('Chatbot is waiting for a response');
-    
-    }
-  }, [chatState]); // Add chatState as a dependency, what it looks out for to execute code on change.
-  */
 
   const handleSend = (e) => {
-    console.log(chatState);
+    // console.log(chatState);
     handleSubmit(e, { options: { body: { useRag, llm, similarityMetric, chatState, skill, email}}});
-    console.log('Chatbot is waiting for a response now');
+    // console.log('Chatbot is waiting for a response now');
 
     if (chatState === 'asking') {
       console.log('Changing to waiting');
@@ -131,10 +145,6 @@ export default function Home() {
     */
   }
 
-  useEffect(() => {
-    console.log(skill)
-  }, [skill]);
-
   return (
     <>
     <main className="flex h-screen flex-col items-center justify-center">
@@ -142,10 +152,8 @@ export default function Home() {
         <div className='chatbot-header pb-6'>
           <div className='flex justify-between'>
             <div className='flex items-center gap-2'>
-              <svg width="24" height="25" viewBox="0 0 24 25">
-                <path d="M20 9.96057V7.96057C20 6.86057 19.1 5.96057 18 5.96057H15C15 4.30057 13.66 2.96057 12 2.96057C10.34 2.96057 9 4.30057 9 5.96057H6C4.9 5.96057 4 6.86057 4 7.96057V9.96057C2.34 9.96057 1 11.3006 1 12.9606C1 14.6206 2.34 15.9606 4 15.9606V19.9606C4 21.0606 4.9 21.9606 6 21.9606H18C19.1 21.9606 20 21.0606 20 19.9606V15.9606C21.66 15.9606 23 14.6206 23 12.9606C23 11.3006 21.66 9.96057 20 9.96057ZM7.5 12.4606C7.5 11.6306 8.17 10.9606 9 10.9606C9.83 10.9606 10.5 11.6306 10.5 12.4606C10.5 13.2906 9.83 13.9606 9 13.9606C8.17 13.9606 7.5 13.2906 7.5 12.4606ZM16 17.9606H8V15.9606H16V17.9606ZM15 13.9606C14.17 13.9606 13.5 13.2906 13.5 12.4606C13.5 11.6306 14.17 10.9606 15 10.9606C15.83 10.9606 16.5 11.6306 16.5 12.4606C16.5 13.2906 15.83 13.9606 15 13.9606Z" />
-              </svg>
-              <h1 className='chatbot-text-primary text-xl md:text-2xl font-medium'>Chatbot</h1>
+              <h1 className='chatbot-text-primary text-xl md:text-2xl font-medium'>{masteryScore}</h1>
+              <h1 className='chatbot-text-primary text-xl md:text-2xl font-medium'>Skill Practice</h1>
             </div>
             <div className='flex gap-1'>
               <ThemeButton />
@@ -156,7 +164,7 @@ export default function Home() {
               </button>
             </div>
           </div>
-          <p className="chatbot-text-secondary-inverse text-sm md:text-base mt-2 md:mt-4">Chatting with the Astra chatbot is a breeze! Simply type your questions or requests in a clear and concise manner. Responses are sourced from Astra documentation and a link for further reading is provided.</p>
+          <p className="chatbot-text-secondary-inverse text-sm md:text-base mt-2 md:mt-4">When you are ready, say that you're ready, and you will be asked a question. Provide an answer, and you will receive some feedback on your answer. After you've read your feedback, say you're ready for the next question to go again and increase your mastery!</p>
         </div>
         <div className='flex-1 relative overflow-y-auto my-4 md:my-6'>
           <div className='absolute w-full overflow-x-hidden'>
