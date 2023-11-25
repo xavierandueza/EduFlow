@@ -1,9 +1,9 @@
 import { AstraDB } from "@datastax/astra-db-ts";
 
 // connect to the astraDb instance
-const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
+const localAstraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
 
-async function getSkillFromDB(skill : string, astraDb : AstraDB) {
+async function getSkillFromDB(skill : string, astraDb : AstraDB = localAstraDb) {
     try {
       const collection = await astraDb.collection('skills_vec');
       const dbResponse = await collection.findOne({ skill: skill });
@@ -14,7 +14,7 @@ async function getSkillFromDB(skill : string, astraDb : AstraDB) {
     }
 }
 
-async function getStudentFromDB(email : string, astraDb : AstraDB) {
+async function getStudentFromDB(email : string, astraDb : AstraDB = localAstraDb) {
     try {
       const collection = await astraDb.collection('students_vec');
       const dbResponse = await collection.findOne({ email_address: email });
@@ -25,7 +25,7 @@ async function getStudentFromDB(email : string, astraDb : AstraDB) {
     }
 }
 
-async function getStudentSkillFromDB(email : string, skill : string, astraDb : AstraDB) {
+async function getStudentSkillFromDB(email : string, skill : string, astraDb : AstraDB = localAstraDb) {
     try {
         const collection = await astraDb.collection('student_skills_vec');
         const dbResponse = await collection.findOne({ email_address: email, skill: skill });
@@ -36,18 +36,21 @@ async function getStudentSkillFromDB(email : string, skill : string, astraDb : A
     }
 }
 
-async function getStudentSkillFromDBAll(email : string, astraDb : AstraDB) {
+async function getStudentSkillFromDBAll(email : string, astraDb : AstraDB = localAstraDb) {
   try {
       const collection = await astraDb.collection('student_skills_vec');
-      const dbResponse = await collection.findOne({ email_address: email, skill: skill });
-      return dbResponse || ''; // Return the response or an empty string if no skill is found
+      const cursor = await collection.find({ email_address: email});
+      const studentSkillsAll = await cursor.toArray();
+      console.log('Logging all student skills:')
+      console.log(studentSkillsAll)
+      return studentSkillsAll || ''; // Return the response or an empty string if no skill is found
   } catch (error) {
-      console.error('Error fetching student skill:', error);
+      console.error('Error fetching all student skills:', error);
       return ''; // Return an empty string in case of an error
   }
 }
 
-async function updateNeedToReviseFlag(email: string, skill: string, needToRevise: boolean, decayValue : number, astraDb : AstraDB) {
+async function updateNeedToReviseFlag(email: string, skill: string, needToRevise: boolean, decayValue : number, astraDb : AstraDB = localAstraDb) {
     try {
       if (needToRevise) { // we have just finished our revision, so halve the decay value
          decayValue = decayValue/2.0;
@@ -63,7 +66,7 @@ async function updateNeedToReviseFlag(email: string, skill: string, needToRevise
     }
 }
 
-async function updateStudentSkillScores(email : string, skill : string, masteryScore : number, retentionScore : number, needToRevise : boolean, decayValue : number, answerGrade : number, astraDb : AstraDB) {
+async function updateStudentSkillScores(email : string, skill : string, masteryScore : number, retentionScore : number, needToRevise : boolean, decayValue : number, answerGrade : number, astraDb : AstraDB = localAstraDb) {
     if (masteryScore === null) {
       masteryScore = 0;
     } 
@@ -155,6 +158,7 @@ export {
     getSkillFromDB,
     getStudentFromDB,
     getStudentSkillFromDB,
+    getStudentSkillFromDBAll,
     updateNeedToReviseFlag,
     updateStudentSkillScores
 }

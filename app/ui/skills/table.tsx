@@ -1,26 +1,20 @@
 import Image from 'next/image';
 import NeedToReviseStatus from './status';
 import { formatDateToLocal, formatCurrency } from '../../lib/utils';
+import { getStudentSkillFromDBAll } from '../../utils/databaseFunctions';
 
 export default async function InvoicesTable({
   query,
   currentPage,
+  email
 }: {
   query: string;
   currentPage: number;
+  email: string;
 }) {
   // const invoices = await fetchFilteredInvoices(query, currentPage);
-  const invoices = [
-    {
-      id: '1',
-      name: 'John Doe',
-      email: 'johndoe@mail.com',
-      status: 'pending',
-      amount: 100.0,
-      date: '2021-08-01',
-    }
-  ]
 
+  /*
   const studentSkills = [
     {
       id: '1',
@@ -33,6 +27,9 @@ export default async function InvoicesTable({
       "decay_value" : 0.5,
     }
   ]
+  */
+
+  const studentSkills = await getStudentSkillFromDBAll(email);
 
   return (
     <div className="mt-6 flow-root">
