@@ -104,7 +104,7 @@ Additional Instructions: {{other_system_instructions}}.
 
 generate_question_input_variables = ['key_idea', 'key_idea_description', 'theory', 'student_year_level', 'subject', 'question_difficulty', 'question_examples', 'other_system_instructions', 'student_interests', 'student_career_goals']
 
-generate_question_human_template: = """Please provide a question formatted as inst"""
+generate_question_human_template: str = """Please provide a question formatted as inst"""
 
 
 #Generates an answer to the Model's own question. This is for accuracy purposes
@@ -417,7 +417,6 @@ def irrelevant_student_response():
 
     return prompt_parser(system_prompt, initial_user_prompt, input_variables)
 
-test: str = """{ayyaba}"""y
 
 
 functions_list = ['answer_question', 'check_generated_answer_hallucination', 'clarify_question', 'discuss_theory', 'generate_question', 'get_function_parameters', 'irrelevant_student_response', 'mark_student_answer', 'prompt_parser', 'provide_feedback', 'student_doesnt_know']
