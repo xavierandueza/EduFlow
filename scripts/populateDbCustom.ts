@@ -223,7 +223,17 @@ async function main() {
     ] 
 
     // create an empty studentsSkillsDocument and loop through skills and append info to get the studentsSkillsDocument fully populated
-    let studentSkillsDocuments = []
+    interface StudentSkillDocument {
+        email_address: string;
+        subject: string;
+        skill: string;
+        mastery_score: number;
+        retention_score: number;
+        need_to_revise: boolean;
+        decay_value: number;
+    }
+      
+    let studentSkillsDocuments: StudentSkillDocument[] = [];
     for (const studentDoc of studentDocuments) {
         for (const skillsDoc of skillsDocuments) {
             studentSkillsDocuments.push({
@@ -240,7 +250,7 @@ async function main() {
     console.log(studentSkillsDocuments);
 
     const skills_vec_collection = await astraDb.collection('skills_vec');
-    for await (const { curriculum_point, skill, key_ideas, key_idea_summaries, easy_questions, mdrt_questions, hard_questions, content } of skillsDocuments) {
+    for await (const { curriculum_point, skill, key_ideas, key_idea_summaries, easy_questions, mdrt_questions, hard_questions, content, dependencies } of skillsDocuments) {
         const res = await skills_vec_collection.insertOne({
             curriculum_point,
             skill,
@@ -249,7 +259,8 @@ async function main() {
             easy_questions,
             mdrt_questions,
             hard_questions,
-            content
+            content,
+            dependencies
         });
     }
 

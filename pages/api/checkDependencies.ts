@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import {AstraDB} from "@datastax/astra-db-ts";
-import { getStudentSkillFromDB } from '../../app/utils/databaseFunctions';
+import { getSkillFromDB, getStudentSkillFromDB } from '../../app/utils/databaseFunctions';
 
 const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
 
@@ -12,11 +12,10 @@ type Dependencies = {
 
 async function checkDependencies(email: string, skill : string) {
     // get the student skill
-    const studentSkill = await getStudentSkillFromDB(email, skill, astraDb);
-    console.log(studentSkill);
-    console.log(studentSkill);
+    const returnedSkill = await getSkillFromDB(skill, astraDb);
+    console.log(returnedSkill);
     // if the length of the student dependencies is 0, then return the JSON object
-    if (studentSkill.dependencies.length === 0) {
+    if (returnedSkill.dependencies.length === 0) {
         console.log("no dependencies to check")
         return {
             areDependenciesValid: true,
@@ -33,17 +32,17 @@ async function checkDependencies(email: string, skill : string) {
             invalidDependenciesScores: [],
         };
         // need to check all of the dependencies
-        for (const dependency of studentSkill.dependencies) {
+        for (const dependency of returnedSkill.dependencies) {
             // get the dependency from the DB
-            const dependencySkill = await getStudentSkillFromDB(email, dependency, astraDb);
+            const dependencyStudentSkill = await getStudentSkillFromDB(email, dependency, astraDb);
             // check if the dependency is valid
-            if (dependencySkill.mastery_score < 40.0) {
+            if (dependencyStudentSkill.mastery_score < 40.0) {
                 console.log(`Invalid dependency: ${dependency}
-                With mastery score of: ${dependencySkill.mastery_score}`)
+                With mastery score of: ${dependencyStudentSkill.mastery_score}`)
                 // modify the inital json object
                 dependencies.areDependenciesValid = false;
                 dependencies.invalidDependencies.push(dependency);
-                dependencies.invalidDependenciesScores.push(dependencySkill.mastery_score);
+                dependencies.invalidDependenciesScores.push(dependencyStudentSkill.mastery_score);
             }
         }
         // return the json object

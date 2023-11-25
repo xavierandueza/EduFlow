@@ -1,5 +1,5 @@
 "use client";
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useRef, useState, useCallback} from 'react';
 import Bubble from '../components/Bubble'
 import { useChat } from 'ai/react';
 import Footer from '../components/Footer';
@@ -7,6 +7,19 @@ import Configure from '../components/Configure';
 import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
 import React, { FormEvent } from 'react';
+
+// Debounce function
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
 
 export default function Home() {
@@ -19,38 +32,6 @@ export default function Home() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
-  useEffect(() => {
-    // Force update chatState on component mount
-    setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
-
-  }, []); // Empty dependency array to run only once on mount
-
-  useEffect(() => {
-    console.log(`skill is: ${skill}`)
-    console.log(`email is: ${email}`)
-    const checkDependencies = async () => {
-      try {
-        console.log('About to try and fetch dependencies')
-        const response = await fetch('/api/checkDependencies',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, skill })
-          });  // Fetch the dependencies from the server
-        const data = await response.json();
-        console.log('Successfully retrieved the data');
-        handleDependencies(data);
-      } catch (error) {
-        console.error('Error fetching dependencies:', error);
-        return null;
-      }
-    };
-
-    checkDependencies();
-  }, [skill, email]);
 
   const handleDependencies = (dependencyCheck) => {
     console.log(`Dependencies retrieved: 
@@ -69,6 +50,36 @@ export default function Home() {
       alert(message);
     }
   };
+
+  const checkDependencies = useCallback(async () => {
+    try {
+      console.log('About to try and fetch dependencies');
+      const response = await fetch('/api/checkDependencies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, skill })
+      });
+      const data = await response.json();
+      console.log('Successfully retrieved the data');
+      handleDependencies(data);
+    } catch (error) {
+      console.error('Error fetching dependencies:', error);
+    }
+  }, [skill]); // Dependencies for useCallback
+
+  useEffect(() => {
+    // Force update chatState on component mount
+    // setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
+  }, []); // Empty dependency array to run only once on mount
+
+  const debouncedCheckDependencies = useCallback(debounce(checkDependencies, 500), [checkDependencies]);
+
+  useEffect(() => {
+    // Call the debounced version inside useEffect
+    debouncedCheckDependencies();
+  }, [debouncedCheckDependencies]); // Dependency is the debounced function itself
   
   useEffect(() => {
     scrollToBottom();

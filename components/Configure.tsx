@@ -52,7 +52,9 @@ const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, chatState, 
     { label: 'Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet, raising the posibility that life might exist under the ice-covered surface moons in our solar system.',
       value: 'Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet, raising the posibility that life might exist under the ice-covered surface moons in our solar system.' },
     { label: 'Critical direct evidence of life (as we know it) is the presence of metabolically active cells.',
-      value: 'Critical direct evidence of life (as we know it) is the presence of metabolically active cells.' }
+      value: 'Critical direct evidence of life (as we know it) is the presence of metabolically active cells.' },
+      { label: 'Cells are the basic structural and functional units of life.',
+      value: 'Cells are the basic structural and functional units of life.' }
   ];
 
   const emailOptions = [
