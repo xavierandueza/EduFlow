@@ -6,8 +6,13 @@ async function main() {
 
     const astraDb = new AstraDB(ASTRA_DB_APPLICATION_TOKEN, ASTRA_DB_ID, ASTRA_DB_REGION, ASTRA_DB_NAMESPACE);
 
+    await astraDb.dropCollection('skills_vec');
     await astraDb.createCollection('skills_vec');
+
+    await astraDb.dropCollection('students_vec');
     await astraDb.createCollection('students_vec');
+    
+    await astraDb.dropCollection('student_skills_vec');
     await astraDb.createCollection('student_skills_vec');
 
     const skillsDocuments = [
@@ -210,7 +215,7 @@ async function main() {
             Role in Health: Proper cell function is essential for overall health.
             Disease and Disorders: Abnormal cell function can lead to diseases like cancer, genetic disorders, and infections​.`,
             "decay_value" : 0.5,
-            "dependencies" : ["On planet Earth, life exists in hostile and extreme environments and the organisms that survive there are termed extremophiles.", "For life to exist, a set of conditions must be met, including the availability of a source of energy and the presence of liquid water.", "Living cells have been found in a subglacial lake in Antarctica under hundreds of metres of ice sheet, raising the posibility that life might exist under the ice-covered surface moons in our solar system.", "Critical direct evidence of life (as we know it) is the presence of metabolically active cells."]
+            "dependencies" : ["Extremophiles on Earth", "Life's Essential Conditions", "Antarctic Subglacial Life", "Evidence of Life"]
         }
     ]
 
@@ -239,6 +244,7 @@ async function main() {
     }
       
     let studentSkillsDocuments: StudentSkillDocument[] = [];
+
     for (const studentDoc of studentDocuments) {
         for (const skillsDoc of skillsDocuments) {
             studentSkillsDocuments.push({

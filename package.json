@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:port1": "next dev -p 3001",
     "build": "next build && npm run seed",
     "start": "next start",
     "seed": "ts-node ./scripts/populateDbCustom.ts",
@@ -12,10 +13,13 @@
   "dependencies": {
     "@datastax/astra-db-ts": "0.0.23",
     "@types/node": "^20.8.10",
+    "@vercel/postgres": "^0.5.1",
     "ai": "^2.2.20",
     "bootstrap": "^5.3.2",
     "cassandra-driver": "^4.7.2",
+    "clsx": "^2.0.0",
     "geist": "^1.1.0",
+    "heroicons": "^2.0.18",
     "langchain": "^0.0.179",
     "next": "14.0.1",
     "node": "^21.2.0",
@@ -27,7 +31,9 @@
     "react-markdown": "^9.0.0",
     "remark-gfm": "^4.0.0",
     "ts-node": "^10.9.1",
-    "typescript": "5.2.2"
+    "typescript": "5.2.2",
+    "use-debounce": "^10.0.0",
+    "vercel": "^32.5.6"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
