@@ -23,6 +23,7 @@ function debounce(func, wait) {
   };
 }
 
+// Andrew: every time new message comes in the progress bar is updated to reflect if the answer was correct or not
 const getRelevantChangeIndicator = (messages) => {
   // Implement logic to determine if a relevant change has occurred
   // For example, return the length of the messages array or a timestamp of the last relevant message
@@ -30,13 +31,17 @@ const getRelevantChangeIndicator = (messages) => {
   return messages.length;
 };
 
+
 export default function Home() {
   const { messages, input, handleInputChange, handleSubmit } = useChat(); // imported from the ai/react package, which can be found here: https://www.npmjs.com/package/ai
   const relevantChangeIndicator = getRelevantChangeIndicator(messages);
   const messagesEndRef = useRef(null);
+  
+  // same as below but in question asking mode
   const [myChatState, setMyChatState] = useState('asking');
 
   // retrieve the studentSkill from the server
+  // this is populated then fed into the chat call to determine chat behvaiour
   const [studentSkill, setStudentSkill] = useState({
     id: '',
     email_address: '',
@@ -49,6 +54,7 @@ export default function Home() {
   });
 
   // getting the search params from the url
+  // Andrew: creates a dictionary mapping parameters to their unique id
   const searchParams = useSearchParams();
   const _id = searchParams.get('_id');
   // console.log('The _id is: ' + _id)
@@ -82,12 +88,14 @@ export default function Home() {
     fetchStudentSkill();
   }, []); // Empty dependency array to run only once on mount
 
+  // Andrew: new message starts, check if need to update mastery metric and so if need to.
   useEffect(() => {
     // console.log('New message received, fetching student skill again')
     fetchStudentSkill();
     // console.log(studentSkill)
   }, [relevantChangeIndicator]); // when messages increases in length (a new message) we call 
 
+  // dependancy sequence handling
   const handleDependencies = (dependencyCheck) => {
   
     if (dependencyCheck.areDependenciesValid) {
@@ -133,7 +141,13 @@ export default function Home() {
 
   const handleSend = (e) => {
     // console.log(chatState); messages, llm, chatState, skill, email
-    handleSubmit(e, { options: { body: { llm: 'gpt-4', chatState: myChatState, email: studentSkill.email_address, skill: studentSkill.skill}}});
+    handleSubmit(e, {
+       options: {
+         body: {
+           llm: 'gpt-4', chatState: myChatState, email: studentSkill.email_address, skill: studentSkill.skill // Andrew: no messages here
+          }
+        }
+      });
     // console.log('Chatbot is waiting for a response now');
 
     if (myChatState === 'asking') {
