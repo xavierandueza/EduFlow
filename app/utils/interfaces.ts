@@ -20,7 +20,7 @@ export interface Skill {
 }
   
 export interface StudentSkill {
-  _id: string;
+  _id : string;
   email_address: string;
   subject: string;
   skill: string;
