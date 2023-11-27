@@ -1,7 +1,9 @@
 import OpenAI from 'openai';
+import { ChatCompletionMessageParam } from 'openai/resources';
 import {OpenAIStream, StreamingTextResponse} from 'ai';
 import {AstraDB} from "@datastax/astra-db-ts";
 import { getSkillFromDB, getStudentFromDB, getStudentSkillFromDB, updateStudentSkillScores } from '../../utils/databaseFunctions';
+import { Skill, Student, StudentSkill } from '../../utils/interfaces';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -17,38 +19,6 @@ function determineSampleQuestions(relevantScore : number, easyQuestions : string
   } else {
     return hardQuestions;
   }
-}
-
-interface Skill {
-  subject: string;
-  curriculum_point: string;
-  skill: string;
-  skill_description: string;
-  key_ideas: string[];
-  key_idea_summaries: string[];
-  easy_questions: string[];
-  mdrt_questions: string[];
-  hard_questions: string[];
-  content: string;
-  dependencies: string[];
-  // ... any other properties
-}
-
-interface Student {
-  email_address: string;
-  interests: string[];
-  subjects: string[];
-}
-
-interface StudentSkill {
-  email_address: string;
-  subject: string;
-  skill: string;
-  mastery_score: number;
-  retention_score: number;
-  need_to_revise: boolean;
-  decay_value: number;
-  // ... any other properties
 }
 
 export async function POST(req: Request) {
@@ -108,7 +78,7 @@ export async function POST(req: Request) {
           Do not make the question entirely focussed on the users interest - the question should be about the academic content.
           `
         },
-      ]
+      ] as ChatCompletionMessageParam[]
       // console.log('system prompt is: ' + systemPrompt[0].content)
 
       const fixedMessage = [
@@ -116,7 +86,7 @@ export async function POST(req: Request) {
           "role": "user",
           "content": "Ask me a question"
         },
-      ]
+      ] as ChatCompletionMessageParam[]
       
       // Create the response
       const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
@@ -153,14 +123,14 @@ export async function POST(req: Request) {
           THEORY END
           .`
         },
-      ]
+      ] as ChatCompletionMessageParam[]
 
       const userAnswer = [
         {
           "role": "user",
           "content": latestMessage
         },
-      ]
+      ] as ChatCompletionMessageParam[]
       
       const grade = await openai.chat.completions.create( // Actually sending the request to OpenAI
         {
@@ -194,13 +164,13 @@ export async function POST(req: Request) {
           QUESTION END
           
           THEORY START
-          ${returnedSkill.theory}
+          ${returnedSkill.content}
           THEORY END
 
           ANSWER SCORE OUT OF 100: ${gradeJsonObject.score} 
           .`
         }
-      ]
+      ] as ChatCompletionMessageParam[]
 
       // Create the response
       const response = await openai.chat.completions.create( // Actually sending the request to OpenAI

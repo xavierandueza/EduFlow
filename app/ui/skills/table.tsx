@@ -4,7 +4,7 @@ import NeedToReviseStatus from './status';
 import { getStudentSkillFromDBAll } from '../../utils/databaseFunctions';
 import ProgressBar from '../../../components/ProgressBar';
 
-export default async function InvoicesTable({
+export default async function SkillsTable({
   query,
   currentPage,
   email
@@ -13,22 +13,6 @@ export default async function InvoicesTable({
   currentPage: number;
   email: string;
 }) {
-  // const invoices = await fetchFilteredInvoices(query, currentPage);
-
-  /*
-  const studentSkills = [
-    {
-      id: '1',
-      "email_address" : 'xand0001@student.monash.edu',
-      "subject" : 'Biology',
-      "skill" : 'Extremophiles on Earth',
-      "mastery_score" : 0,
-      "retention_score" : 0,
-      "need_to_revise" : false,
-      "decay_value" : 0.5,
-    }
-  ]
-  */
 
   const studentSkills = await getStudentSkillFromDBAll(email);
 

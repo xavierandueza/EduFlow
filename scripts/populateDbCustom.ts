@@ -1,5 +1,6 @@
 import { AstraDB } from "@datastax/astra-db-ts";
 import 'dotenv/config'
+import { StudentSkill } from "../app/utils/interfaces";
 
 async function main() {
     const {ASTRA_DB_APPLICATION_TOKEN, ASTRA_DB_ID, ASTRA_DB_REGION, ASTRA_DB_NAMESPACE } = process.env;
@@ -233,17 +234,8 @@ async function main() {
     ] 
 
     // create an empty studentsSkillsDocument and loop through skills and append info to get the studentsSkillsDocument fully populated
-    interface StudentSkillDocument {
-        email_address: string;
-        subject: string;
-        skill: string;
-        mastery_score: number;
-        retention_score: number;
-        need_to_revise: boolean;
-        decay_value: number;
-    }
       
-    let studentSkillsDocuments: StudentSkillDocument[] = [];
+    let studentSkillsDocuments: StudentSkill[] = [];
 
     for (const studentDoc of studentDocuments) {
         for (const skillsDoc of skillsDocuments) {

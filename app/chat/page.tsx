@@ -133,7 +133,7 @@ export default function Home() {
 
   const handleSend = (e) => {
     // console.log(chatState); messages, llm, chatState, skill, email
-    handleSubmit(e, { options: { body: { llm: 'gpt-4', chatState: myChatState, email: studentSkill.email, skill: studentSkill.skill}}});
+    handleSubmit(e, { options: { body: { llm: 'gpt-4', chatState: myChatState, email: studentSkill.email_address, skill: studentSkill.skill}}});
     // console.log('Chatbot is waiting for a response now');
 
     if (myChatState === 'asking') {
