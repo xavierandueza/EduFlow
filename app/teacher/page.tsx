@@ -1,19 +1,22 @@
-export default async function Page({
-    searchParams,
-  }: {
-    searchParams?: {
-      query?: string;
-      page?: string;
-    };
-  }) {
-    return (
-      <div className="w-full">
-        <div className="flex w-full items-center justify-between ">
-          <h1 className={`font-bold text-2xl`}>Skills</h1>
-        </div>
-        <p className="mt-4 flex items-center justify-between gap-2 md:mt-8">
-          This is currently a placeholder, however this page will be used for gamification, overviews, personal learning recommendations and more.
-        </p>
+import { ClassCard } from '../ui/teacher/cards'; 
+ 
+export default async function Page() {
+ 
+  return (
+    <main>
+      <h1 className="mb-4 text-xl md:text-2xl">
+        Classes
+      </h1>
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <ClassCard title="Biology" value="class1" classId = "biology1"/>
+        <ClassCard title="Biology" value="class2" classId = "biology2" />
+        <ClassCard title="Mathematics" value="class1" classId="mathematics1" />
+        <ClassCard title="Mathematics" value="class2" classId="mathematics2" />
       </div>
-    );
-  }
+      <div className="flex-grow mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
+        <ClassCard title="Biology" value="class1" classId = "biology1"/>
+        <ClassCard title="Biology" value="class2" classId = "biology2" />
+      </div>
+    </main>
+  );
+}
