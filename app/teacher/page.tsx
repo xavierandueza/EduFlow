@@ -1,6 +1,11 @@
 import { ClassCard } from '../ui/teacher/cards'; 
+import { getTeacherFromDB, getSchoolClassFromDBAll } from '../utils/databaseFunctions';
  
 export default async function Page() {
+  const teacher = await getTeacherFromDB("clara@everdawn.ai");
+  console.log(teacher);
+
+  const schoolClassList = await getSchoolClassFromDBAll(teacher.school_classes);
  
   return (
     <main>
@@ -8,14 +13,13 @@ export default async function Page() {
         Classes
       </h1>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <ClassCard title="Biology" value="class1" classId = "biology1"/>
-        <ClassCard title="Biology" value="class2" classId = "biology2" />
-        <ClassCard title="Mathematics" value="class1" classId="mathematics1" />
-        <ClassCard title="Mathematics" value="class2" classId="mathematics2" />
+        {schoolClassList.map((schoolClass, index) => (
+          <ClassCard key={index} schoolClass={schoolClass} />
+        ))}
       </div>
       <div className="flex-grow mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
-        <ClassCard title="Biology" value="class1" classId = "biology1"/>
-        <ClassCard title="Biology" value="class2" classId = "biology2" />
+        <p>Placeholder for a calendar </p>
+        <p>Placeholder for a notification section </p>
       </div>
     </main>
   );

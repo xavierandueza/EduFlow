@@ -14,8 +14,8 @@ import clsx from 'clsx';
 const links = [
   { name: 'Home', href: '/teacher'},
   {
-    name: 'Subjects',
-    href: '/teacher/subjects',
+    name: 'Classes',
+    href: '/teacher/classes',
   }
 ];
 

@@ -15,6 +15,13 @@ async function main() {
     await astraDb.dropCollection('student_skills_vec');
     await astraDb.createCollection('student_skills_vec');
 
+    // extending features for teacher views
+    await astraDb.dropCollection('teachers_vec');
+    await astraDb.createCollection('teachers_vec');
+
+    await astraDb.dropCollection('school_classes_vec');
+    await astraDb.createCollection('school_classes_vec'); 
+
     const skillsDocuments = [
         {
             "subject" : "Biology",
@@ -219,50 +226,310 @@ async function main() {
         }
     ]
 
-    const studentDocuments = [
+    interface StudentDocument {
+        first_name: string;
+        last_name: string;
+        email_address: string;
+        interests: string[];
+        subjects: string[];
+        school_classes: string[];
+    }
+
+    const studentDocuments: StudentDocument[] = [
         {
+            "first_name" : "Xavier",
+            "last_name" : "Andueza",
             "email_address" : "xand0001@student.monash.edu",
             "interests" : ["Gaming", "Programming", "Cooking"],
-            "subjects" : ["FIT3171"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
         },
         {
+            "first_name" : "Scott",
+            "last_name" : "Bennett",
             "email_address" : "sben0007@student.monash.edu",
             "interests" : ["Running", "Artificial Intelligence", "Painting"],
-            "subjects" : ["FIT3171"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        // Additional 23 student documents
+        {
+            "first_name" : "Amelia",
+            "last_name" : "Johnson",
+            "email_address" : "ajoh0023@student.monash.edu",
+            "interests" : ["Photography", "Traveling", "Blogging"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Liam",
+            "last_name" : "Fletcher",
+            "email_address" : "lfle0019@student.monash.edu",
+            "interests" : ["Football", "Music", "Video Games"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Emma",
+            "last_name" : "Walsh",
+            "email_address" : "ewal0027@student.monash.edu",
+            "interests" : ["Reading", "Hiking", "Photography"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Noah",
+            "last_name" : "Kim",
+            "email_address" : "nkim0034@student.monash.edu",
+            "interests" : ["Chess", "Robotics", "Cycling"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Olivia",
+            "last_name" : "Davies",
+            "email_address" : "odav0042@student.monash.edu",
+            "interests" : ["Yoga", "Gardening", "Cooking"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "William",
+            "last_name" : "Patel",
+            "email_address" : "wpat0050@student.monash.edu",
+            "interests" : ["Swimming", "Traveling", "Blogging"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Sophia",
+            "last_name" : "Chen",
+            "email_address" : "sche0058@student.monash.edu",
+            "interests" : ["Fashion", "Drawing", "Gaming"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "James",
+            "last_name" : "Gupta",
+            "email_address" : "jgup0066@student.monash.edu",
+            "interests" : ["Skateboarding", "Music Production", "Photography"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Isabella",
+            "last_name" : "Brown",
+            "email_address" : "ibro0073@student.monash.edu",
+            "interests" : ["Writing", "Acting", "Dance"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Lucas",
+            "last_name" : "Nguyen",
+            "email_address" : "lngu0081@student.monash.edu",
+            "interests" : ["Coding", "Astronomy", "Chess"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Mia",
+            "last_name" : "Lee",
+            "email_address" : "mlee0089@student.monash.edu",
+            "interests" : ["Baking", "Photography", "Yoga"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Benjamin",
+            "last_name" : "Smith",
+            "email_address" : "bsmi0096@student.monash.edu",
+            "interests" : ["Surfing", "Guitar", "Graphic Design"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Charlotte",
+            "last_name" : "Jones",
+            "email_address" : "cjon0104@student.monash.edu",
+            "interests" : ["Painting", "Traveling", "Vlogging"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Elijah",
+            "last_name" : "Taylor",
+            "email_address" : "etay0112@student.monash.edu",
+            "interests" : ["Basketball", "Cooking", "Reading"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Harper",
+            "last_name" : "Anderson",
+            "email_address" : "hand0119@student.monash.edu",
+            "interests" : ["Fashion Design", "Blogging", "Yoga"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Ethan",
+            "last_name" : "Thomas",
+            "email_address" : "etho0127@student.monash.edu",
+            "interests" : ["Robotics", "Hiking", "Photography"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Avery",
+            "last_name" : "Wang",
+            "email_address" : "awan0135@student.monash.edu",
+            "interests" : ["Painting", "Sculpting", "Cycling"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Jackson",
+            "last_name" : "Martinez",
+            "email_address" : "jmar0142@student.monash.edu",
+            "interests" : ["Football", "Cooking", "Music"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Evelyn",
+            "last_name" : "Garcia",
+            "email_address" : "egar0150@student.monash.edu",
+            "interests" : ["Dancing", "Gardening", "Photography"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Aiden",
+            "last_name" : "Rodriguez",
+            "email_address" : "arod0158@student.monash.edu",
+            "interests" : ["Boxing", "Programming", "Gaming"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Lily",
+            "last_name" : "Martinez",
+            "email_address" : "lmar0166@student.monash.edu",
+            "interests" : ["Fashion", "Drawing", "Singing"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Grace",
+            "last_name" : "Hernandez",
+            "email_address" : "gher0174@student.monash.edu",
+            "interests" : ["Astronomy", "Poetry", "Traveling"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
+        },
+        {
+            "first_name" : "Daniel",
+            "last_name" : "Lee",
+            "email_address" : "dlee0182@student.monash.edu",
+            "interests" : ["Martial Arts", "Film Making", "Cooking"],
+            "subjects" : ["Biology", "Mathematics"],
+            "school_classes" : ["Biology-1", "Mathematics-1"]
         }
-    ] 
+    ]
 
     // create an empty studentsSkillsDocument and loop through skills and append info to get the studentsSkillsDocument fully populated
     interface StudentSkillDocument {
         email_address: string;
         subject: string;
+        school_class_name: string;
         skill: string;
         mastery_score: number;
         retention_score: number;
         need_to_revise: boolean;
+        dependencies_met: boolean;
         decay_value: number;
     }
       
     let studentSkillsDocuments: StudentSkillDocument[] = [];
 
     for (const studentDoc of studentDocuments) {
-        for (const skillsDoc of skillsDocuments) {
-            studentSkillsDocuments.push({
-                "email_address" : studentDoc.email_address,
-                "subject" : skillsDoc.subject,
-                "skill" : skillsDoc.skill,
-                "mastery_score" : 0,
-                "retention_score" : 0,
-                "need_to_revise" : false,
-                "decay_value" : 0.5,
-            })
+        for (let i=0;i< studentDoc.subjects.length; i++) { // loop over all of their subjects
+            // go through the skills list, if the subject matches then add a new studentSkillsDocument
+            for (const skillsDoc of skillsDocuments) {
+                if (skillsDoc.subject == studentDoc.subjects[i]){
+                    studentSkillsDocuments.push({
+                        "email_address" : studentDoc.email_address,
+                        "subject" : skillsDoc.subject,
+                        "school_class_name" : studentDoc.school_classes[i],
+                        "skill" : skillsDoc.skill,
+                        "mastery_score" : 0,
+                        "retention_score" : 0,
+                        "need_to_revise" : false,
+                        "dependencies_met" : false,
+                        "decay_value" : 0.5,
+                    })
+                }
+            }
         }
     }
     console.log(studentSkillsDocuments);
 
+    const teachers_vec = [
+        {
+            "email_address" : "clara@everdawn.ai",
+            "first_name" : "Clara",
+            "last_name" : "Yew",
+            "school_classes" : ["Biology-1", "Biology-2", "Mathematics-1", "Mathematics-2"]
+        }, 
+        {
+            "email_address" : "andrew@everdawn.ai",
+            "first_name" : "Andrew",
+            "last_name" : "Atta",
+            "school_classes" : ["Biology-3", "Biology-4", "Mathematics-3", "Mathematics-4"]
+        }
+    ]
+
+    const school_classes_vec = [
+        {
+            "school_class_name" : "Biology-1",
+            "subject" : "Biology"
+        }, 
+        {
+            "school_class_name" : "Biology-2",
+            "subject" : "Biology"
+        },
+        {
+            "school_class_name" : "Biology-3",
+            "subject" : "Biology"
+        }, 
+        {
+            "school_class_name" : "Biology-4",
+            "subject" : "Biology"
+        },
+        {
+            "school_class_name" : "Mathematics-1",
+            "subject" : "Mathematics"
+        }, 
+        {
+            "school_class_name" : "Mathematics-2",
+            "subject" : "Mathematics"
+        },
+        {
+            "school_class_name" : "Mathematics-3",
+            "subject" : "Mathematics"
+        }, 
+        {
+            "school_class_name" : "Mathematics-4",
+            "subject" : "Mathematics"
+        }
+    ]
+
     const skills_vec_collection = await astraDb.collection('skills_vec');
-    for await (const { curriculum_point, skill, skill_description, key_ideas, key_idea_summaries, easy_questions, mdrt_questions, hard_questions, content, dependencies } of skillsDocuments) {
+    for await (const { subject, curriculum_point, skill, skill_description, key_ideas, key_idea_summaries, easy_questions, mdrt_questions, hard_questions, content, dependencies } of skillsDocuments) {
         const res = await skills_vec_collection.insertOne({
+            subject,
             curriculum_point,
             skill,
             skill_description,
@@ -277,24 +544,46 @@ async function main() {
     }
 
     const students_vec_collection = await astraDb.collection('students_vec');
-    for await (const { email_address, interests, subjects } of studentDocuments) {
+    for await (const { first_name, last_name, email_address, interests, subjects, school_classes } of studentDocuments) {
         const res = await students_vec_collection.insertOne({
+            first_name,
+            last_name,
             email_address,
             interests,
-            subjects
+            subjects,
+            school_classes
         });
     }
 
     const students_skills_vec_collection = await astraDb.collection('student_skills_vec');
-    for await (const { email_address, subject, skill, mastery_score, retention_score, need_to_revise, decay_value} of studentSkillsDocuments) {
+    for await (const { email_address, subject, school_class_name, skill, mastery_score, retention_score, need_to_revise, decay_value} of studentSkillsDocuments) {
         const res = await students_skills_vec_collection.insertOne({
             email_address,
             subject,
             skill,
+            school_class_name,
             mastery_score,
             retention_score,
             need_to_revise,
             decay_value
+        });
+    }
+
+    const teachers_vec_collection = await astraDb.collection('teachers_vec');
+    for await (const { email_address, first_name, last_name, school_classes } of teachers_vec) {
+        const res = await teachers_vec_collection.insertOne({
+            email_address,
+            first_name,
+            last_name,
+            school_classes
+        });
+    }
+
+    const school_classes_vec_collection = await astraDb.collection('school_classes_vec');
+    for await (const { school_class_name, subject } of school_classes_vec) {
+        const res = await school_classes_vec_collection.insertOne({
+            school_class_name,
+            subject
         });
     }
 }
