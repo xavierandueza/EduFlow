@@ -160,3 +160,5 @@ cython_debug/
 
 node_modules
 .next
+
+Auto/OAI_CONFIG_LIST
