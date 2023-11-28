@@ -2,7 +2,7 @@
 // import Image from 'next/image';
 import { SkillAggregate } from '../../utils/interfaces';
 import ProgressBar from '../../../components/ProgressBar';
-
+import Search from '../../ui/search';
 
 export default function DisplayAggregateSkillsTable({
   skillAggregates,
@@ -12,9 +12,12 @@ export default function DisplayAggregateSkillsTable({
   return (
     <div className="flex w-full flex-col md:col-span-4 lg:col-span-4">
       <h2 className={"mb-4 text-xl md:text-2xl"}>
-        Class Skills
+        Skills
       </h2>
-      <div className="flex grow flex-col justify-between rounded-xl bg-gray-50 p-4">
+      <div className="mb-4 flex items-center justify-between gap-2 ">
+        <Search placeholder="Search skills..." />
+      </div>
+      <div className="flex grow flex-col justify-between rounded-xl bg-gray-50 p-1">
         {/* NOTE: comment in this code when you get to this point in the course */}
         <table className="hidden min-w-full text-gray-900 md:table">
           <thead className="rounded-lg text-left text-sm font-normal">
@@ -44,7 +47,7 @@ export default function DisplayAggregateSkillsTable({
               >
                 <td className="whitespace-nowrap py-3 pl-6 pr-3">
                   <div className="flex items-center gap-3">
-                    <a href={`/chat?_id=${skillAggregate.skill}`} className="hover:text-blue-600" /*FIX LINKING*/ >
+                    <a href={`/teacher/classes/skills?class_name=${skillAggregate.school_class_name}&skill=${skillAggregate.skill}`} className="hover:text-blue-600" /*FIX LINKING*/ >
                       {skillAggregate.skill}
                     </a>
                   </div>

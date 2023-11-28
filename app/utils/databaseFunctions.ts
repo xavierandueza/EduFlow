@@ -114,6 +114,7 @@ function aggregateSkillsData(skills: StudentSkill[]): SkillAggregate[] {
   try {
     // get the list of unique skills from the studentSkills
     const uniqueSkills = Array.from(new Set(skills.map((skill) => skill.skill)));
+    const schoolClassName = skills[0].school_class_name;
 
     // get the total number of students, aka the unique emails
     const studentCount = Array.from(new Set(skills.map((skill) => skill.email_address))).length;
@@ -144,6 +145,7 @@ function aggregateSkillsData(skills: StudentSkill[]): SkillAggregate[] {
       // calculate the averages
       skillAggregates.push({
         skill : skill,
+        school_class_name : schoolClassName,
         mastery_score : masteryScoreTotal/studentCount,
         retention_score : retentionScoreTotal/studentCount,
         no_students_not_met_dependencies : noStudentsNotMetDependencies,
@@ -276,11 +278,11 @@ async function updateStudentSkillScores(email : string, skill : string, masteryS
     }
     try {
       const collection = await astraDb.collection('student_skills_vec');
-      console.log('About to calculate new metric scores.');
+      // console.log('About to calculate new metric scores.');
       const newMetricScores = calculateNewMetricScores(email, skill, masteryScore, retentionScore, answerGrade, needToRevise, decayValue, astraDb);
-      console.log('New metric scores are: ' + newMetricScores.mastery_score + ' and ' + newMetricScores.retention_score);
+      // console.log('New metric scores are: ' + newMetricScores.mastery_score + ' and ' + newMetricScores.retention_score);
       const dbResponse = await collection.updateOne({ email_address: email, skill: skill }, {"$set" : newMetricScores});
-      console.log('Updated student skill scores.')
+      // console.log('Updated student skill scores.')
       return dbResponse || ''; // Return the response or an empty string if no skill is found
     } catch (error) {
       console.error('Error updating student skill:', error);
@@ -321,9 +323,9 @@ function calculateNewMetricScores(
     decayValue: number,
     astraDb: AstraDB
   ): MetricScores {
-    console.log('About to calculate new metric score delta.');
+    // console.log('About to calculate new metric score delta.');
     const metricScoreDelta = calculateMetricScoreDelta(masteryScore, retentionScore, answerGrade, needToRevise);
-    console.log('Metric score delta is: ' + metricScoreDelta);
+    // console.log('Metric score delta is: ' + metricScoreDelta);
     const updatedMasteryScore = Math.max(masteryScore + metricScoreDelta, 0);
     const updatedRetentionScore = Math.max(retentionScore + metricScoreDelta, 0);
   

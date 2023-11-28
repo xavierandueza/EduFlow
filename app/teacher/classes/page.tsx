@@ -4,20 +4,13 @@ import DisplayAggregateStudentsTable from '../../ui/teacher/student-aggregate-ta
 import { SkillAggregate, StudentAggregate } from '../../utils/interfaces';
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { PrepForClassCard } from '../../ui/teacher/cards';
+import Search from '../../ui/search';
+import { CreateLessonPlan } from '../../ui/teacher/buttons';
  
 export default function Page() {
   const [skillAggregates, setSkillAggregates] = useState<SkillAggregate[]>([]);
   const [studentAggregates, setStudentAggregates] = useState<StudentAggregate[]>([]);
-  // Where you call the API to fetch data. First will be aggregate of class skills
-  // Fixed to begin with
-  const aggregatedSkills = {
-    "skill" : "Skill1",
-    "mastery_score" : 30,
-    "retention_score" : 15,
-    "no_students_not_met_dependencies" : 5,
-    "no_students_to_revise" : 10,
-  } as SkillAggregate
-  // const latestInvoices = await fetchLatestInvoices();
 
   const searchParams = useSearchParams();
   const _id = searchParams.get('_id'); // the ID for the class. Lets you fetch class-name, and then the skills for the class
@@ -65,21 +58,20 @@ export default function Page() {
     fetchStudentAggregates();
   }, []);
 
-  // const skillsAggregate = await getSkillsAggregateForClassFromDB(_id);
-  /* Probably irrelevant for this page, cards will likely just dissappear
-  const {
-    numberOfInvoices,
-    numberOfCustomers,
-    totalPaidInvoices,
-    totalPendingInvoices,
-  } = await fetchCardData();
-  */
+  useEffect(() => {
+    // Storing data in Session Storage
+    sessionStorage.setItem('skillAggregates', JSON.stringify(skillAggregates));
+    sessionStorage.setItem('studentAggregates', JSON.stringify(studentAggregates));
+  }, [skillAggregates, studentAggregates]);
  
   return (
     <main>
       <h1 className={"mb-4 text-xl md:text-2xl"}>
-        Dashboard
+        Class: {skillAggregates[0] ? skillAggregates[0].school_class_name : 'Loading...'}
       </h1>
+      <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
+        <CreateLessonPlan />
+      </div>
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
         <DisplayAggregateSkillsTable skillAggregates={skillAggregates} />
         <DisplayAggregateStudentsTable studentAggregates={studentAggregates} /*Replace with students view after*//>

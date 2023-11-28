@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@datastax/astra-db-ts": "0.0.23",
+    "@heroicons/react": "^2.0.18",
     "@types/node": "^20.8.10",
     "@vercel/postgres": "^0.5.1",
     "ai": "^2.2.20",

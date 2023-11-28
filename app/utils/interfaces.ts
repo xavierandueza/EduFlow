@@ -57,6 +57,7 @@ export interface MetricScores {
 
 export interface SkillAggregate {
   skill : string,
+  school_class_name : string,
   mastery_score : number,
   retention_score : number,
   no_students_not_met_dependencies : number
