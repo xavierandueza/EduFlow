@@ -88,6 +88,10 @@ export default function Home() {
     // console.log(studentSkill)
   }, [relevantChangeIndicator]); // when messages increases in length (a new message) we call 
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   const handleDependencies = (dependencyCheck) => {
   
     if (dependencyCheck.areDependenciesValid) {

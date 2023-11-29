@@ -129,11 +129,15 @@ function aggregateSkillsData(skills: StudentSkill[]): SkillAggregate[] {
       // loop over the filtered list
       let masteryScoreTotal = 0;
       let retentionScoreTotal = 0;
+      let noStudentsNotMetMastery = 0;
       let noStudentsNotMetDependencies = 0;
       let noStudentsToRevise = 0;
       for (const skillStudentSkill of skillStudentSkills) {
         masteryScoreTotal += skillStudentSkill.mastery_score;
         retentionScoreTotal += skillStudentSkill.retention_score;
+        if (skillStudentSkill.mastery_score < 50) {
+          noStudentsNotMetMastery += 1;
+        }
         if (skillStudentSkill.dependencies_met === false) {
           noStudentsNotMetDependencies += 1;
         }
@@ -148,6 +152,7 @@ function aggregateSkillsData(skills: StudentSkill[]): SkillAggregate[] {
         school_class_name : schoolClassName,
         mastery_score : masteryScoreTotal/studentCount,
         retention_score : retentionScoreTotal/studentCount,
+        no_students_not_met_mastery : noStudentsNotMetMastery,
         no_students_not_met_dependencies : noStudentsNotMetDependencies,
         no_students_to_revise : noStudentsToRevise,
       });

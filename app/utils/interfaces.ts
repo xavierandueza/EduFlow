@@ -60,8 +60,13 @@ export interface SkillAggregate {
   school_class_name : string,
   mastery_score : number,
   retention_score : number,
+  no_students_not_met_mastery : number,
   no_students_not_met_dependencies : number
   no_students_to_revise : number,
+}
+
+export interface ExtendedSkillAggregate extends SkillAggregate {
+  include_in_class_lesson_plan: boolean;
 }
 
 export interface StudentAggregate {
@@ -71,4 +76,13 @@ export interface StudentAggregate {
   mastery_score : number,
   retention_score : number,
   skills_to_revise : number,
+}
+
+export interface RouteRequestBody {
+  messages?: any;
+  llm: string;
+  chatState: string;
+  skill: string;
+  email: string;
+  sessionSkillAggregates?: ExtendedSkillAggregate[]; 
 }
