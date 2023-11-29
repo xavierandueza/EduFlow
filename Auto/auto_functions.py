@@ -3,7 +3,7 @@ from typing import List, Dict
 from autogen.agentchat.groupchat import GroupChat
 from autogen.agentchat.agent import Agent
 from autogen.agentchat.assistant_agent import AssistantAgent
-from prompts import *
+
 
 class CustomGroupChat(GroupChat):
     def __init__(self, agents, messages, max_round=10):
@@ -56,3 +56,24 @@ def is_termination_msg(content) -> bool:
     if have_content and "TERMINATE" in content["content"]:
         return True
     return False
+
+
+# class MyConversableAgent(autogen.ConversableAgent):
+
+#     async def a_get_human_input(self, prompt: str) -> str:
+        
+#         global input_future
+#         print('AGET')
+#         chat_interface.send(prompt, user = "System", respond=False)
+
+#         #create a new Future object for this input operation if none exists
+#         if input_future is None or input_future.done():
+#             input_future = asyncio.Future()
+
+#         #wait for the callback to set the result on the future
+#         await input_future
+
+#         #Once the result is set, extract the value and reset the future for the next input operation
+#         input_value = input_future.result()
+#         input_future = None
+#         return input_value
