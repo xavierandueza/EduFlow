@@ -586,6 +586,8 @@ async function main() {
             subject
         });
     }
+
+    console.log("Finished seeding");
 }
 
 main().catch(console.error);
