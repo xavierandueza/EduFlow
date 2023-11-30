@@ -472,7 +472,7 @@ async function main() {
                     const tempNeedToRevise = !(tempRetentionScore < tempMasteryScore/2); //need to check this logic
                     //check if skill is cellular units of life, if yes randomly assign true or false, else false
 
-                    const tempDependenciesMet = (skillsDoc.skill == "Cellular Units of Life") ? (Math.random() < 0.5) : false;
+                    const tempDependenciesMet = (Math.random() < 0.5);
 
 
                     studentSkillsDocuments.push({
