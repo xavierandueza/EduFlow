@@ -171,7 +171,9 @@ async function getSkillsAggregateForClassFromDB(_id : string, astraDb : AstraDB 
     // Get the class first
     console.log("inputted id is: " + _id);
     const studentClassCollection = await astraDb.collection('school_classes_vec');
-    const studentClass = await studentClassCollection.findOne({ _id: _id}); 
+    const studentClass = await studentClassCollection.findOne({ _id: _id}) as SchoolClass; 
+    console.log('Student class is: ');
+    console.log(studentClass);
     
     // Now go ahead and get the skills from the class
     const collection = await astraDb.collection('student_skills_vec');
@@ -241,9 +243,10 @@ async function aggregateStudentsData(skills: StudentSkill[]) {
 async function getStudentAggregatesForClassFromDB(_id : string, astraDb : AstraDB = localAstraDb) {
   try {
     // Get the class first
-    console.log("inputted id is: " + _id);
+    // console.log("inputted id is: " + _id);
     const studentClassCollection = await astraDb.collection('school_classes_vec');
-    const studentClass = await studentClassCollection.findOne({ _id: _id}); 
+    const studentClass = await studentClassCollection.findOne({ _id: _id}) as SchoolClass; 
+
     
     // Now go ahead and get the students from the class
     const collection = await astraDb.collection('student_skills_vec');
