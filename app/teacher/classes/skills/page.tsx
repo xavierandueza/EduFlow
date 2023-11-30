@@ -1,8 +1,8 @@
-import Pagination from '../../ui/skills/pagination';
-import Search from '../../ui/search';
-import Table from '../../ui/skills/table';
+import Pagination from '../../../ui/skills/pagination';
+import Search from '../../../ui/search';
+import Table from '../../../ui/skills/table';
 import { Suspense } from 'react';
-import { InvoicesTableSkeleton } from '../../ui/skeletons';
+import { InvoicesTableSkeleton } from '../../../ui/skeletons';
  
 export default async function Page({
   searchParams,
