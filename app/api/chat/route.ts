@@ -1,7 +1,6 @@
 import OpenAI from 'openai';
 import { ChatCompletionMessageParam } from 'openai/resources';
 import {OpenAIStream, StreamingTextResponse} from 'ai';
-import {AstraDB} from "@datastax/astra-db-ts";
 import { getSkillFromDB, getStudentFromDB, getStudentSkillFromDB, updateStudentSkillScores } from '../../utils/databaseFunctions';
 import { Skill, Student, StudentSkill } from '../../utils/interfaces';
 import { RouteRequestBody } from '../../utils/interfaces';
@@ -9,8 +8,6 @@ import { RouteRequestBody } from '../../utils/interfaces';
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
 
 function determineSampleQuestions(relevantScore : number, easyQuestions : string[], mdrtQuestions : string[], hardQuestions : string[]) {
   if (relevantScore < 100.0/3.0) {
@@ -28,11 +25,11 @@ export async function POST(req: Request) {
     const {messages, llm, chatState, skill, email, sessionSkillAggregates} = requestBody;
 
     if (chatState === 'asking') {
-      const returnedSkill = await getSkillFromDB(skill, astraDb) as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
+      const returnedSkill = await getSkillFromDB(skill) as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
 
-      const returnedStudent = await getStudentFromDB(email, astraDb) as Student; // response from the DB. Has email_address, interests, subjects
+      const returnedStudent = await getStudentFromDB(email) as Student; // response from the DB. Has email_address, interests, subjects
       
-      const returnedStudentSkill = await getStudentSkillFromDB(email, skill, astraDb) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
+      const returnedStudentSkill = await getStudentSkillFromDB(email, skill) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
       
       const latestMessage = messages[messages?.length - 1]?.content;
 
@@ -103,11 +100,11 @@ export async function POST(req: Request) {
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
 
     } else if (chatState === 'waiting') {
-      const returnedSkill = await getSkillFromDB(skill, astraDb) as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
+      const returnedSkill = await getSkillFromDB(skill) as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
 
-      const returnedStudent = await getStudentFromDB(email, astraDb) as Student; // response from the DB. Has email_address, interests, subjects
+      const returnedStudent = await getStudentFromDB(email) as Student; // response from the DB. Has email_address, interests, subjects
       
-      const returnedStudentSkill = await getStudentSkillFromDB(email, skill, astraDb) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
+      const returnedStudentSkill = await getStudentSkillFromDB(email, skill) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
       
       const latestMessage = messages[messages?.length - 1]?.content;
       // console.log('in route.ts waiting')
@@ -159,7 +156,7 @@ export async function POST(req: Request) {
         // console.log('Original content:', grade.choices[0].message.content);
       }
 
-      const updateScores = await updateStudentSkillScores(email, skill, returnedStudentSkill.mastery_score, returnedStudentSkill.retention_score, returnedStudentSkill.need_to_revise, returnedStudentSkill.decay_value, gradeJsonObject.score, astraDb);
+      const updateScores = await updateStudentSkillScores(email, skill, returnedStudentSkill.mastery_score, returnedStudentSkill.retention_score, returnedStudentSkill.need_to_revise, returnedStudentSkill.decay_value, gradeJsonObject.score);
       // console.log('Updated scores: ' + updateScores);
 
       const feedbackSystemPrompt = [
@@ -210,7 +207,7 @@ export async function POST(req: Request) {
         // Start my string
 
         // Retrieve the skill from the DB
-        const currentSkill = await getSkillFromDB(includedSkillAggregate.skill, astraDb);
+        const currentSkill = await getSkillFromDB(includedSkillAggregate.skill);
         lessonPlanContextString += `\n\nSkill Number: ${i} out of ${totalIncludedSkills}: ${currentSkill.skill}\n`;
         lessonPlanContextString += `This skill has the following key Ideas: ${currentSkill.key_ideas}\n`;
         lessonPlanContextString += `Here is the relevant theory on the skill: ${currentSkill.content}\n`;
