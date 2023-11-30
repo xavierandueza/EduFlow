@@ -1,11 +1,43 @@
+'use client';
+import { useState, useEffect } from 'react';
 import { ClassCard } from '../ui/teacher/cards'; 
 import { getTeacherFromDB, getSchoolClassFromDBAll } from '../utils/databaseFunctions';
+import { SchoolClass } from '../utils/interfaces';
  
-export default async function Page() {
+export default function Page() {
+  const [schoolClassList, setSchoolClassList] = useState<SchoolClass[]>([]); // [SchoolClass
+
+  const email_address = "clara@everdawn.ai";
+
+  /*
   const teacher = await getTeacherFromDB("clara@everdawn.ai");
   console.log(teacher);
 
   const schoolClassList = await getSchoolClassFromDBAll(teacher.school_classes);
+  */
+
+  const fetchSchoolClassList = async () => {
+    // console.log('entered fetching student skill function')
+    try {
+      const response = await fetch('/api/getSchoolClassList', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email_address })
+      });
+      const data = await response.json();
+      // console.log('Successfully retrieved the student skill')
+      // console.log(studentSkill)
+      setSchoolClassList(data);
+    } catch (error) {
+      console.error('Error fetching student skill:', error);
+    }
+  }
+
+  useEffect(() => {
+    fetchSchoolClassList();
+  }, []);
  
   return (
     <main>
