@@ -3,6 +3,8 @@ import { getStudentAggregatesForClassFromDB } from '../../app/utils/databaseFunc
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // console.log("Getting studentSkill from the handler function")
+    console.log("req.body is: ");
+    console.log(req.body);
 
     const { _id } = req.body;
     const result = await getStudentAggregatesForClassFromDB(_id);
