@@ -1,4 +1,10 @@
 import clsx from 'clsx';
+import { ExclamationTriangleIcon as ExclamationTriangleOutline} from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon as ExclamationTriangleSolid} from '@heroicons/react/24/solid';
+import { CheckCircleIcon as CheckCircleOutline} from '@heroicons/react/24/outline';
+import { CheckCircleIcon as CheckCircleSolid} from '@heroicons/react/24/solid';
+import {CheckIcon as CheckIconSolid} from '@heroicons/react/24/solid';
+
 
 export default function needToReviseStatus({ needToRevise }: { needToRevise: boolean }) {
   return (
@@ -13,12 +19,13 @@ export default function needToReviseStatus({ needToRevise }: { needToRevise: boo
     >
       {!needToRevise ? (
         <>
-          No
+          <CheckCircleOutline className="ml-1 w-4
+          text-highlight" />
         </>
       ) : null}
       {needToRevise ? (
         <>
-          Yes
+          <ExclamationTriangleOutline className="ml-1 w-4 text-highlight" />
         </>
       ) : null}
     </span>
