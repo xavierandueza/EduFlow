@@ -15,6 +15,9 @@ module.exports = {
       screens: {
         origin: "800px",
       },
+      colors: {
+        highlight: '#388a91',
+      }
     },
   },
   plugins: [],

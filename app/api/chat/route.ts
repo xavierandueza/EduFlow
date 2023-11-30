@@ -1,8 +1,10 @@
 import OpenAI from 'openai';
 import { ChatCompletionMessageParam } from 'openai/resources';
 import {OpenAIStream, StreamingTextResponse} from 'ai';
-import {AstraDB} from "@datastax/astra-db-ts";
 import { getSkillFromDB, getStudentFromDB, getStudentSkillFromDB, updateStudentSkillScores } from '../../utils/databaseFunctions';
+
+import { Skill, Student, StudentSkill } from '../../utils/interfaces';
+import { RouteRequestBody } from '../../utils/interfaces';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -10,7 +12,6 @@ const openai = new OpenAI({
 
 // const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
 
-// Andrew: determines questiond difficulty
 function determineSampleQuestions(relevantScore : number, easyQuestions : string[], mdrtQuestions : string[], hardQuestions : string[]) {
   if (relevantScore < 100.0/3.0) {
     return easyQuestions;
@@ -24,17 +25,18 @@ function determineSampleQuestions(relevantScore : number, easyQuestions : string
 // Andrew: post sends information to the client
 export async function POST(req: Request) {
   try {
-    const {messages, llm, chatState, skill, email} = await req.json();
-
-    const returnedSkill = await getSkillFromDB(skill)//, astraDb) //as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
-
-    const returnedStudent = await getStudentFromDB(email)//, astraDb)// as Student; // response from the DB. Has email_address, interests, subjects
-    
-    const returnedStudentSkill = await getStudentSkillFromDB(email, skill)//, astraDb)// as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
-    
-    const latestMessage = messages[messages?.length - 1]?.content;
+    const requestBody = await req.json() as RouteRequestBody;
+    const {messages, llm, chatState, skill, email, sessionSkillAggregates} = requestBody;
 
     if (chatState === 'asking') {
+      const returnedSkill = await getSkillFromDB(skill) as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
+
+      const returnedStudent = await getStudentFromDB(email) as Student; // response from the DB. Has email_address, interests, subjects
+      
+      const returnedStudentSkill = await getStudentSkillFromDB(email, skill) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
+      
+      const latestMessage = messages[messages?.length - 1]?.content;
+
       var sampleQuestions : string[];
 
       // checks to see if the student needs to revise or not via function caluclated in astraDB. If True then will give student questions based on difficulty where <33.3 is easy, <66.6 is medium, and >66.6 is hard. 
@@ -58,26 +60,6 @@ export async function POST(req: Request) {
       }
 
       console.log(`Questions are: ${questions}`)
-
-      //Andrew code: Create a dictionary object to be passed to autogen for parsing.
-
-      const autogenkeywords = {
-        "skill": returnedSkill.skill,
-        "key_ideas": returnedSkill.key_ideas,
-        "key_idea_summaries": returnedSkill.key_idea_summaries,
-        "theory": returnedSkill.content,
-        "subject": returnedSkill.subject,
-        "sampleQuestions": sampleQuestions,
-        "interests": returnedStudent.interests,
-        "career_goals": returnedStudent.career_goals,
-        // To Add:
-        // "student_year_level": returnedStudent.year_level,
-        // "question_difficulty": returnedSkill.question_difficulty,
-    };
-
-      //Andrew code: pass dictionary to python script to generate prompts
-
-
 
       const systemPrompt = [ // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
         {
@@ -125,6 +107,13 @@ export async function POST(req: Request) {
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
 
     } else if (chatState === 'waiting') {
+      const returnedSkill = await getSkillFromDB(skill) as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
+
+      const returnedStudent = await getStudentFromDB(email) as Student; // response from the DB. Has email_address, interests, subjects
+      
+      const returnedStudentSkill = await getStudentSkillFromDB(email, skill) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
+      
+      const latestMessage = messages[messages?.length - 1]?.content;
       // console.log('in route.ts waiting')
       // console.log('latest question was: ' + messages.slice(-2)[0].content)
       // console.log('Answer was: ' + latestMessage)
@@ -174,7 +163,7 @@ export async function POST(req: Request) {
         // console.log('Original content:', grade.choices[0].message.content);
       }
 
-      const updateScores = await updateStudentSkillScores(email, skill, returnedStudentSkill.mastery_score, returnedStudentSkill.retention_score, returnedStudentSkill.need_to_revise, returnedStudentSkill.decay_value, gradeJsonObject.score)//, astraDb);
+      const updateScores = await updateStudentSkillScores(email, skill, returnedStudentSkill.mastery_score, returnedStudentSkill.retention_score, returnedStudentSkill.need_to_revise, returnedStudentSkill.decay_value, gradeJsonObject.score);
       // console.log('Updated scores: ' + updateScores);
 
       const feedbackSystemPrompt = [
@@ -208,8 +197,100 @@ export async function POST(req: Request) {
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
       
-    } 
-    
+    } else if (chatState === 'creating lesson plan') {
+      console.log(sessionSkillAggregates)
+      // code for pulling out relevant information from the aggregated Skills
+
+      // start by looking at the dependencies stuff. First we want to just get all of the skills that have been selected
+      const includedSkillAggregates = sessionSkillAggregates.filter(skill => skill.include_in_class_lesson_plan);
+      const totalIncludedSkills = includedSkillAggregates.length;
+
+      let lessonPlanContextString = 'Here are the list of skills and their relevant information:'
+      let i = 0;
+
+      for (const includedSkillAggregate of includedSkillAggregates) {
+        i++;
+        // I basically want to get the relevant information for this skill
+        // Start my string
+
+        // Retrieve the skill from the DB
+        const currentSkill = await getSkillFromDB(includedSkillAggregate.skill);
+        lessonPlanContextString += `\n\nSkill Number: ${i} out of ${totalIncludedSkills}: ${currentSkill.skill}\n`;
+        lessonPlanContextString += `This skill has the following key Ideas: ${currentSkill.key_ideas}\n`;
+        lessonPlanContextString += `Here is the relevant theory on the skill: ${currentSkill.content}\n`;
+        
+        if (includedSkillAggregate.no_students_not_met_dependencies > 0) {
+          lessonPlanContextString += `There are ${includedSkillAggregate.no_students_not_met_dependencies} students who have not met the satisfactory mastery level dependencies for this skill.\n`;
+          lessonPlanContextString += `Here are the skills and number of students that have not met dependencies in the skills, that this skill is dependent on:\n`;
+          for (const dependency of currentSkill.dependencies) {
+            const dependencyAggregate = sessionSkillAggregates.find(skill => skill.skill === dependency);
+            if (dependencyAggregate.no_students_not_met_mastery > 0) {
+              lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.no_students_not_met_mastery}\n`;
+            }
+            lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.no_students_not_met_mastery}\n`;
+          }
+        }
+
+        let insertedRevisionDependencyText = false;
+
+        if (currentSkill.dependencies.length > 0) {
+          // Need to check the retention of the dependencies
+          for (const dependency of currentSkill.dependencies) {
+            const dependencyAggregate = sessionSkillAggregates.find(skill => skill.skill === dependency);
+            if (dependencyAggregate.no_students_to_revise > 0) {
+              if (!insertedRevisionDependencyText) {
+                lessonPlanContextString += `This skill has some skills that it is dependent on, which students need to revise. Here is the list of those skills, and the number of students needing to revise them:\n`;
+                insertedRevisionDependencyText = true;
+              }
+            lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.no_students_not_met_mastery}\n`;
+          }
+        }
+      }
+
+      console.log(lessonPlanContextString)
+
+      // console.log('waiting')
+      const classLessonPlanSystemPrompt = [
+        {
+          "role": "system", 
+          "content": `You are an AI assistant who provides expert lesson plans to teachers, helping them cater their content to the needs of their students. 
+          You have been given a list of skills to be included in the lesson, and their relevant information. This also includes the key ideas of the skill(s), and the theory relating to the skill(s). 
+          You may also be warned that some students have not met the satisfactory mastery level for skills that this skill is dependent on. A skill that is depedent on another indicates that the dependee skill is a prerequisite for the dependent skill.
+          If this is the case, then please provide a note on the major dependent skills that students are lacking in for the teacher. 
+            
+          The question and relevant theory are as follows:
+          RELEVANT INFORMATION START
+          ${lessonPlanContextString}
+          RELEVANT INFORMATION END
+
+          Break down your lesson plan into the following components:
+          - Learning intention: What is the skill that the student is learning in the class. Phrase as a "we are learning... "
+          - Success criteria: What should the student be capable of after the class, that they weren't capable of before. These must be worded as "I can" statements, from the perspective of the student, in terms of what they can do after they have completed the class
+          - Key questions: Good starters to prompt the class when you start off, motivating learning
+          - Introduction section (10 minutes): Provide an outline of the introduction, discussing learning intention, success criteria, any activities you may do in this period
+          - The main activity (25 minutes): Provide a summary of whjat the main classroom activity will be
+          - Materials: What you need to conduct the lesson
+          - closure (10 minutes): Provide an summary that reflects on class learnings, including what strategies were used to gain knowledge.
+          - rational: Why this has been the approach to the class.
+
+          Use markdown where appropriate. Do not return your lesson plan in quotes.
+          `
+        }
+      ] as ChatCompletionMessageParam[]
+
+      const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
+        {
+          model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
+          stream: true, // streaming YAY
+          messages: [...classLessonPlanSystemPrompt, ...messages], // combine the system prompt with the latest message
+        }
+      );
+      
+      const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
+      return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
+
+    }
+  }  
   } catch (e) { // error handling
     throw e;
   }

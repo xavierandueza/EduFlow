@@ -95,7 +95,6 @@ export default function Home() {
     // console.log(studentSkill)
   }, [relevantChangeIndicator]); // when messages increases in length (a new message) we call 
 
-  // dependancy sequence handling
   const handleDependencies = (dependencyCheck) => {
   
     if (dependencyCheck.areDependenciesValid) {
