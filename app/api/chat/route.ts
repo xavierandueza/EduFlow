@@ -10,8 +10,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
+// const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
 
+// Andrew: determines questiond difficulty
 function determineSampleQuestions(relevantScore : number, easyQuestions : string[], mdrtQuestions : string[], hardQuestions : string[]) {
   if (relevantScore < 100.0/3.0) {
     return easyQuestions;
@@ -22,6 +23,7 @@ function determineSampleQuestions(relevantScore : number, easyQuestions : string
   }
 }
 
+// Andrew: post sends information to the client
 export async function POST(req: Request) {
   try {
     const requestBody = await req.json() as RouteRequestBody;
@@ -38,6 +40,8 @@ export async function POST(req: Request) {
 
       var sampleQuestions : string[];
 
+      // checks to see if the student needs to revise or not via function caluclated in astraDB. If True then will give student questions based on difficulty where <33.3 is easy, <66.6 is medium, and >66.6 is hard. 
+      // Andrew note for future development: this function might be bugged. A student with a low mastery score but high retention score (because they just answered a question) can be given hard questions. Doesn't matter atm though.
       if (returnedStudentSkill.need_to_revise) {
         sampleQuestions = determineSampleQuestions(returnedStudentSkill.retention_score, returnedSkill.easy_questions, returnedSkill.mdrt_questions, returnedSkill.hard_questions);
       } else {
@@ -47,6 +51,7 @@ export async function POST(req: Request) {
       // console.log(sampleQuestions);
       const questions: string[] = [];
 
+      //Andrew: What does this function do and why 2?
       if (messages.length > 2)
       {
         // Questions have been asked before
@@ -56,6 +61,26 @@ export async function POST(req: Request) {
       }
 
       console.log(`Questions are: ${questions}`)
+
+      //Andrew code: Create a dictionary object to be passed to autogen for parsing.
+
+      const autogenkeywords = {
+        "skill": returnedSkill.skill,
+        "key_ideas": returnedSkill.key_ideas,
+        "key_idea_summaries": returnedSkill.key_idea_summaries,
+        "theory": returnedSkill.content,
+        "subject": returnedSkill.subject,
+        "sampleQuestions": sampleQuestions,
+        "interests": returnedStudent.interests,
+        "career_goals": returnedStudent.career_goals,
+        // To Add:
+        // "student_year_level": returnedStudent.year_level,
+        // "question_difficulty": returnedSkill.question_difficulty,
+    };
+
+      //Andrew code: pass dictionary to python script to generate prompts
+
+
 
       const systemPrompt = [ // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
         {
@@ -159,7 +184,7 @@ export async function POST(req: Request) {
         // console.log('Original content:', grade.choices[0].message.content);
       }
 
-      const updateScores = await updateStudentSkillScores(email, skill, returnedStudentSkill.mastery_score, returnedStudentSkill.retention_score, returnedStudentSkill.need_to_revise, returnedStudentSkill.decay_value, gradeJsonObject.score, astraDb);
+      const updateScores = await updateStudentSkillScores(email, skill, returnedStudentSkill.mastery_score, returnedStudentSkill.retention_score, returnedStudentSkill.need_to_revise, returnedStudentSkill.decay_value, gradeJsonObject.score)//, astraDb);
       // console.log('Updated scores: ' + updateScores);
 
       const feedbackSystemPrompt = [
