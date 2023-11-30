@@ -1,12 +1,12 @@
 import clsx from 'clsx';
 // import Image from 'next/image';
-import { AggregateSkills } from '../../utils/interfaces';
+import { SkillAggregate } from '../../utils/interfaces';
 
 
 export default async function DisplayAggregateSkills({
   aggregatedSkills,
 }: {
-  aggregatedSkills: AggregateSkills[];
+  aggregatedSkills: SkillAggregate[];
 }) {
   return (
     <div className="flex w-full flex-col md:col-span-4 lg:col-span-4">
@@ -20,7 +20,7 @@ export default async function DisplayAggregateSkills({
           {aggregatedSkills.map((aggregatedSkill, i) => {
             return (
               <div
-                key={aggregatedSkill._id}
+                key={aggregatedSkill.skill}
                 className={clsx(
                   'flex flex-row items-center justify-between py-4',
                   {
