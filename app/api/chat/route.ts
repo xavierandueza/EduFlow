@@ -2,12 +2,15 @@ import OpenAI from 'openai';
 import { ChatCompletionMessageParam } from 'openai/resources';
 import {OpenAIStream, StreamingTextResponse} from 'ai';
 import { getSkillFromDB, getStudentFromDB, getStudentSkillFromDB, updateStudentSkillScores } from '../../utils/databaseFunctions';
+
 import { Skill, Student, StudentSkill } from '../../utils/interfaces';
 import { RouteRequestBody } from '../../utils/interfaces';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
 
 function determineSampleQuestions(relevantScore : number, easyQuestions : string[], mdrtQuestions : string[], hardQuestions : string[]) {
   if (relevantScore < 100.0/3.0) {
@@ -19,6 +22,7 @@ function determineSampleQuestions(relevantScore : number, easyQuestions : string
   }
 }
 
+// Andrew: post sends information to the client
 export async function POST(req: Request) {
   try {
     const requestBody = await req.json() as RouteRequestBody;
@@ -35,6 +39,8 @@ export async function POST(req: Request) {
 
       var sampleQuestions : string[];
 
+      // checks to see if the student needs to revise or not via function caluclated in astraDB. If True then will give student questions based on difficulty where <33.3 is easy, <66.6 is medium, and >66.6 is hard. 
+      // Andrew note for future development: this function might be bugged. A student with a low mastery score but high retention score (because they just answered a question) can be given hard questions. Doesn't matter atm though.
       if (returnedStudentSkill.need_to_revise) {
         sampleQuestions = determineSampleQuestions(returnedStudentSkill.retention_score, returnedSkill.easy_questions, returnedSkill.mdrt_questions, returnedSkill.hard_questions);
       } else {
@@ -44,6 +50,7 @@ export async function POST(req: Request) {
       // console.log(sampleQuestions);
       const questions: string[] = [];
 
+      //Andrew: What does this function do and why 2?
       if (messages.length > 2)
       {
         // Questions have been asked before
