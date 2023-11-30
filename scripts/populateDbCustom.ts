@@ -454,20 +454,36 @@ async function main() {
       
     let studentSkillsDocuments: StudentSkillDocument[] = [];
 
+
+// randomly generate mastery score
+// retention score should be a random proproation of the mastery ScoreRestoration
+// need_to_revise == true if retention score < masterscore/2
+// make dependencies_met randomly true and false for only the cellularunitsoflife skill
+
     for (const studentDoc of studentDocuments) {
         for (let i=0;i< studentDoc.subjects.length; i++) { // loop over all of their subjects
             // go through the skills list, if the subject matches then add a new studentSkillsDocument
             for (const skillsDoc of skillsDocuments) {
                 if (skillsDoc.subject == studentDoc.subjects[i]){
+
+                    // variables then pass them to object in push call below
+                    const tempMasteryScore = Math.round(Math.random()*100);
+                    const tempRetentionScore = Math.round(tempMasteryScore*Math.random());
+                    const tempNeedToRevise = (tempRetentionScore < tempMasteryScore/2); //need to check this logic
+                    //check if skill is cellular units of life, if yes randomly assign true or false, else false
+
+                    const tempDependenciesMet = (Math.random() < 0.5);
+
+
                     studentSkillsDocuments.push({
                         "email_address" : studentDoc.email_address,
                         "subject" : skillsDoc.subject,
                         "school_class_name" : studentDoc.school_classes[i],
                         "skill" : skillsDoc.skill,
-                        "mastery_score" : 0,
-                        "retention_score" : 0,
-                        "need_to_revise" : false,
-                        "dependencies_met" : false,
+                        "mastery_score" : tempMasteryScore,
+                        "retention_score" : tempRetentionScore,
+                        "need_to_revise" : tempNeedToRevise,
+                        "dependencies_met" : tempDependenciesMet,
                         "decay_value" : 0.5,
                     })
                 }
