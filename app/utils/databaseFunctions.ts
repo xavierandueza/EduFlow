@@ -169,6 +169,7 @@ function aggregateSkillsData(skills: StudentSkill[]): SkillAggregate[] {
 async function getSkillsAggregateForClassFromDB(_id : string, astraDb : AstraDB = localAstraDb) {
   try {
     // Get the class first
+    console.log("inputted id is: " + _id);
     const studentClassCollection = await astraDb.collection('school_classes_vec');
     const studentClass = await studentClassCollection.findOne({ _id: _id}); 
     
@@ -240,6 +241,7 @@ async function aggregateStudentsData(skills: StudentSkill[]) {
 async function getStudentAggregatesForClassFromDB(_id : string, astraDb : AstraDB = localAstraDb) {
   try {
     // Get the class first
+    console.log("inputted id is: " + _id);
     const studentClassCollection = await astraDb.collection('school_classes_vec');
     const studentClass = await studentClassCollection.findOne({ _id: _id}); 
     

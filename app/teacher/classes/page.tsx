@@ -14,6 +14,7 @@ export default function Page() {
 
   const searchParams = useSearchParams();
   const _id = searchParams.get('_id'); // the ID for the class. Lets you fetch class-name, and then the skills for the class
+  console.log('The _id is: ' + _id);
   
   const fetchSkillAggregates = async () => {
     // console.log('entered fetching student skill function')
