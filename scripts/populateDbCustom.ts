@@ -469,7 +469,7 @@ async function main() {
                     // variables then pass them to object in push call below
                     const tempMasteryScore = Math.round(Math.random()*100);
                     const tempRetentionScore = Math.round(tempMasteryScore*Math.random());
-                    const tempNeedToRevise = !(tempRetentionScore < tempMasteryScore/2); //need to check this logic
+                    const tempNeedToRevise = (tempRetentionScore < tempMasteryScore/2); //need to check this logic
                     //check if skill is cellular units of life, if yes randomly assign true or false, else false
 
                     const tempDependenciesMet = (Math.random() < 0.5);

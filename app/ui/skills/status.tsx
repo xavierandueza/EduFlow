@@ -10,22 +10,22 @@ export default function needToReviseStatus({ needToRevise }: { needToRevise: boo
   return (
     <span
       className={clsx(
-        'inline-flex items-center rounded-full px-2 py-1 text-xs',
+        'inline-flex items-centre rounded-full px-2 py-1 text-xs',
         {
           'bg-gray-100 text-gray-500': !needToRevise,
-          'bg-green-500 text-white': needToRevise,
+          'bg-yellow-500 text-white': needToRevise,
         },
       )}
     >
       {!needToRevise ? (
         <>
           <CheckCircleOutline className="ml-1 w-4
-          text-highlight" />
+          text-highlight" strokeWidth="2.5"/>
         </>
       ) : null}
       {needToRevise ? (
         <>
-          <ExclamationTriangleOutline className="ml-1 w-4 text-highlight" />
+          <ExclamationTriangleOutline className="ml-1 w-4 text-highlight" strokeWidth="2.5" />
         </>
       ) : null}
     </span>
