@@ -1,5 +1,6 @@
 import { GeistSans } from "geist/font/sans";
 import './globals.css';
+import SessionProvider from "../components/SessionProvider";
  
 export default function RootLayout({
   children,
@@ -8,7 +9,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={GeistSans.variable}>
-      <body className={`antialiased`}>{children}</body>
+      <body className={`antialiased`}>
+        <SessionProvider>
+          {children}
+        </SessionProvider>
+      </body>
     </html>
   );
 }
