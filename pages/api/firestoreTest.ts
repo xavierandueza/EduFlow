@@ -14,7 +14,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.error("Error adding document: ", e);
       }
 }
-
-const addDataToDB = async () => {
-
-};
