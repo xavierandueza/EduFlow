@@ -2,14 +2,6 @@
   "name": "eduflow",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "dev:port1": "next dev -p 3001",
-    "build": "next build && npm run seed",
-    "start": "next start",
-    "seed": "ts-node ./scripts/populateDbCustom.ts",
-    "lint": "next lint"
-  },
   "dependencies": {
     "@datastax/astra-db-ts": "0.0.23",
     "@heroicons/react": "^2.0.18",
@@ -35,16 +27,12 @@
     "ts-node": "^10.9.1",
     "typescript": "5.2.2",
     "use-debounce": "^10.0.0",
-    "vercel": "^32.5.6"
+    "vercel": "^32.5.6",
+    "firebase-frameworks": "^0.11.0",
+    "firebase-functions": "^4.5.0"
   },
-  "devDependencies": {
-    "@types/react": "^18.2.37",
-    "autoprefixer": "^10",
-    "dotenv": "^16.3.1",
-    "eslint": "^8",
-    "eslint-config-next": "13.5.5",
-    "eslint-config-prettier": "^9.0.0",
-    "postcss": "^8",
-    "tailwindcss": "^3"
+  "main": "server.js",
+  "engines": {
+    "node": "20"
   }
 }
