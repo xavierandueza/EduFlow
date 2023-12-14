@@ -86,3 +86,19 @@ export interface RouteRequestBody {
   email: string;
   sessionSkillAggregates?: ExtendedSkillAggregate[]; 
 }
+
+export type ChatAction =  'clarifyingQuestion' | 
+                          'gradingValidAnswer' | 
+                          'gradingInvalidAnswer' | 
+                          'providingExtraFeedback' | 
+                          'askingQuestion' | 
+                          'unknownResponse'; 
+
+//For testing purposes
+export interface StudentResponseRequestBody {
+  body : {
+    relevantChatMessage: string;
+    studentResponse: string;
+    lastAction: ChatAction;
+  }
+}
