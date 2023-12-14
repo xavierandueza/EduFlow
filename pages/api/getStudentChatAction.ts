@@ -10,7 +10,10 @@ const openai = new OpenAI({
 
 export default async function handler(req: NextApiRequest | StudentResponseRequestBody, res: NextApiResponse) {
   const {relevantChatMessage, studentResponse, lastAction}: { relevantChatMessage : string, studentResponse : string, lastAction : ChatAction} = req.body;
-
+  console.log("Relevant chat message is: " + relevantChatMessage);
+  console.log("Student response is: " + studentResponse);
+  console.log("Last action is: " + lastAction);
+  
   let currentChatAction : string = "unknownResponse"; // default value of an unknown response
 
   let response : ChatCompletion;
@@ -56,7 +59,7 @@ export default async function handler(req: NextApiRequest | StudentResponseReque
       }
       );
       console.log("Model classification is: " + response.choices[0].message.content)
-      currentChatAction = response.choices[0].message.content; // setting the currentChatAction to the response from OpenAI
+      currentChatAction = response.choices[0].message.content as ChatAction; // setting the currentChatAction to the response from OpenAI
       // console.log("The response is:"); 
       // console.log(response);
 
@@ -100,7 +103,7 @@ export default async function handler(req: NextApiRequest | StudentResponseReque
         }
       );
       console.log("Model classification is: " + response.choices[0].message.content)
-      currentChatAction = response.choices[0].message.content; // setting the currentChatAction to the response from OpenAI
+      currentChatAction = response.choices[0].message.content as ChatAction; // setting the currentChatAction to the response from OpenAI
       // console.log("The response is:"); 
       // console.log(response);
 

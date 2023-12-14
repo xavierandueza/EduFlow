@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom'
 import 'openai/shims/node';
-import setStudentChatState from '../../pages/api/setStudentChatState'
+import setStudentChatState from '../../pages/api/getStudentChatAction'
 import { StudentResponseRequestBody, ChatAction } from '../../app/utils/interfaces'
 
 // Not recommended to get to know jest and testing, but useful for testing API

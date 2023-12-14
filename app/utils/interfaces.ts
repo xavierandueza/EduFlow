@@ -81,7 +81,7 @@ export interface StudentAggregate {
 export interface RouteRequestBody {
   messages?: any;
   llm: string;
-  chatState: string;
+  chatAction: string;
   skill: string;
   email: string;
   sessionSkillAggregates?: ExtendedSkillAggregate[]; 

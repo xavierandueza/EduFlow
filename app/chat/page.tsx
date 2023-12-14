@@ -8,7 +8,7 @@ import useConfiguration from '../hooks/useConfiguration';
 import React, { FormEvent } from 'react';
 import ProgressBar from '../../components/ProgressBar';
 import { useSearchParams } from 'next/navigation';
-
+import { ChatAction } from '../utils/interfaces';
 
 // Debounce function
 function debounce(func, wait) {
@@ -36,12 +36,14 @@ export default function Home() {
   const { messages, input, handleInputChange, handleSubmit } = useChat(); // imported from the ai/react package, which can be found here: https://www.npmjs.com/package/ai
   const relevantChangeIndicator = getRelevantChangeIndicator(messages);
   const messagesEndRef = useRef(null);
+  const [lastChatAction, setLastChatAction] = useState<ChatAction>("unknownResponse");
+  const [relevantChatMessage, setRelevantChatMessage] = useState<string>("");
   
   // same as below but in question asking mode
   const [myChatState, setMyChatState] = useState('asking');
 
   // retrieve the studentSkill from the server
-  // this is populated then fed into the chat call to determine chat behvaiour
+  // this is populated then fed into the chat call to determine chat behaviour
   const [studentSkill, setStudentSkill] = useState({
     id: '',
     email_address: '',
@@ -79,6 +81,28 @@ export default function Home() {
     }
   }
 
+  const fetchCurrentChatAction = async (relevantChatMessage, studentResponse, lastAction) => {
+    // console.log('entered fetching student skill function')
+    try {
+      console.log("Getting the current chat action")
+      const response = await fetch('/api/getStudentChatState', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ relevantChatMessage, studentResponse, lastAction })
+      });
+      const data = await response.json();
+      console.log("Next chat action is: ")
+      console.log(data.currentChatAction)
+      // console.log('Successfully retrieved the student skill')
+      // console.log(studentSkill)
+      return(data.currentChatAction);
+    } catch (error) {
+      console.error('Error fetching currentAction skill:', error);
+    }
+  }
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -88,7 +112,7 @@ export default function Home() {
     fetchStudentSkill();
   }, []); // Empty dependency array to run only once on mount
 
-  // Andrew: new message starts, check if need to update mastery metric and so if need to.
+  // Andrew: new message starts, check if need to updat e mastery metric and so if need to.
   useEffect(() => {
     // console.log('New message received, fetching student skill again')
     fetchStudentSkill();
@@ -138,12 +162,24 @@ export default function Home() {
     debouncedCheckDependencies();
   }, [debouncedCheckDependencies]);  // Dependency is the debounced function itself
 
-  const handleSend = (e) => {
+  const handleSend = async (e : React.FormEvent<HTMLFormElement>) => {
     // console.log(chatState); messages, llm, chatState, skill, email
+    e.preventDefault(); // prevents default form submission behaviour
+
+    const textInput = input;
+    console.log("User inputted: " + textInput);
+    let currentChatAction = lastChatAction;
+
+    if (lastChatAction == "unknownResponse") {
+      // get the next chat action
+      console.log(`Previous chatAction was: ${lastChatAction}`)
+      currentChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction); // input is from the form
+      console.log(`Current chatAction is: ${currentChatAction}`)
+    }
     handleSubmit(e, {
        options: {
          body: {
-           llm: 'gpt-4', chatState: myChatState, email: studentSkill.email_address, skill: studentSkill.skill // Andrew: no messages here
+           llm: 'gpt-4-1106-preview', chatState: myChatState, email: studentSkill.email_address, skill: studentSkill.skill // Andrew: no messages here
           }
         }
       });
@@ -158,6 +194,8 @@ export default function Home() {
       // setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
       setMyChatState('asking');
     } 
+
+    setLastChatAction(currentChatAction);
   }
 
   return (
