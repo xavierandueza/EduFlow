@@ -2,9 +2,9 @@ import OpenAI from 'openai';
 import { ChatCompletionMessageParam } from 'openai/resources';
 import {OpenAIStream, StreamingTextResponse} from 'ai';
 import { getSkillFromDB, getStudentFromDB, getStudentSkillFromDB, updateStudentSkillScores } from '../../utils/databaseFunctions';
-
-import { Skill, Student, StudentSkill } from '../../utils/interfaces';
+import { Skill, Student, StudentSkill, ChatAction } from '../../utils/interfaces';
 import { RouteRequestBody } from '../../utils/interfaces';
+import { getStudentChatAction } from '../../../pages/api/getStudentChatAction';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -26,20 +26,48 @@ function determineSampleQuestions(relevantScore : number, easyQuestions : string
 export async function POST(req: Request) {
   try {
     const requestBody = await req.json() as RouteRequestBody;
-    const {messages, llm, chatState, skill, email, sessionSkillAggregates} = requestBody;
+    const {messages, 
+      llm, 
+      lastChatAction, 
+      skill, 
+      email, 
+      sessionSkillAggregates, 
+      relevantMessagesStartIndex, 
+      onFeedbackLoopCounter, 
+      onQuestionLoopCounter,
+      myChatAction} = requestBody;
+    
+    let chatAction : ChatAction;
 
-    if (chatState === 'asking') {
+    const relevantMessages = messages.slice(relevantMessagesStartIndex);
+
+    console.log("\n\nRelevant Messages are: \n")
+    for (const relevantMessage of relevantMessages) {
+      console.log(relevantMessage.content);
+    }
+
+    if (relevantMessages.length === 1) {
+      // only one message, so chatAction is askingQuestion
+      chatAction = 'askingQuestion';
+    } else if (relevantMessages.length > 0) { // there is a chat action to speak of
+      chatAction = await getStudentChatAction(messages[messages.length-2].content, messages[messages.length - 1].content, lastChatAction)
+    }
+
+    // make messages only the relevant messages (current Q+A string)
+
+    console.log(`Chat action is: ${chatAction}`)
+
+    if (chatAction === 'askingQuestion') {
+      console.log("Asking a question")
       const returnedSkill = await getSkillFromDB(skill) as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
 
       const returnedStudent = await getStudentFromDB(email) as Student; // response from the DB. Has email_address, interests, subjects
       
       const returnedStudentSkill = await getStudentSkillFromDB(email, skill) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
-      
-      const latestMessage = messages[messages?.length - 1]?.content;
 
-      var sampleQuestions : string[];
+      var sampleQuestions : string[]; 
 
-      // checks to see if the student needs to revise or not via function caluclated in astraDB. If True then will give student questions based on difficulty where <33.3 is easy, <66.6 is medium, and >66.6 is hard. 
+      // checks to see if the student needs to revise or not via function calculated in astraDB. If True then will give student questions based on difficulty where <33.3 is easy, <66.6 is medium, and >66.6 is hard. 
       // Andrew note for future development: this function might be bugged. A student with a low mastery score but high retention score (because they just answered a question) can be given hard questions. Doesn't matter atm though.
       if (returnedStudentSkill.need_to_revise) {
         sampleQuestions = determineSampleQuestions(returnedStudentSkill.retention_score, returnedSkill.easy_questions, returnedSkill.mdrt_questions, returnedSkill.hard_questions);
@@ -51,15 +79,15 @@ export async function POST(req: Request) {
       const questions: string[] = [];
 
       //Andrew: What does this function do and why 2?
-      if (messages.length > 2)
+      if (relevantMessages.length > 2)
       {
         // Questions have been asked before
-        for (let i = 1; i < messages.length; i += 4) {
-          questions.push(messages[i].content);
+        for (let i = 1; i < relevantMessages.length; i += 4) {
+          questions.push(relevantMessages[i].content);
         }
       }
 
-      console.log(`Questions are: ${questions}`)
+      // console.log(`Questions are: ${questions}`)
 
       const systemPrompt = [ // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
         {
@@ -106,14 +134,61 @@ export async function POST(req: Request) {
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
 
-    } else if (chatState === 'waiting') {
+    } else if (chatAction === 'clarifyingQuestion') {
+      console.log("Clarifying the question")
+      // Provide extra feedback
+      const returnedSkill = await getSkillFromDB(skill) as Skill;  
+
+      console.log(`onQuestionLoopCounter is: ${onQuestionLoopCounter}`)
+      console.log(`Original question start: ${relevantMessages[1].content}`)
+      console.log(``)
+
+      const feedbackSystemPrompt = [
+        {
+          "role": "system", 
+          "content": `You are an expert ${returnedSkill.subject} AI assistant who assists students on the topic of ${returnedSkill.skill}.
+          You have already asked the student a question, and the student is currently clarifying the question with you. 
+ 
+          ORIGINAL QUESTION START
+          ${relevantMessages[1].content}
+          ORIGINAL QUESTION END
+          
+          TOPIC THEORY START
+          ${returnedSkill.content}
+          TOPIC THEORY END
+          
+          Provide a response to the student that helps clarify the question without providing an answer. Keep your answer succinct, and focus on answering the student's question.
+          .`
+        }
+      ] as ChatCompletionMessageParam[]
+
+      const studentResponse = [
+        {
+          "role": "user",
+          "content": relevantMessages.slice(-1)[0].content
+        }
+      ] as ChatCompletionMessageParam[]
+
+      // Create the response
+      const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
+        {
+          model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
+          stream: true, // streaming YAY
+          messages: [...feedbackSystemPrompt, ...studentResponse], // combine the system prompt with the latest message
+        }
+      );
+      
+      const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
+      return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
+
+    } else if (chatAction === 'gradingValidAnswer' || chatAction === 'gradingInvalidAnswer') {
       const returnedSkill = await getSkillFromDB(skill) as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
 
       const returnedStudent = await getStudentFromDB(email) as Student; // response from the DB. Has email_address, interests, subjects
       
       const returnedStudentSkill = await getStudentSkillFromDB(email, skill) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
       
-      const latestMessage = messages[messages?.length - 1]?.content;
+      const latestMessage = relevantMessages[relevantMessages?.length - 1]?.content;
       // console.log('in route.ts waiting')
       // console.log('latest question was: ' + messages.slice(-2)[0].content)
       // console.log('Answer was: ' + latestMessage)
@@ -128,7 +203,7 @@ export async function POST(req: Request) {
           }
           The question and relevant theory are as follows:
           QUESTION START
-          ${messages.slice(-2)[0].content}
+          ${relevantMessages[1].content}
           QUESTION END
           
           THEORY START
@@ -138,17 +213,30 @@ export async function POST(req: Request) {
         },
       ] as ChatCompletionMessageParam[]
 
-      const userAnswer = [
-        {
-          "role": "user",
-          "content": latestMessage
-        },
-      ] as ChatCompletionMessageParam[]
+      let studentAnswer : ChatCompletionMessageParam[];
+
+      if (chatAction === "gradingValidAnswer") {
+        console.log("Responding to a valid response")
+        studentAnswer = [
+          {
+            "role": "user",
+            "content": latestMessage
+          },
+        ] as ChatCompletionMessageParam[]
+      } else {
+        console.log("Responding to an invalid response")
+        studentAnswer = [
+          {
+            "role": "user",
+            "content": "I don't know."
+          },
+        ] as ChatCompletionMessageParam[]
+      }
       
       const grade = await openai.chat.completions.create( // Actually sending the request to OpenAI
         {
           model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
-          messages: [...gradeSystemPrompt, ...userAnswer], // combine the system prompt with the latest message
+          messages: [...gradeSystemPrompt, ...studentAnswer], // combine the system prompt with the latest message
         }
       );
       let gradeJsonObject: any;
@@ -173,7 +261,7 @@ export async function POST(req: Request) {
           Provide feedback to the student on their answer, and word this in the 2nd person, as if the student is reading it.
           The question and relevant theory are as follows:
           QUESTION START
-          ${messages.slice(-2)[0].content}
+          ${relevantMessages[1].content}
           QUESTION END
           
           THEORY START
@@ -197,7 +285,99 @@ export async function POST(req: Request) {
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
       
-    } else if (chatState === 'creating lesson plan') {
+    } else if (chatAction === 'providingExtraFeedback') {
+      console.log("Providing extra feedback")
+      // Provide extra feedback
+      const returnedSkill = await getSkillFromDB(skill) as Skill; 
+
+      // TO DO
+      // - Need to get a way of determining how many loops we've been in for non-question answer chain
+      // - Need to drop that into the feedbackSystemPrompt  
+
+      console.log(`onFeedbackLoopCounter is: ${onFeedbackLoopCounter}`)
+      console.log(`Original question start: ${relevantMessages[1].content}`)
+
+      console.log(`Student Answer Start: ${relevantMessages[2 + onFeedbackLoopCounter*2].content}`)
+      console.log(`Student Answer End: ${relevantMessages[3 + onFeedbackLoopCounter*2].content}`)
+
+      const feedbackSystemPrompt = [
+        {
+          "role": "system", 
+          "content": `You are an AI assistant who assists students on the topic of ${returnedSkill.subject}.
+          The student has answered a question, and you have graded their answer and given feedback.
+
+          The student has asked a further clarifying question on the feedback, question, or broader topic.
+ 
+          ORIGINAL QUESTION START
+          ${relevantMessages[1].content}
+          ORIGINAL QUESTION END
+          
+          TOPIC THEORY START
+          ${returnedSkill.content}
+          TOPIC THEORY END
+
+          STUDENT ANSWER START
+          ${relevantMessages[2 + onQuestionLoopCounter*2].content}
+          STUDENT ANSWER END
+
+          FEEDBACK TO ANSWER START
+          ${relevantMessages[3 + onQuestionLoopCounter*2].content}
+          FEEDBACK TO ANSWER END 
+          
+          Provide a response to the student, and word this in the 2nd person, as if the student is reading it. Clarify the question without giving the answer away.
+          .`
+        }
+      ] as ChatCompletionMessageParam[]
+
+      const studentResponse = [
+        {
+          "role": "user",
+          "content": relevantMessages.slice(-1)[0].content
+        }
+      ] as ChatCompletionMessageParam[]
+
+      // Create the response
+      const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
+        {
+          model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
+          stream: true, // streaming YAY
+          messages: [...feedbackSystemPrompt, ...studentResponse], // combine the system prompt with the latest message
+        }
+      );
+      
+      const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
+      return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
+
+    } else if (chatAction === 'unknownResponse') {
+      console.log("Responding to an invalid response")
+      const feedbackSystemPrompt = [
+        {
+          "role": "system", 
+          "content": `You are an AI assistant who assists students in their learning.
+          You have been provided an unknown response, if it is appropriate to provide some sort of response to, do so, however ensure that you ask whether the student has any more questions, or would like to move on.
+          .`
+        }
+      ] as ChatCompletionMessageParam[]
+
+      const studentResponse = [
+        {
+          "role": "user",
+          "content": relevantMessages.slice(-1)[0].content
+        }
+      ] as ChatCompletionMessageParam[]
+
+      // Create the response
+      const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
+        {
+          model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
+          stream: true, // streaming YAY
+          messages: [...feedbackSystemPrompt, ...studentResponse], // combine the system prompt with the latest message
+        }
+      );
+      
+      const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
+      return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
+    } else if (chatAction === 'creating lesson plan') {
       console.log(sessionSkillAggregates)
       // code for pulling out relevant information from the aggregated Skills
 
@@ -242,55 +422,56 @@ export async function POST(req: Request) {
                 lessonPlanContextString += `This skill has some skills that it is dependent on, which students need to revise. Here is the list of those skills, and the number of students needing to revise them:\n`;
                 insertedRevisionDependencyText = true;
               }
-            lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.no_students_not_met_mastery}\n`;
+              lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.no_students_not_met_mastery}\n`;
+            }
           }
         }
+
+        console.log(lessonPlanContextString)
+
+        // console.log('waiting')
+        const classLessonPlanSystemPrompt = [
+          {
+            "role": "system", 
+            "content": `You are an AI assistant who provides expert lesson plans to teachers, helping them cater their content to the needs of their students. 
+            You have been given a list of skills to be included in the lesson, and their relevant information. This also includes the key ideas of the skill(s), and the theory relating to the skill(s). 
+            You may also be warned that some students have not met the satisfactory mastery level for skills that this skill is dependent on. A skill that is depedent on another indicates that the dependee skill is a prerequisite for the dependent skill.
+            If this is the case, then please provide a note on the major dependent skills that students are lacking in for the teacher. 
+              
+            The question and relevant theory are as follows:
+            RELEVANT INFORMATION START
+            ${lessonPlanContextString}
+            RELEVANT INFORMATION END
+
+            Break down your lesson plan into the following components:
+            - Learning intention: What is the skill that the student is learning in the class. Phrase as a "we are learning... "
+            - Success criteria: What should the student be capable of after the class, that they weren't capable of before. These must be worded as "I can" statements, from the perspective of the student, in terms of what they can do after they have completed the class
+            - Key questions: Good starters to prompt the class when you start off, motivating learning
+            - Introduction section (10 minutes): Provide an outline of the introduction, discussing learning intention, success criteria, any activities you may do in this period
+            - The main activity (25 minutes): Provide a summary of whjat the main classroom activity will be
+            - Materials: What you need to conduct the lesson
+            - closure (10 minutes): Provide an summary that reflects on class learnings, including what strategies were used to gain knowledge.
+            - rational: Why this has been the approach to the class.
+
+            Use markdown where appropriate. Do not return your lesson plan in quotes.
+            `
+          }
+        ] as ChatCompletionMessageParam[]
+
+        const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
+          {
+            model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
+            stream: true, // streaming YAY
+            messages: [...classLessonPlanSystemPrompt, ...messages], // combine the system prompt with the latest message
+          }
+        );
+        
+        const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
+        return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
+
       }
+    }  
 
-      console.log(lessonPlanContextString)
-
-      // console.log('waiting')
-      const classLessonPlanSystemPrompt = [
-        {
-          "role": "system", 
-          "content": `You are an AI assistant who provides expert lesson plans to teachers, helping them cater their content to the needs of their students. 
-          You have been given a list of skills to be included in the lesson, and their relevant information. This also includes the key ideas of the skill(s), and the theory relating to the skill(s). 
-          You may also be warned that some students have not met the satisfactory mastery level for skills that this skill is dependent on. A skill that is depedent on another indicates that the dependee skill is a prerequisite for the dependent skill.
-          If this is the case, then please provide a note on the major dependent skills that students are lacking in for the teacher. 
-            
-          The question and relevant theory are as follows:
-          RELEVANT INFORMATION START
-          ${lessonPlanContextString}
-          RELEVANT INFORMATION END
-
-          Break down your lesson plan into the following components:
-          - Learning intention: What is the skill that the student is learning in the class. Phrase as a "we are learning... "
-          - Success criteria: What should the student be capable of after the class, that they weren't capable of before. These must be worded as "I can" statements, from the perspective of the student, in terms of what they can do after they have completed the class
-          - Key questions: Good starters to prompt the class when you start off, motivating learning
-          - Introduction section (10 minutes): Provide an outline of the introduction, discussing learning intention, success criteria, any activities you may do in this period
-          - The main activity (25 minutes): Provide a summary of whjat the main classroom activity will be
-          - Materials: What you need to conduct the lesson
-          - closure (10 minutes): Provide an summary that reflects on class learnings, including what strategies were used to gain knowledge.
-          - rational: Why this has been the approach to the class.
-
-          Use markdown where appropriate. Do not return your lesson plan in quotes.
-          `
-        }
-      ] as ChatCompletionMessageParam[]
-
-      const response = await openai.chat.completions.create( // Actually sending the request to OpenAI
-        {
-          model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
-          stream: true, // streaming YAY
-          messages: [...classLessonPlanSystemPrompt, ...messages], // combine the system prompt with the latest message
-        }
-      );
-      
-      const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
-      return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
-
-    }
-  }  
   } catch (e) { // error handling
     throw e;
   }

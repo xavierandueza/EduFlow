@@ -8,7 +8,7 @@ import useConfiguration from '../hooks/useConfiguration';
 import React, { FormEvent } from 'react';
 import ProgressBar from '../../components/ProgressBar';
 import { useSearchParams } from 'next/navigation';
-
+import { ChatAction } from '../utils/interfaces';
 
 // Debounce function
 function debounce(func, wait) {
@@ -36,12 +36,14 @@ export default function Home() {
   const { messages, input, handleInputChange, handleSubmit } = useChat(); // imported from the ai/react package, which can be found here: https://www.npmjs.com/package/ai
   const relevantChangeIndicator = getRelevantChangeIndicator(messages);
   const messagesEndRef = useRef(null);
-  
-  // same as below but in question asking mode
-  const [myChatState, setMyChatState] = useState('asking');
+  const [lastChatAction, setLastChatAction] = useState<ChatAction>("unknownResponse");
+  const [relevantChatMessage, setRelevantChatMessage] = useState<string>("");
+  const [relevantMessagesStartIndex, setRelevantMessagesStartIndex] = useState<number>(0); // will need to change when history implemented.
+  const [onQuestionLoopCount, setOnQuestionLoopCount] = useState<number>(0); // Used in the route.ts file
+  const [onFeedbackLoopCount, setOnFeedbackLoopCount] = useState<number>(0); // Used in the route.ts file
 
   // retrieve the studentSkill from the server
-  // this is populated then fed into the chat call to determine chat behvaiour
+  // this is populated then fed into the chat call to determine chat behaviour
   const [studentSkill, setStudentSkill] = useState({
     id: '',
     email_address: '',
@@ -76,6 +78,28 @@ export default function Home() {
       setStudentSkill(data);
     } catch (error) {
       console.error('Error fetching student skill:', error);
+    }
+  }
+
+  const fetchCurrentChatAction = async (relevantChatMessage, studentResponse, lastAction) => {
+    // console.log('entered fetching student skill function')
+    try {
+      console.log("Getting the current chat action")
+      const response = await fetch('/api/getStudentChatAction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ relevantChatMessage, studentResponse, lastAction })
+      });
+      const data = await response.json();
+      // console.log("Next chat action is: ")
+      // console.log(data.currentChatAction)
+      // console.log('Successfully retrieved the student skill')
+      // console.log(studentSkill)
+      return(data.currentChatAction as ChatAction);
+    } catch (error) {
+      console.error('Error fetching currentAction skill:', error);
     }
   }
 
@@ -138,26 +162,57 @@ export default function Home() {
     debouncedCheckDependencies();
   }, [debouncedCheckDependencies]);  // Dependency is the debounced function itself
 
-  const handleSend = (e) => {
+  const handleSend = async (e : React.FormEvent<HTMLFormElement>) => {
     // console.log(chatState); messages, llm, chatState, skill, email
-    handleSubmit(e, {
-       options: {
-         body: {
-           llm: 'gpt-4', chatState: myChatState, email: studentSkill.email_address, skill: studentSkill.skill // Andrew: no messages here
-          }
-        }
-      });
-    // console.log('Chatbot is waiting for a response now');
+    e.preventDefault(); // prevents default form submission behaviour
 
-    if (myChatState === 'asking') {
-      // console.log('Changing to waiting');
-      // setConfiguration(useRag, llm, similarityMetric, 'waiting', skill, email);
-      setMyChatState('waiting');
-    } else if (myChatState === 'waiting') {
-      // console.log('Changing to asking');
-      // setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
-      setMyChatState('asking');
-    } 
+    const textInput = input;
+    console.log("User inputted: " + textInput);
+    console.log("Relevant messages starting index is : " + relevantMessagesStartIndex);
+    // let currentChatAction = lastChatAction;
+    let tempRelevantMessagesStartIndex = relevantMessagesStartIndex; 
+    let tempOnQuestionLoopCount = onQuestionLoopCount;
+    let tempOnFeedbackLoopCount = onFeedbackLoopCount;
+
+    // get the currentAction from input, relevant message, and next action
+    console.log(`Previous chatAction was: ${lastChatAction}`);
+    // currentChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction); // input is from the form
+
+    if (messages.length === 0) {
+      tempRelevantMessagesStartIndex = messages.length;  // so that the "ready" statement is the start index of the current ones
+    } else if (lastChatAction === "askingQuestion"){
+      tempRelevantMessagesStartIndex = messages.length - 2; // ready statement again, 1 before the last message
+      tempOnQuestionLoopCount = 0; // reset both loop counters
+      tempOnFeedbackLoopCount = 0; // reset both loop counters
+    } else if (lastChatAction === "clarifyingQuestion") {
+      tempOnQuestionLoopCount = tempOnQuestionLoopCount + 1; // increment the loop counter
+    } else if (lastChatAction === "providingExtraFeedback" || lastChatAction === "unknownResponse") {
+      tempOnFeedbackLoopCount = tempOnFeedbackLoopCount + 1; // increment the loop counter
+    }
+
+    console.log("Temp Relevant Messages Index is: " + tempRelevantMessagesStartIndex)
+    
+    handleSubmit(e, {
+      options: {
+        body: {
+          llm: 'gpt-4-1106-preview', 
+          lastChatAction: lastChatAction, 
+          skill: studentSkill.skill, 
+          email: studentSkill.email_address, 
+          relevantMessagesStartIndex: tempRelevantMessagesStartIndex,
+          onQuestionLoopCount: tempOnQuestionLoopCount,
+          onFeedbackLoopCount: tempOnFeedbackLoopCount,
+        }
+      }
+    });
+
+    // update states
+    const tempChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction); // input is from the form
+    console.log(`Chat Action was: ${tempChatAction}`);
+    setLastChatAction(tempChatAction);
+    setRelevantMessagesStartIndex(tempRelevantMessagesStartIndex);
+    setOnFeedbackLoopCount(tempOnFeedbackLoopCount);
+    setOnFeedbackLoopCount(tempOnFeedbackLoopCount);
   }
 
   return (

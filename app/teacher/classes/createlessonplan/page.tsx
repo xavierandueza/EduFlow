@@ -51,7 +51,7 @@ export default function Page() {
 
   const handleSend = (e) => {
     // console.log(chatState); messages, llm, chatState, skill, email
-    handleSubmit(e, { options: { body: { llm: 'gpt-4', chatState: myChatState, email: '', skill: ''}}});
+    handleSubmit(e, { options: { body: { llm: 'gpt-4', myChatState: myChatState, email: '', skill: ''}}});
     // console.log('Chatbot is waiting for a response now');
 
     /* Handling different chat states below, not needed at present 
