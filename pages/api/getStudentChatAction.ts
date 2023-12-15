@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest | StudentResponseReque
   console.log("Student response is: " + studentResponse);
   console.log("Last action is: " + lastAction);
   
-  let currentChatAction : string = "unknownResponse"; // default value of an unknown response
+  let currentChatAction : ChatAction = "unknownResponse"; // default value of an unknown response
 
   let response : ChatCompletion;
 

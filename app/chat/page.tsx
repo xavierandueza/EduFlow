@@ -38,9 +38,7 @@ export default function Home() {
   const messagesEndRef = useRef(null);
   const [lastChatAction, setLastChatAction] = useState<ChatAction>("unknownResponse");
   const [relevantChatMessage, setRelevantChatMessage] = useState<string>("");
-  
-  // same as below but in question asking mode
-  const [myChatState, setMyChatState] = useState('asking');
+  const [relevantMessagesStartIndex, setRelevantMessagesStartIndex] = useState<number>(0); // will need to change when history implemented.
 
   // retrieve the studentSkill from the server
   // this is populated then fed into the chat call to determine chat behaviour
@@ -85,7 +83,7 @@ export default function Home() {
     // console.log('entered fetching student skill function')
     try {
       console.log("Getting the current chat action")
-      const response = await fetch('/api/getStudentChatState', {
+      const response = await fetch('/api/getStudentChatAction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -93,11 +91,11 @@ export default function Home() {
         body: JSON.stringify({ relevantChatMessage, studentResponse, lastAction })
       });
       const data = await response.json();
-      console.log("Next chat action is: ")
-      console.log(data.currentChatAction)
+      // console.log("Next chat action is: ")
+      // console.log(data.currentChatAction)
       // console.log('Successfully retrieved the student skill')
       // console.log(studentSkill)
-      return(data.currentChatAction);
+      return(data.currentChatAction as ChatAction);
     } catch (error) {
       console.error('Error fetching currentAction skill:', error);
     }
@@ -168,34 +166,32 @@ export default function Home() {
 
     const textInput = input;
     console.log("User inputted: " + textInput);
+    console.log("Relevant messages starting index is : " + relevantMessagesStartIndex);
     let currentChatAction = lastChatAction;
+    let tempRelevantMessagesStartIndex = relevantMessagesStartIndex; 
 
-    if (lastChatAction == "unknownResponse") {
-      // get the next chat action
-      console.log(`Previous chatAction was: ${lastChatAction}`)
-      currentChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction); // input is from the form
-      console.log(`Current chatAction is: ${currentChatAction}`)
+    // get the currentAction from input, relevant message, and next action
+    console.log(`Previous chatAction was: ${lastChatAction}`);
+    currentChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction); // input is from the form
+
+    if (currentChatAction === "askingQuestion") {
+      tempRelevantMessagesStartIndex = messages.length;  // so that the "ready" statement is the start index of the current ones
     }
+
+    console.log(`Current chatAction is: ${currentChatAction}`);
+    console.log(`Type of chatAction is ${typeof(currentChatAction)}`);
+    
     handleSubmit(e, {
-       options: {
-         body: {
-           llm: 'gpt-4-1106-preview', chatState: myChatState, email: studentSkill.email_address, skill: studentSkill.skill // Andrew: no messages here
-          }
+      options: {
+        body: {
+          llm: 'gpt-4-1106-preview', chatAction: currentChatAction, email: studentSkill.email_address, skill: studentSkill.skill // Andrew: no messages here
         }
-      });
-    // console.log('Chatbot is waiting for a response now');
+      }
+    });
 
-    if (myChatState === 'asking') {
-      // console.log('Changing to waiting');
-      // setConfiguration(useRag, llm, similarityMetric, 'waiting', skill, email);
-      setMyChatState('waiting');
-    } else if (myChatState === 'waiting') {
-      // console.log('Changing to asking');
-      // setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
-      setMyChatState('asking');
-    } 
-
+    // update states
     setLastChatAction(currentChatAction);
+    setRelevantMessagesStartIndex(tempRelevantMessagesStartIndex);
   }
 
   return (
