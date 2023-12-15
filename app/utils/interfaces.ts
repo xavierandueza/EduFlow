@@ -81,10 +81,13 @@ export interface StudentAggregate {
 export interface RouteRequestBody {
   messages?: any;
   llm: string;
-  chatAction: ChatAction;
+  lastChatAction: ChatAction;
   skill: string;
   email: string;
   relevantMessagesStartIndex?: number;
+  onQuestionLoopCounter?: number;
+  onFeedbackLoopCounter?: number;
+  myChatAction?: ChatAction;
   sessionSkillAggregates?: ExtendedSkillAggregate[]; 
 }
 
@@ -93,7 +96,8 @@ export type ChatAction =  'clarifyingQuestion' |
                           'gradingInvalidAnswer' | 
                           'providingExtraFeedback' | 
                           'askingQuestion' | 
-                          'unknownResponse'; 
+                          'unknownResponse' |
+                          'creating lesson plan'; 
 
 //For testing purposes
 export interface StudentResponseRequestBody {

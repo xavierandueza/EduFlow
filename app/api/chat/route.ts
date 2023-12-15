@@ -2,9 +2,9 @@ import OpenAI from 'openai';
 import { ChatCompletionMessageParam } from 'openai/resources';
 import {OpenAIStream, StreamingTextResponse} from 'ai';
 import { getSkillFromDB, getStudentFromDB, getStudentSkillFromDB, updateStudentSkillScores } from '../../utils/databaseFunctions';
-
 import { Skill, Student, StudentSkill, ChatAction } from '../../utils/interfaces';
 import { RouteRequestBody } from '../../utils/interfaces';
+import { getStudentChatAction } from '../../../pages/api/getStudentChatAction';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -26,10 +26,34 @@ function determineSampleQuestions(relevantScore : number, easyQuestions : string
 export async function POST(req: Request) {
   try {
     const requestBody = await req.json() as RouteRequestBody;
-    const {messages, llm, chatAction, skill, email, sessionSkillAggregates, relevantMessagesStartIndex} = requestBody;
+    const {messages, 
+      llm, 
+      lastChatAction, 
+      skill, 
+      email, 
+      sessionSkillAggregates, 
+      relevantMessagesStartIndex, 
+      onFeedbackLoopCounter, 
+      onQuestionLoopCounter,
+      myChatAction} = requestBody;
+    
+    let chatAction : ChatAction;
+
+    const relevantMessages = messages.slice(relevantMessagesStartIndex);
+
+    console.log("\n\nRelevant Messages are: \n")
+    for (const relevantMessage of relevantMessages) {
+      console.log(relevantMessage.content);
+    }
+
+    if (relevantMessages.length === 1) {
+      // only one message, so chatAction is askingQuestion
+      chatAction = 'askingQuestion';
+    } else if (relevantMessages.length > 0) { // there is a chat action to speak of
+      chatAction = await getStudentChatAction(messages[messages.length-2].content, messages[messages.length - 1].content, lastChatAction)
+    }
 
     // make messages only the relevant messages (current Q+A string)
-    const relevantMessages = messages.slice(relevantMessagesStartIndex);
 
     console.log(`Chat action is: ${chatAction}`)
 
@@ -55,11 +79,11 @@ export async function POST(req: Request) {
       const questions: string[] = [];
 
       //Andrew: What does this function do and why 2?
-      if (messages.length > 2)
+      if (relevantMessages.length > 2)
       {
         // Questions have been asked before
-        for (let i = 1; i < messages.length; i += 4) {
-          questions.push(messages[i].content);
+        for (let i = 1; i < relevantMessages.length; i += 4) {
+          questions.push(relevantMessages[i].content);
         }
       }
 
@@ -115,6 +139,10 @@ export async function POST(req: Request) {
       // Provide extra feedback
       const returnedSkill = await getSkillFromDB(skill) as Skill;  
 
+      console.log(`onQuestionLoopCounter is: ${onQuestionLoopCounter}`)
+      console.log(`Original question start: ${relevantMessages[1].content}`)
+      console.log(``)
+
       const feedbackSystemPrompt = [
         {
           "role": "system", 
@@ -122,20 +150,12 @@ export async function POST(req: Request) {
           You have already asked the student a question, and the student is currently clarifying the question with you. 
  
           ORIGINAL QUESTION START
-          ${messages.slice(-2)[0].content}
+          ${relevantMessages[1].content}
           ORIGINAL QUESTION END
           
           TOPIC THEORY START
           ${returnedSkill.content}
           TOPIC THEORY END
-
-          STUDENT ANSWER START
-          ${messages.slice(-3)[0].content}
-          STUDENT ANSWER END
-
-          FEEDBACK TO ANSWER START
-          ${messages.slice(-2)[0].content}
-          FEEDBACK TO ANSWER END 
           
           Provide a response to the student that helps clarify the question without providing an answer. Keep your answer succinct, and focus on answering the student's question.
           .`
@@ -145,7 +165,7 @@ export async function POST(req: Request) {
       const studentResponse = [
         {
           "role": "user",
-          "content": messages.slice(-1)[0].content
+          "content": relevantMessages.slice(-1)[0].content
         }
       ] as ChatCompletionMessageParam[]
 
@@ -168,7 +188,7 @@ export async function POST(req: Request) {
       
       const returnedStudentSkill = await getStudentSkillFromDB(email, skill) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
       
-      const latestMessage = messages[messages?.length - 1]?.content;
+      const latestMessage = relevantMessages[relevantMessages?.length - 1]?.content;
       // console.log('in route.ts waiting')
       // console.log('latest question was: ' + messages.slice(-2)[0].content)
       // console.log('Answer was: ' + latestMessage)
@@ -183,7 +203,7 @@ export async function POST(req: Request) {
           }
           The question and relevant theory are as follows:
           QUESTION START
-          ${messages.slice(-2)[0].content}
+          ${relevantMessages[1].content}
           QUESTION END
           
           THEORY START
@@ -241,7 +261,7 @@ export async function POST(req: Request) {
           Provide feedback to the student on their answer, and word this in the 2nd person, as if the student is reading it.
           The question and relevant theory are as follows:
           QUESTION START
-          ${messages.slice(-2)[0].content}
+          ${relevantMessages[1].content}
           QUESTION END
           
           THEORY START
@@ -274,6 +294,12 @@ export async function POST(req: Request) {
       // - Need to get a way of determining how many loops we've been in for non-question answer chain
       // - Need to drop that into the feedbackSystemPrompt  
 
+      console.log(`onFeedbackLoopCounter is: ${onFeedbackLoopCounter}`)
+      console.log(`Original question start: ${relevantMessages[1].content}`)
+
+      console.log(`Student Answer Start: ${relevantMessages[2 + onFeedbackLoopCounter*2].content}`)
+      console.log(`Student Answer End: ${relevantMessages[3 + onFeedbackLoopCounter*2].content}`)
+
       const feedbackSystemPrompt = [
         {
           "role": "system", 
@@ -283,7 +309,7 @@ export async function POST(req: Request) {
           The student has asked a further clarifying question on the feedback, question, or broader topic.
  
           ORIGINAL QUESTION START
-          ${messages.slice(-4)[0].content}
+          ${relevantMessages[1].content}
           ORIGINAL QUESTION END
           
           TOPIC THEORY START
@@ -291,14 +317,14 @@ export async function POST(req: Request) {
           TOPIC THEORY END
 
           STUDENT ANSWER START
-          ${messages.slice(-3)[0].content}
+          ${relevantMessages[2 + onQuestionLoopCounter*2].content}
           STUDENT ANSWER END
 
           FEEDBACK TO ANSWER START
-          ${messages.slice(-2)[0].content}
+          ${relevantMessages[3 + onQuestionLoopCounter*2].content}
           FEEDBACK TO ANSWER END 
           
-          Provide a response to the student, and word this in the 2nd person, as if the student is reading it.
+          Provide a response to the student, and word this in the 2nd person, as if the student is reading it. Clarify the question without giving the answer away.
           .`
         }
       ] as ChatCompletionMessageParam[]
@@ -306,7 +332,7 @@ export async function POST(req: Request) {
       const studentResponse = [
         {
           "role": "user",
-          "content": messages.slice(-1)[0].content
+          "content": relevantMessages.slice(-1)[0].content
         }
       ] as ChatCompletionMessageParam[]
 
@@ -336,7 +362,7 @@ export async function POST(req: Request) {
       const studentResponse = [
         {
           "role": "user",
-          "content": messages.slice(-1)[0].content
+          "content": relevantMessages.slice(-1)[0].content
         }
       ] as ChatCompletionMessageParam[]
 
@@ -351,8 +377,7 @@ export async function POST(req: Request) {
       
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
-    }
-    /*else if (chatAction === 'creating lesson plan') {
+    } else if (chatAction === 'creating lesson plan') {
       console.log(sessionSkillAggregates)
       // code for pulling out relevant information from the aggregated Skills
 
@@ -445,7 +470,7 @@ export async function POST(req: Request) {
         return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
 
       }
-    }*/  
+    }  
 
   } catch (e) { // error handling
     throw e;

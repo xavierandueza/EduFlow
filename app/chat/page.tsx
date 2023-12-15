@@ -39,6 +39,8 @@ export default function Home() {
   const [lastChatAction, setLastChatAction] = useState<ChatAction>("unknownResponse");
   const [relevantChatMessage, setRelevantChatMessage] = useState<string>("");
   const [relevantMessagesStartIndex, setRelevantMessagesStartIndex] = useState<number>(0); // will need to change when history implemented.
+  const [onQuestionLoopCount, setOnQuestionLoopCount] = useState<number>(0); // Used in the route.ts file
+  const [onFeedbackLoopCount, setOnFeedbackLoopCount] = useState<number>(0); // Used in the route.ts file
 
   // retrieve the studentSkill from the server
   // this is populated then fed into the chat call to determine chat behaviour
@@ -110,7 +112,7 @@ export default function Home() {
     fetchStudentSkill();
   }, []); // Empty dependency array to run only once on mount
 
-  // Andrew: new message starts, check if need to updat e mastery metric and so if need to.
+  // Andrew: new message starts, check if need to update mastery metric and so if need to.
   useEffect(() => {
     // console.log('New message received, fetching student skill again')
     fetchStudentSkill();
@@ -167,31 +169,50 @@ export default function Home() {
     const textInput = input;
     console.log("User inputted: " + textInput);
     console.log("Relevant messages starting index is : " + relevantMessagesStartIndex);
-    let currentChatAction = lastChatAction;
+    // let currentChatAction = lastChatAction;
     let tempRelevantMessagesStartIndex = relevantMessagesStartIndex; 
+    let tempOnQuestionLoopCount = onQuestionLoopCount;
+    let tempOnFeedbackLoopCount = onFeedbackLoopCount;
 
     // get the currentAction from input, relevant message, and next action
     console.log(`Previous chatAction was: ${lastChatAction}`);
-    currentChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction); // input is from the form
+    // currentChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction); // input is from the form
 
-    if (currentChatAction === "askingQuestion") {
+    if (messages.length === 0) {
       tempRelevantMessagesStartIndex = messages.length;  // so that the "ready" statement is the start index of the current ones
+    } else if (lastChatAction === "askingQuestion"){
+      tempRelevantMessagesStartIndex = messages.length - 2; // ready statement again, 1 before the last message
+      tempOnQuestionLoopCount = 0; // reset both loop counters
+      tempOnFeedbackLoopCount = 0; // reset both loop counters
+    } else if (lastChatAction === "clarifyingQuestion") {
+      tempOnQuestionLoopCount = tempOnQuestionLoopCount + 1; // increment the loop counter
+    } else if (lastChatAction === "providingExtraFeedback" || lastChatAction === "unknownResponse") {
+      tempOnFeedbackLoopCount = tempOnFeedbackLoopCount + 1; // increment the loop counter
     }
 
-    console.log(`Current chatAction is: ${currentChatAction}`);
-    console.log(`Type of chatAction is ${typeof(currentChatAction)}`);
+    console.log("Temp Relevant Messages Index is: " + tempRelevantMessagesStartIndex)
     
     handleSubmit(e, {
       options: {
         body: {
-          llm: 'gpt-4-1106-preview', chatAction: currentChatAction, email: studentSkill.email_address, skill: studentSkill.skill // Andrew: no messages here
+          llm: 'gpt-4-1106-preview', 
+          lastChatAction: lastChatAction, 
+          skill: studentSkill.skill, 
+          email: studentSkill.email_address, 
+          relevantMessagesStartIndex: tempRelevantMessagesStartIndex,
+          onQuestionLoopCount: tempOnQuestionLoopCount,
+          onFeedbackLoopCount: tempOnFeedbackLoopCount,
         }
       }
     });
 
     // update states
-    setLastChatAction(currentChatAction);
+    const tempChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction); // input is from the form
+    console.log(`Chat Action was: ${tempChatAction}`);
+    setLastChatAction(tempChatAction);
     setRelevantMessagesStartIndex(tempRelevantMessagesStartIndex);
+    setOnFeedbackLoopCount(tempOnFeedbackLoopCount);
+    setOnFeedbackLoopCount(tempOnFeedbackLoopCount);
   }
 
   return (
