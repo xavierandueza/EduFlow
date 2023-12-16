@@ -13,6 +13,7 @@ const openai = new OpenAI({
 
 // const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
 
+/*
 function determineSampleQuestions(relevantScore : number, easyQuestions : string[], mdrtQuestions : string[], hardQuestions : string[]) {
   if (relevantScore < 100.0/3.0) {
     return easyQuestions;
@@ -22,6 +23,7 @@ function determineSampleQuestions(relevantScore : number, easyQuestions : string
     return hardQuestions;
   }
 }
+*/
 
 // Andrew: post sends information to the client
 export async function POST(req: Request) {
@@ -39,33 +41,49 @@ export async function POST(req: Request) {
       myChatAction} = requestBody;
     
     let chatAction : ChatAction;
+    let relevantChatMessage : string;
 
     const relevantMessages = messages.slice(relevantMessagesStartIndex);
 
+    /* Not needed at the moment.
     console.log("\n\nRelevant Messages are: \n")
     for (const relevantMessage of relevantMessages) {
       console.log(relevantMessage.content);
     }
+    */
 
     if (relevantMessages.length === 1) {
       // only one message, so chatAction is askingQuestion
       chatAction = 'askingQuestion';
-    } else if (relevantMessages.length > 0) { // there is a chat action to speak of
-      chatAction = await getStudentChatAction(messages[messages.length-2].content, messages[messages.length - 1].content, lastChatAction)
+    } else { // there is a chat action to speak of
+      // the relevant chat action is dependent on where you're at actually
+      if (lastChatAction === 'askingQuestion' || lastChatAction === 'clarifyingQuestion') {
+        // last chat action is the chat question itself
+        relevantChatMessage = relevantMessages[1].content;
+      } else if (lastChatAction === 'gradingValidAnswer' || lastChatAction === 'gradingInvalidAnswer' || lastChatAction === 'providingExtraFeedback' || lastChatAction === 'unknownResponse') {
+        // relevant message is the last piece of feedback provided
+        console.log("Total relevant messages: " + relevantMessages.length)
+        console.log("Last feedback point index:" + (3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2))
+        relevantChatMessage = relevantMessages[3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2].content
+      }
+      chatAction = await getStudentChatAction(relevantChatMessage, messages[messages.length - 1].content, lastChatAction)
     }
+
+    console.log(`The relevant chat message is: ${relevantChatMessage}`)
 
     // make messages only the relevant messages (current Q+A string)
 
     console.log(`Chat action is: ${chatAction}`)
 
     if (chatAction === 'askingQuestion') {
-      console.log("Asking a question")
+      // console.log("Asking a question")
       const returnedSkill = await getSkillFromDB(skill) as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
 
       const returnedStudent = await getStudentFromDB(email) as Student; // response from the DB. Has email_address, interests, subjects
       
       const returnedStudentSkill = await getStudentSkillFromDB(email, skill) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
 
+      /* Don't actually use sample questions so don't care about below
       var sampleQuestions : string[]; 
 
       // checks to see if the student needs to revise or not via function calculated in astraDB. If True then will give student questions based on difficulty where <33.3 is easy, <66.6 is medium, and >66.6 is hard. 
@@ -75,8 +93,9 @@ export async function POST(req: Request) {
       } else {
         sampleQuestions = determineSampleQuestions(returnedStudentSkill.mastery_score, returnedSkill.easy_questions, returnedSkill.mdrt_questions, returnedSkill.hard_questions);
       }
-      
       // console.log(sampleQuestions);
+      
+      */ 
       const questions: string[] = [];
 
       //Andrew: What does this function do and why 2?
@@ -100,7 +119,6 @@ export async function POST(req: Request) {
           - Here is some additional theory surrounding the key idea. This information is relevant to helping you formulate the question but you do not have to strictly follow it. Take some personal liberty while still being within the same context governed by the key idea: ${returnedSkill.content}.
           - Student Year Level - It is important you create create a question that is appropriate for this a student at this academic level: Years 10-11.
           - Ensure the question pertains to and enriches understanding in this field: ${returnedSkill.subject}.
-          - Difficulty Level - The question's complexity should be similar to those of the following sample questions: ${sampleQuestions}.
           
           Where applicable, embed the student's interests into the question to enhance engagement, however don't force it if it doesn't fit well. If these elements don't directly align with the academic content, focus on the educational aspect.
           
@@ -136,13 +154,13 @@ export async function POST(req: Request) {
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
 
     } else if (chatAction === 'clarifyingQuestion') {
-      console.log("Clarifying the question")
+      // console.log("Clarifying the question")
       // Provide extra feedback
       const returnedSkill = await getSkillFromDB(skill) as Skill;  
 
-      console.log(`onQuestionLoopCounter is: ${onQuestionLoopCounter}`)
-      console.log(`Original question start: ${relevantMessages[1].content}`)
-      console.log(``)
+      // console.log(`onQuestionLoopCounter is: ${onQuestionLoopCounter}`)
+      // console.log(`Original question start: ${relevantMessages[1].content}`)
+      // console.log(``)
 
       const feedbackSystemPrompt = [
         {
@@ -220,7 +238,7 @@ export async function POST(req: Request) {
       let studentAnswer : ChatCompletionMessageParam[];
 
       if (chatAction === "gradingValidAnswer") {
-        console.log("Responding to a valid response")
+        // console.log("Responding to a valid response")
         studentAnswer = [
           {
             "role": "user",
@@ -228,7 +246,7 @@ export async function POST(req: Request) {
           },
         ] as ChatCompletionMessageParam[]
       } else {
-        console.log("Responding to an invalid response")
+        // console.log("Responding to an invalid response")
         studentAnswer = [
           {
             "role": "user",
@@ -294,7 +312,7 @@ export async function POST(req: Request) {
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
       
     } else if (chatAction === 'providingExtraFeedback') {
-      console.log("Providing extra feedback")
+      // console.log("Providing extra feedback")
       // Provide extra feedback
       const returnedSkill = await getSkillFromDB(skill) as Skill; 
 
@@ -302,11 +320,11 @@ export async function POST(req: Request) {
       // - Need to get a way of determining how many loops we've been in for non-question answer chain
       // - Need to drop that into the feedbackSystemPrompt  
 
-      console.log(`onFeedbackLoopCounter is: ${onFeedbackLoopCounter}`)
-      console.log(`Original question start: ${relevantMessages[1].content}`)
+      // console.log(`onFeedbackLoopCounter is: ${onFeedbackLoopCounter}`)
+      // console.log(`Original question start: ${relevantMessages[1].content}`)
 
-      console.log(`Student Answer Start: ${relevantMessages[2 + onFeedbackLoopCounter*2].content}`)
-      console.log(`Student Answer End: ${relevantMessages[3 + onFeedbackLoopCounter*2].content}`)
+      // console.log(`Student Answer Start: ${relevantMessages[2 + onFeedbackLoopCounter*2].content}`)
+      // console.log(`Student Answer End: ${relevantMessages[3 + onFeedbackLoopCounter*2].content}`)
 
       // get the feedback as a single prompt
       let existingFeedback = "Feedback #1: " + relevantMessages[3 + onQuestionLoopCounter*2].content;
@@ -336,7 +354,7 @@ export async function POST(req: Request) {
           STUDENT ANSWER END
 
           FEEDBACK TO ANSWER START
-          ${relevantMessages[3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter].content}
+          ${relevantMessages[3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2].content}
           FEEDBACK TO ANSWER END 
           
           Provide a response to the student, and word this in the 2nd person, as if the student is reading it. Clarify the question without giving the answer away.
@@ -364,7 +382,7 @@ export async function POST(req: Request) {
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
 
     } else if (chatAction === 'unknownResponse') {
-      console.log("Responding to an invalid response")
+      // console.log("Responding to an invalid response")
       const feedbackSystemPrompt = [
         {
           "role": "system", 
@@ -393,7 +411,7 @@ export async function POST(req: Request) {
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
     } else if (myChatAction === 'creating lesson plan') {
-      console.log(sessionSkillAggregates)
+      // console.log(sessionSkillAggregates)
       // code for pulling out relevant information from the aggregated Skills
 
       // start by looking at the dependencies stuff. First we want to just get all of the skills that have been selected
@@ -442,7 +460,7 @@ export async function POST(req: Request) {
           }
         }
 
-        console.log(lessonPlanContextString)
+        // console.log(lessonPlanContextString)
 
         // console.log('waiting')
         const classLessonPlanSystemPrompt = [

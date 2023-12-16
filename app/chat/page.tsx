@@ -167,12 +167,12 @@ export default function Home() {
     e.preventDefault(); // prevents default form submission behaviour
 
     const textInput = input;
-    console.log("User inputted: " + textInput);
+    // console.log("User inputted: " + textInput);
     console.log("Relevant messages starting index is : " + relevantMessagesStartIndex);
     // let currentChatAction = lastChatAction;
     let tempRelevantMessagesStartIndex = relevantMessagesStartIndex; 
-    let tempOnFeedbackLoopCounter = onQuestionLoopCounter;
-    let tempOnFeedbackLoopCount = onFeedbackLoopCounter;
+    let tempOnQuestionLoopCounter = onQuestionLoopCounter;
+    let tempOnFeedbackLoopCounter = onFeedbackLoopCounter;
 
     // get the currentAction from input, relevant message, and next action
     console.log(`Previous chatAction was: ${lastChatAction}`);
@@ -182,12 +182,12 @@ export default function Home() {
       tempRelevantMessagesStartIndex = messages.length;  // so that the "ready" statement is the start index of the current ones
     } else if (lastChatAction === "askingQuestion"){
       tempRelevantMessagesStartIndex = messages.length - 2; // ready statement again, 1 before the last message
+      tempOnQuestionLoopCounter = 0; // reset both loop counters
       tempOnFeedbackLoopCounter = 0; // reset both loop counters
-      tempOnFeedbackLoopCount = 0; // reset both loop counters
     } else if (lastChatAction === "clarifyingQuestion") {
-      tempOnFeedbackLoopCounter = tempOnFeedbackLoopCounter + 1; // increment the loop counter
+      tempOnQuestionLoopCounter = tempOnQuestionLoopCounter + 1; // increment the loop counter
     } else if (lastChatAction === "providingExtraFeedback" || lastChatAction === "unknownResponse") {
-      tempOnFeedbackLoopCount = tempOnFeedbackLoopCount + 1; // increment the loop counter
+      tempOnFeedbackLoopCounter = tempOnFeedbackLoopCounter + 1; // increment the loop counter
     }
 
     console.log("Temp Relevant Messages Index is: " + tempRelevantMessagesStartIndex)
@@ -200,18 +200,34 @@ export default function Home() {
           skill: studentSkill.skill, 
           email: studentSkill.email_address, 
           relevantMessagesStartIndex: tempRelevantMessagesStartIndex,
-          onQuestionLoopCounter: tempOnFeedbackLoopCounter,
-          onFeedbackLoopCounter: tempOnFeedbackLoopCount,
+          onQuestionLoopCounter: tempOnQuestionLoopCounter,
+          onFeedbackLoopCounter: tempOnFeedbackLoopCounter,
         }
       }
     });
 
+    let relevantChatMessage: string;
+    let tempChatAction: ChatAction;
+    console.log("Messages is of length: " + messages.slice(tempRelevantMessagesStartIndex).length)
     // update states
-    const tempChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction); // input is from the form
+    if (messages.slice(tempRelevantMessagesStartIndex).length <= 1) {
+      // only one message, so chatAction is askingQuestion
+      tempChatAction = 'askingQuestion';
+    } else { // there is a chat action to speak of
+      // the relevant chat action is dependent on where you're at actually
+      if (lastChatAction === 'askingQuestion' || lastChatAction === 'clarifyingQuestion') {
+        // last chat action is the chat question itself
+        relevantChatMessage = messages.slice(tempRelevantMessagesStartIndex)[1].content;
+      } else if (lastChatAction === 'gradingValidAnswer' || lastChatAction === 'gradingInvalidAnswer' || lastChatAction === 'providingExtraFeedback' || lastChatAction === 'unknownResponse') {
+        messages.slice(tempRelevantMessagesStartIndex)[3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2].content
+      }
+      tempChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction);
+    }
+
     console.log(`Chat Action was: ${tempChatAction}`);
     setLastChatAction(tempChatAction);
     setRelevantMessagesStartIndex(tempRelevantMessagesStartIndex);
-    setOnFeedbackLoopCounter(tempOnFeedbackLoopCounter);
+    setOnQuestionLoopCounter(tempOnQuestionLoopCounter);
     setOnFeedbackLoopCounter(tempOnFeedbackLoopCounter);
   }
 
