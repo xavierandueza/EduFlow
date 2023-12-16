@@ -5,6 +5,7 @@ import { getSkillFromDB, getStudentFromDB, getStudentSkillFromDB, updateStudentS
 import { Skill, Student, StudentSkill, ChatAction } from '../../utils/interfaces';
 import { RouteRequestBody } from '../../utils/interfaces';
 import { getStudentChatAction } from '../../../pages/api/getStudentChatAction';
+import { on } from 'events';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -198,9 +199,12 @@ export async function POST(req: Request) {
         {
           "role": "system", 
           "content": `You are an AI assistant who is given an answer to a question to give a score out of 100. Do not provide any feedback, and only give the score out of 100 in the following JSON format: 
+          "
           {
             "score" : insert_score_here
           }
+          "
+          Do not return the JSON object within quotes, and do not return any other text.
           The question and relevant theory are as follows:
           QUESTION START
           ${relevantMessages[1].content}
@@ -220,7 +224,7 @@ export async function POST(req: Request) {
         studentAnswer = [
           {
             "role": "user",
-            "content": latestMessage
+            "content": "The student's answer is: " + latestMessage
           },
         ] as ChatCompletionMessageParam[]
       } else {
@@ -257,7 +261,7 @@ export async function POST(req: Request) {
       const feedbackSystemPrompt = [
         {
           "role": "system", 
-          "content": `You are an AI assistant who is given an answer to a question, and the score it was provided out of 100.
+          "content": `You are an AI assistant who is given an answer to a question, and the score it was marked as out of 100.
           Provide feedback to the student on their answer, and word this in the 2nd person, as if the student is reading it.
           The question and relevant theory are as follows:
           QUESTION START
@@ -269,6 +273,10 @@ export async function POST(req: Request) {
           THEORY END
 
           ANSWER SCORE OUT OF 100: ${gradeJsonObject.score} 
+
+          Do not tell the student their score, just let them know whether they got the question correct or incorrect, where scores of less than 60 are incorrect.
+          Keep your feedback short and succinct, focusing on major areas of improvement if any exist.
+          Do not add in extra flavouring text. Do not return your feedback in quotes.
           .`
         }
       ] as ChatCompletionMessageParam[]
@@ -300,6 +308,13 @@ export async function POST(req: Request) {
       console.log(`Student Answer Start: ${relevantMessages[2 + onFeedbackLoopCounter*2].content}`)
       console.log(`Student Answer End: ${relevantMessages[3 + onFeedbackLoopCounter*2].content}`)
 
+      // get the feedback as a single prompt
+      let existingFeedback = "Feedback #1: " + relevantMessages[3 + onQuestionLoopCounter*2].content;
+
+      for (let i = 0; i < onFeedbackLoopCounter; i++) {
+        existingFeedback += `\nFeedback #${i+2}: ` + relevantMessages[3 + onQuestionLoopCounter*2 + i*2].content;
+      }
+
       const feedbackSystemPrompt = [
         {
           "role": "system", 
@@ -321,7 +336,7 @@ export async function POST(req: Request) {
           STUDENT ANSWER END
 
           FEEDBACK TO ANSWER START
-          ${relevantMessages[3 + onQuestionLoopCounter*2].content}
+          ${relevantMessages[3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter].content}
           FEEDBACK TO ANSWER END 
           
           Provide a response to the student, and word this in the 2nd person, as if the student is reading it. Clarify the question without giving the answer away.
@@ -377,7 +392,7 @@ export async function POST(req: Request) {
       
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
-    } else if (chatAction === 'creating lesson plan') {
+    } else if (myChatAction === 'creating lesson plan') {
       console.log(sessionSkillAggregates)
       // code for pulling out relevant information from the aggregated Skills
 
@@ -435,7 +450,7 @@ export async function POST(req: Request) {
             "role": "system", 
             "content": `You are an AI assistant who provides expert lesson plans to teachers, helping them cater their content to the needs of their students. 
             You have been given a list of skills to be included in the lesson, and their relevant information. This also includes the key ideas of the skill(s), and the theory relating to the skill(s). 
-            You may also be warned that some students have not met the satisfactory mastery level for skills that this skill is dependent on. A skill that is depedent on another indicates that the dependee skill is a prerequisite for the dependent skill.
+            You may also be warned that some students have not met the satisfactory mastery level for skills that this skill is dependent on. A skill that is dependent on another indicates that the dependee skill is a prerequisite for the dependent skill.
             If this is the case, then please provide a note on the major dependent skills that students are lacking in for the teacher. 
               
             The question and relevant theory are as follows:
@@ -448,7 +463,7 @@ export async function POST(req: Request) {
             - Success criteria: What should the student be capable of after the class, that they weren't capable of before. These must be worded as "I can" statements, from the perspective of the student, in terms of what they can do after they have completed the class
             - Key questions: Good starters to prompt the class when you start off, motivating learning
             - Introduction section (10 minutes): Provide an outline of the introduction, discussing learning intention, success criteria, any activities you may do in this period
-            - The main activity (25 minutes): Provide a summary of whjat the main classroom activity will be
+            - The main activity (25 minutes): Provide a summary of what the main classroom activity will be
             - Materials: What you need to conduct the lesson
             - closure (10 minutes): Provide an summary that reflects on class learnings, including what strategies were used to gain knowledge.
             - rational: Why this has been the approach to the class.
