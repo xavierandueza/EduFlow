@@ -17,6 +17,7 @@ const useConfiguration = () => {
     return defaultValue;
   };
 
+  //Andrew: grabs the current state variables from the browser local storage, if they exist, otherwise it sets them to the default values 
   const [useRag, setUseRag] = useState<boolean>(() => getLocalStorageValue('useRag', 'true') === 'true'); // if nothing, its true
   const [llm, setLlm] = useState<string>(() => getLocalStorageValue('llm', 'gpt-3.5-turbo')); // if nothing, its gpt-3.5-turbo
   const [similarityMetric, setSimilarityMetric] = useState<SimilarityMetric>(
@@ -32,6 +33,7 @@ const useConfiguration = () => {
     () => getLocalStorageValue('email', 'xand0001@student.monash.edu') as string // defaults to no skill for now
   );
 
+  //Andrew: A function that will set all the state variables 
   const setConfiguration = (rag: boolean, llm: string, similarityMetric: SimilarityMetric, chatState: ChatState, skill : string, email : string) => { // a single function that will set all of the config variables
     setUseRag(rag);
     setLlm(llm);

@@ -25,7 +25,7 @@ function determineSampleQuestions(relevantScore : number, easyQuestions : string
 }
 */
 
-// Andrew: post sends information to the client
+
 export async function POST(req: Request) {
   try {
     const requestBody = await req.json() as RouteRequestBody;
@@ -82,9 +82,10 @@ export async function POST(req: Request) {
       const returnedStudent = await getStudentFromDB(email) as Student; // response from the DB. Has email_address, interests, subjects
       
       const returnedStudentSkill = await getStudentSkillFromDB(email, skill) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
+      
+      // const latestMessage = messages[messages?.length - 1]?.content; 
 
-      /* Don't actually use sample questions so don't care about below
-      var sampleQuestions : string[]; 
+      var sampleQuestions : string[];
 
       // checks to see if the student needs to revise or not via function calculated in astraDB. If True then will give student questions based on difficulty where <33.3 is easy, <66.6 is medium, and >66.6 is hard. 
       // Andrew note for future development: this function might be bugged. A student with a low mastery score but high retention score (because they just answered a question) can be given hard questions. Doesn't matter atm though.
@@ -95,7 +96,7 @@ export async function POST(req: Request) {
       }
       // console.log(sampleQuestions);
       
-      */ 
+      // */ 
       const questions: string[] = [];
 
       //Andrew: What does this function do and why 2?
