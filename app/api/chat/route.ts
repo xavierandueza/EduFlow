@@ -6,6 +6,7 @@ import { Skill, Student, StudentSkill, ChatAction } from '../../utils/interfaces
 import { RouteRequestBody } from '../../utils/interfaces';
 import { getStudentChatAction } from '../../../pages/api/getStudentChatAction';
 import { on } from 'events';
+import { questionTypes, QuestionType } from '../../utils/interfaces';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -43,71 +44,87 @@ export async function POST(req: Request) {
     let chatAction : ChatAction;
     let relevantChatMessage : string;
 
+    // get messages that are in the current Q+A string
     const relevantMessages = messages.slice(relevantMessagesStartIndex);
-
-    /* Not needed at the moment.
-    console.log("\n\nRelevant Messages are: \n")
-    for (const relevantMessage of relevantMessages) {
-      console.log(relevantMessage.content);
-    }
-    */
-
-    if (relevantMessages.length === 1) {
-      // only one message, so chatAction is askingQuestion
-      chatAction = 'askingQuestion';
-    } else { // there is a chat action to speak of
-      // the relevant chat action is dependent on where you're at actually
-      if (lastChatAction === 'askingQuestion' || lastChatAction === 'clarifyingQuestion') {
-        // last chat action is the chat question itself
-        relevantChatMessage = relevantMessages[1].content;
-      } else if (lastChatAction === 'gradingValidAnswer' || lastChatAction === 'gradingInvalidAnswer' || lastChatAction === 'providingExtraFeedback' || lastChatAction === 'unknownResponse') {
-        // relevant message is the last piece of feedback provided
-        console.log("Total relevant messages: " + relevantMessages.length)
-        console.log("Last feedback point index:" + (3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2))
-        relevantChatMessage = relevantMessages[3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2].content
+    
+    // setting the chatAction
+    if (myChatAction !== 'creatingLessonPlan') {
+      if (relevantMessages.length === 1) {
+        // only one message, so chatAction is askingQuestion
+        chatAction = 'askingQuestion';
+      } else { // there is a chat action to speak of
+        // the relevant chat action is dependent on where you're at actually
+        if (lastChatAction === 'askingQuestion' || lastChatAction === 'clarifyingQuestion') {
+          // last chat action is the chat question itself
+          relevantChatMessage = relevantMessages[1].content;
+        } else if (lastChatAction === 'gradingValidAnswer' || lastChatAction === 'gradingInvalidAnswer' || lastChatAction === 'providingExtraFeedback' || lastChatAction === 'unknownResponse') {
+          // relevant message is the last piece of feedback provided
+          console.log("Total relevant messages: " + relevantMessages.length)
+          console.log("Last feedback point index:" + (3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2))
+          relevantChatMessage = relevantMessages[3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2].content
+        }
+        chatAction = await getStudentChatAction(relevantChatMessage, messages[messages.length - 1].content, lastChatAction)
       }
-      chatAction = await getStudentChatAction(relevantChatMessage, messages[messages.length - 1].content, lastChatAction)
+    } else {
+      chatAction = 'creatingLessonPlan';
     }
 
-    console.log(`The relevant chat message is: ${relevantChatMessage}`)
-
-    // make messages only the relevant messages (current Q+A string)
-
-    console.log(`Chat action is: ${chatAction}`)
+    console.log("Chat action is: " + chatAction)
 
     if (chatAction === 'askingQuestion') {
       // console.log("Asking a question")
       const returnedSkill = await getSkillFromDB(skill) as Skill; // response from the DB. Has skill_title, decay_value, dependencies, subject_code, theory
 
       const returnedStudent = await getStudentFromDB(email) as Student; // response from the DB. Has email_address, interests, subjects
-      
+
       const returnedStudentSkill = await getStudentSkillFromDB(email, skill) as StudentSkill; // response from the DB. Has email_address, subject_code, skill_title, mastery_score, retention_score, need_to_revise, decay_value
 
-      /* Don't actually use sample questions so don't care about below
-      var sampleQuestions : string[]; 
-
-      // checks to see if the student needs to revise or not via function calculated in astraDB. If True then will give student questions based on difficulty where <33.3 is easy, <66.6 is medium, and >66.6 is hard. 
-      // Andrew note for future development: this function might be bugged. A student with a low mastery score but high retention score (because they just answered a question) can be given hard questions. Doesn't matter atm though.
-      if (returnedStudentSkill.need_to_revise) {
-        sampleQuestions = determineSampleQuestions(returnedStudentSkill.retention_score, returnedSkill.easy_questions, returnedSkill.mdrt_questions, returnedSkill.hard_questions);
-      } else {
-        sampleQuestions = determineSampleQuestions(returnedStudentSkill.mastery_score, returnedSkill.easy_questions, returnedSkill.mdrt_questions, returnedSkill.hard_questions);
-      }
-      // console.log(sampleQuestions);
-      
-      */ 
       const questions: string[] = [];
 
-      //Andrew: What does this function do and why 2?
-      if (relevantMessages.length > 2)
-      {
-        // Questions have been asked before
-        for (let i = 1; i < relevantMessages.length; i += 4) {
-          questions.push(relevantMessages[i].content);
-        }
+      // Get the question type from the imported questionTypes list, and the mastery score:
+      let questionType: QuestionType;
+
+      if (returnedStudentSkill.mastery_score <= 25) {
+          const possibleTypes: QuestionType[] = ['trueOrFalseTrue', 'provideADefinition', 'trueOrFalseFalse'];
+          questionType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
+      } else if (returnedStudentSkill.mastery_score <= 50) {
+          const possibleTypes: QuestionType[] = ['multipleChoiceSingleTrue', 'multipleChoiceSingleFalse', 'trueOrFalseFalse'];
+          questionType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
+      } else if (returnedStudentSkill.mastery_score <= 75) {
+          const possibleTypes: QuestionType[] = ['multipleChoiceMultipleTrue', 'multipleChoiceMultipleFalse', 'shortAnswer', 'trueOrFalseFalse'];
+          questionType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
+      } else if (returnedStudentSkill.mastery_score <= 100) {
+          const possibleTypes: QuestionType[] = ['shortAnswer', 'longAnswer'];
+          questionType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
+      } else {
+          console.error('Invalid mastery score');
       }
 
-      // console.log(`Questions are: ${questions}`)
+      let questionAskingString = '';
+
+      if (questionType === 'trueOrFalseTrue') {
+        questionAskingString += 'True or False. From the theory, generate a true statement, and ask the user to determine whether it is true or false';
+      } else if (questionType === 'provideADefinition') {
+          questionAskingString += 'Ask the user to provide a definition of a relevant point from the theory.';
+      } else if (questionType === 'trueOrFalseFalse') {
+          questionAskingString += 'True or False. From the theory, generate a false statement, and ask the user to determine whether it is true or false';
+      } else if (questionType === 'multipleChoiceSingleTrue') {
+          questionAskingString += 'From the theory, generate a correct statement, and 3 incorrect statements, and ask the student to select the correct statement. Randomly order the statements from a) to d)';
+      } else if (questionType === 'multipleChoiceSingleFalse') {
+          questionAskingString += 'From the theory Generate 3 correct statements, and 1 incorrect statement and ask the user to select the incorrect statement. Randomly order the statements from a) to d)';
+      } else if (questionType === 'multipleChoiceMultipleTrue') {
+          questionAskingString += 'Of 4 total statements based off of the theory generate 1 or more correct statements, with the rest being false, and ask the user to select all correct statements. Randomly order the statements from a) to d)';
+      } else if (questionType === 'multipleChoiceMultipleFalse') {
+          questionAskingString += 'Multiple Choice (Multiple False). From the theory generate 4 statements, with 1 or more being incorrect, and ask the user to select all incorrect statements. Randomly order the statements from a) to d)';
+      } else if (questionType === 'shortAnswer') {
+          questionAskingString += 'Ask the student a question on the theory that can be answered in a few sentences. This question should not be multi-part.';
+      } else if (questionType === 'longAnswer') {
+          questionAskingString += 'Ask the student a question on the theory that can be answered in one or two paragraphs. This question can be multi-part, or extended';
+      } else {
+          questionAskingString += 'Generate a question based on the theory, and ask the student to answer it.';
+      }
+
+      console.log(`Question type is: ${questionAskingString}`)
 
       const systemPrompt = [ // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
         {
@@ -124,11 +141,10 @@ export async function POST(req: Request) {
           
           - Student Interests - Consider these to make the question more engaging: ${returnedStudent.interests}.
           
-          Directly pose the question without prefacing it as a 'question' or any thing else like that. The question should be formatted as if it were written in a textbook or exam, ensuring it adheres to the specified difficulty level and educational goals.
-          
-          Formulate a question that is academically suitable for a student at the Years 10-11 level. Here are some example questions which are about the same key idea and at a similar difficulty. Do not use sample questions directly, they are just meant to be examples of the expected difficulty. Do not return your question in quotes.
+          Directly pose the question without prefacing it as a 'question'. The question should be formatted as if it were written in a textbook or exam, ensuring it adheres to the specified difficulty level and educational goals.
 
-          Do not make the question entirely focussed on the users interest - the question should be about the academic content.
+          Follow these specific instructions when generating your question:
+          ${questionAskingString}
           `
         },
       ] as ChatCompletionMessageParam[]
@@ -357,7 +373,7 @@ export async function POST(req: Request) {
           ${relevantMessages[3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2].content}
           FEEDBACK TO ANSWER END 
           
-          Provide a response to the student, and word this in the 2nd person, as if the student is reading it. Clarify the question without giving the answer away.
+          Provide a response to the student, and word this in the 2nd person, as if the student is reading it.
           .`
         }
       ] as ChatCompletionMessageParam[]
@@ -410,7 +426,7 @@ export async function POST(req: Request) {
       
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
-    } else if (myChatAction === 'creating lesson plan') {
+    } else if (chatAction === 'creatingLessonPlan') {
       // console.log(sessionSkillAggregates)
       // code for pulling out relevant information from the aggregated Skills
 
@@ -427,6 +443,8 @@ export async function POST(req: Request) {
         // Start my string
 
         // Retrieve the skill from the DB
+        console.log("Current skill is: ")
+        console.log(includedSkillAggregate.skill)
         const currentSkill = await getSkillFromDB(includedSkillAggregate.skill);
         lessonPlanContextString += `\n\nSkill Number: ${i} out of ${totalIncludedSkills}: ${currentSkill.skill}\n`;
         lessonPlanContextString += `This skill has the following key Ideas: ${currentSkill.key_ideas}\n`;

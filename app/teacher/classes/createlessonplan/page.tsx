@@ -1,17 +1,11 @@
 'use client';
 import { DisplayAggregateSkillsTableWithSelection } from '../../../ui/teacher/skill-aggregate-table';
-// import DisplayAggregateStudentsTable from '../../ui/teacher/student-aggregate-table';
 import { SkillAggregate, StudentAggregate, ExtendedSkillAggregate } from '../../../utils/interfaces';
 import { useState, useEffect } from 'react';
-// import { PrepForClassCard } from '../../ui/teacher/cards';
-import { CreateLessonPlan } from '../../../ui/teacher/buttons';
-// import Bubble from '../../../../components/Bubble';
 import { useChat } from 'ai/react';
-// import Footer from '../../../../components/Footer';
-// import ThemeButton from '../components/ThemeButton';
 import React, { FormEvent } from 'react';
 import Chatbot from '../../../ui/teacher/chatbot';
-// import Chatbot from '../../../ui/teacher/chatbot';
+import { ChatAction } from '../../../utils/interfaces';
 
 
  
@@ -19,7 +13,7 @@ export default function Page() {
   const { messages, input, handleInputChange, handleSubmit } = useChat();
   const [skillAggregates, setSkillAggregates] = useState<ExtendedSkillAggregate[]>([]);
   const [studentAggregates, setStudentAggregates] = useState<StudentAggregate[]>([]);
-  const [myChatState, setMyChatState] = useState('creating_lesson_plan'); // chatState is used for the route.ts file
+  const [chatAction, setChatAction] = useState<ChatAction>('creatingLessonPlan'); // chatState is used for the route.ts file
   // Where you call the API to fetch data. First will be aggregate of class skills
   
   useEffect(() => {
@@ -48,24 +42,6 @@ export default function Page() {
       )
     );
   };
-
-  const handleSend = (e) => {
-    // console.log(chatState); messages, llm, chatState, skill, email
-    handleSubmit(e, { options: { body: { llm: 'gpt-4', myChatState: myChatState, email: '', skill: ''}}});
-    // console.log('Chatbot is waiting for a response now');
-
-    /* Handling different chat states below, not needed at present 
-    if (myChatState === 'creating_lesson_plan') {
-      // console.log('Changing to waiting');
-      // setConfiguration(useRag, llm, similarityMetric, 'waiting', skill, email);
-      setMyChatState('waiting');
-    } else if (myChatState === 'waiting') {
-      // console.log('Changing to asking');
-      // setConfiguration(useRag, llm, similarityMetric, 'asking', skill, email);
-      setMyChatState('asking');
-    } 
-    */
-  }
  
   return (
     <main>
