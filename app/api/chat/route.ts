@@ -246,9 +246,7 @@ export async function POST(req: Request) {
           "role": "system", 
           "content": `You are an AI assistant tasked with grading a student's answer to a year 11 exam style ${returnedSkill.subject} question in the topic of ${returnedSkill.skill}. 
           
-          First: Analysis - you should begin by analysing the student's answer against the relevant theory provided below. Your analysis should include and explaination of why the student has answered the question correctly/incorrectly, pointing what exactly they got right and wrong, including how well they and how well they followed the instructions of the question. Please be mindful that this is a year 11 student and that your analysis should not be so harsh that it is unfair for a student at this academic level but not so lenient that it would be too easy on them. Please use your own discression. IF the student's response was something like "I don't know" or anything similar indicating that the student has no idea what the answer is then your analysis should simply say "the student doesn't know the answer to the question" and strictly nothing else. Their grade should be 0 if this is the case.
-          
-          Second: Score - Based on your analysis, you should provide a score to the student out of 100. The score should reflect how well the student answered the question, considering the student's academic level and the completeness of their understanding of the key concepts, not necessarily how much of the provided theory was reflected in their answer. Please use your own discression.
+          You should provide a score to the student out of 100. The score should reflect how well the student answered the question, considering the student's academic level and the completeness of their understanding of the key concepts, not necessarily how much of the provided theory was reflected in their answer. Please use your own discression. If the student's response is something like "I don't know the answer" or anything similar indicating that the student has no idea what the answer is then you should give them a score of 0.0
           
           Here are the relevant question and theory:
           
@@ -264,13 +262,10 @@ export async function POST(req: Request) {
 
           "
           {
-            "analysis" : insert_analysis_here,
             "score" : insert_score_here
           }
           "
-
-          where "your_analysis_here" should contain the analysis and insert_score_here should contain the score. Do not return the JSON object within quotes, and do not return any other text. Your analysis should only be about 3 sentences long try to be comprehensive yet brief in your analysis.
-          .`
+          `
         },
       ] as ChatCompletionMessageParam[]
 
@@ -319,7 +314,7 @@ export async function POST(req: Request) {
       const feedbackSystemPrompt = [
         {
           "role": "system", 
-          "content": `You are an AI assistant who provides feedback to students in year 11 who are answering exam style ${returnedSkill.subject} questions. You are given the question the student has been asked, the student's answer, an analysis of that answer (based on correctness relative to the provided theory), and the score out of 100 that has been assigned to the student. Below is the relevant content information:
+          "content": `You are an AI assistant who provides feedback to students in year 11 who are answering exam style ${returnedSkill.subject} questions. You are given the question the student has been asked, the student's answer, and the score out of 100 that has been assigned to the student. Below is the relevant content information:
 
           QUESTION START
           ${relevantMessages[1].content}
@@ -328,20 +323,24 @@ export async function POST(req: Request) {
           THEORY START
           ${returnedSkill.content}
           THEORY END
-          
-          ANALYSIS START
-          ${gradeJsonObject.analysis}
-          ANALYSIS END
 
           ANSWER SCORE OUT OF 100: ${gradeJsonObject.score}
+          
+          IF the student's response was something like "I don't know" or anything similar indicating that the student has no idea what the answer is then you should supportively tell the student the correct answer to the question without directly telling them that their answer is wrong.
 
-          If the analysis is "the student doesn't know the answer to the question" then you should supportively tell the student the correct answer to the question without directly telling them that their answer is wrong.
+          If the student has responded with something that is irrelevant to the question, then you should tell them that their answer was not relevant and tell them what the correct answer is
 
           Do not tell the student their score, just let them know whether they got the question correct or incorrect, where scores of less than 70 are incorrect.
 
+          You should start by BRIEFLY addressing the student's response
+
+          You should begin by analysing the student's answer against the relevant theory provided above. Your analysis should include and explaination of why the student has answered the question correctly/incorrectly, pointing out what exactly they got right and wrong, considering how well they followed the instructions of the question. Please be mindful that this is a year 11 student and that your analysis should not be so harsh that it is unfair for a student at this academic level but not so lenient that it would be too easy on them. Please use your own discression. 
+
           It is critical your response is appropriate for a student at a year 11 academic level, avoiding the use of sophisticated jargon unless directly asked. Also, consider the depth of your response, ensuring that it is appropriate for the student's year level. Your answer should be sufficiently detailed to provide a comprehensive enough explanation, but still succinct enough that a student does not lose focus reading it. Finally, it is absolutly critical that your responses are STRICTLY less than a maximum of 6 sentences long, using your own descretion to determine the appropriate length given the query posed by the student.
 
-          Do not add in extra flavouring text. Do not return your feedback in quotes.
+          Do not add in extra flavouring text. Do not return your feedback in quotes. Your response should be as if you were the one to ask the original question, hence if the student gets the wrong answer,doesn't know the answer, or says something irrelevant you should provide the correct answer as if you were the one to ask the. 
+
+          Very importantly your responses should be from the second person, as if you were the teacher asking the student the intial question
           
           Once you have provided your response, ask the student if they are ready to move onto a new question of it have any questions about the response you have provided.
           .`
@@ -353,7 +352,7 @@ export async function POST(req: Request) {
         {
           model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
           stream: true, // streaming YAY
-          messages: [...studentAnswer, ...feedbackSystemPrompt], // combine the system prompt with the latest message
+          messages: [...feedbackSystemPrompt, ...studentAnswer], // combine the system prompt with the latest message
         }
       );
       
