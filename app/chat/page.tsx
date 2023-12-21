@@ -219,7 +219,7 @@ export default function Home() {
         // last chat action is the chat question itself
         relevantChatMessage = messages.slice(tempRelevantMessagesStartIndex)[1].content;
       } else if (lastChatAction === 'gradingValidAnswer' || lastChatAction === 'gradingInvalidAnswer' || lastChatAction === 'providingExtraFeedback' || lastChatAction === 'unknownResponse') {
-        messages.slice(tempRelevantMessagesStartIndex)[3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2].content
+        relevantChatMessage = messages.slice(tempRelevantMessagesStartIndex)[3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2].content
       }
       tempChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction);
     }

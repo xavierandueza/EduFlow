@@ -246,7 +246,7 @@ export async function POST(req: Request) {
           "role": "system", 
           "content": `You are an AI assistant tasked with grading a student's answer to a year 11 exam style ${returnedSkill.subject} question in the topic of ${returnedSkill.skill}. 
           
-          First: Analysis - you should begin by analysing the student's answer against the relevant theory provided below. Your analysis should include and explaination of why the student has answered the question correctly/incorrectly, pointing what exactly they got right and wrong, including how well they and how well they followed the instructions of the question. Please be mindful that this is a year 11 student and that your analysis should not be so harsh that it is unfair for a student at this academic level but not so lenient that it would be too easy on them. Please use your own discression.
+          First: Analysis - you should begin by analysing the student's answer against the relevant theory provided below. Your analysis should include and explaination of why the student has answered the question correctly/incorrectly, pointing what exactly they got right and wrong, including how well they and how well they followed the instructions of the question. Please be mindful that this is a year 11 student and that your analysis should not be so harsh that it is unfair for a student at this academic level but not so lenient that it would be too easy on them. Please use your own discression. IF the student's response was something like "I don't know" or anything similar indicating that the student has no idea what the answer is then your analysis should simply say "the student doesn't know the answer to the question" and strictly nothing else. Their grade should be 0 if this is the case.
           
           Second: Score - Based on your analysis, you should provide a score to the student out of 100. The score should reflect how well the student answered the question, considering the student's academic level and the completeness of their understanding of the key concepts, not necessarily how much of the provided theory was reflected in their answer. Please use your own discression.
           
@@ -335,11 +335,15 @@ export async function POST(req: Request) {
 
           ANSWER SCORE OUT OF 100: ${gradeJsonObject.score}
 
+          If the analysis is "the student doesn't know the answer to the question" then you should supportively tell the student the correct answer to the question without directly telling them that their answer is wrong.
+
           Do not tell the student their score, just let them know whether they got the question correct or incorrect, where scores of less than 70 are incorrect.
 
           It is critical your response is appropriate for a student at a year 11 academic level, avoiding the use of sophisticated jargon unless directly asked. Also, consider the depth of your response, ensuring that it is appropriate for the student's year level. Your answer should be sufficiently detailed to provide a comprehensive enough explanation, but still succinct enough that a student does not lose focus reading it. Finally, it is absolutly critical that your responses are STRICTLY less than a maximum of 6 sentences long, using your own descretion to determine the appropriate length given the query posed by the student.
 
-          Do not add in extra flavouring text. Do not return your feedback in quotes. Once you have provided your response, ask the student if they are ready to move onto a new question of it have any questions about the response you have provided.
+          Do not add in extra flavouring text. Do not return your feedback in quotes.
+          
+          Once you have provided your response, ask the student if they are ready to move onto a new question of it have any questions about the response you have provided.
           .`
         }
       ] as ChatCompletionMessageParam[]
@@ -349,7 +353,7 @@ export async function POST(req: Request) {
         {
           model: llm ?? 'gpt-3.5-turbo', // defaults to gpt-3.5-turbo if llm is not provided
           stream: true, // streaming YAY
-          messages: [...feedbackSystemPrompt], // combine the system prompt with the latest message
+          messages: [...studentAnswer, ...feedbackSystemPrompt], // combine the system prompt with the latest message
         }
       );
       
