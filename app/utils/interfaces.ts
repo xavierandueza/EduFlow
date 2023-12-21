@@ -12,14 +12,41 @@ export interface Skill {
   dependencies: string[];
   // ... any other properties
 }
+
+export interface SchoolClassSkill {
+  subject: string;
+  curriculumPoint: string;
+  skill: string;
+  skillID: string;
+  skillDescription: string;
+  keyIdeas: string[];
+  keyIdeasSummary: string[];
+  content: string;
+  questions: string[];
+  dependencies: string[];
+  schoolClassID: string;
+  schoolClass: string;
+  decayValue: number;
+  // ... any other properties
+}
   
- export interface Student {
+export interface Student {
   first_name: string;
   last_name: string;
   email_address: string;
   interests: string[];
   subjects: string[];
   school_classes: string[];
+}
+
+export interface FirestoreStudent {
+  firstName: string;
+  lastName: string;
+  email: string;
+  interests: string[];
+  subjects: string[];
+  schoolClassesLong: string[];
+  schoolClassesShort: string[];
 }
   
 export interface StudentSkill {
@@ -36,6 +63,25 @@ export interface StudentSkill {
   // ... any other properties
 }
 
+export interface FirestoreStudentSkill {
+  studentID : string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  subject: string;
+  schoolClass: string;
+  schoolClassID: string;
+  skill: string;
+  skillID: string;
+  masteryScore: number;
+  retentionScore: number;
+  needToRevise: boolean;
+  areDependenciesMet: boolean;
+  decayValue: number;
+  // ... any other properties
+}
+
+
 export interface Teacher {
   _id : string;
   email_address: string;
@@ -44,10 +90,36 @@ export interface Teacher {
   school_classes: string[];
 }
 
+export interface FirestoreTeacher {
+  email : string;
+  firstName : string;
+  lastName : string;
+  schoolClasses : {
+    id : string;
+    name : string;
+  }[];
+}
+
 export interface SchoolClass {
   _id : string;
   school_class_name: string;
   subject: string;
+}
+
+export interface FirestoreSchoolClass {
+  name : string;
+  subject: string;
+  students: {
+    firstName : string;
+    lastName : string;
+    id: string;
+  }[];
+  teachers: {
+    firstName : string;
+    lastName : string;
+    email: string;
+    id: string;
+  }[];
 }
 
 export interface MetricScores {
@@ -63,6 +135,16 @@ export interface SkillAggregate {
   no_students_not_met_mastery : number,
   no_students_not_met_dependencies : number
   no_students_to_revise : number,
+}
+
+export interface FirestoreSkillAggregate {
+  skill : string,
+  schoolClass : string,
+  masteryScore : number,
+  retentionScore : number,
+  noStudentsNotMetMastery : number,
+  noStudentsNotMetDependencies : number
+  noStudentsToRevise : number,
 }
 
 export interface ExtendedSkillAggregate extends SkillAggregate {

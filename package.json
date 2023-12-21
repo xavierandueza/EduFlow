@@ -7,7 +7,7 @@
     "dev:port1": "next dev -p 3001",
     "build": "next build && npm run seed",
     "start": "next start",
-    "seed": "ts-node ./scripts/populateDbCustom.ts",
+    "seed": "ts-node ./scripts/populateFirestoreDb.ts",
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch", 
