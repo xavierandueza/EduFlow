@@ -88,10 +88,10 @@ export async function POST(req: Request) {
           const possibleTypes: QuestionType[] = ['trueOrFalseTrue', 'provideADefinition', 'trueOrFalseFalse'];
           questionType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
       } else if (returnedStudentSkill.mastery_score <= 50) {
-          const possibleTypes: QuestionType[] = ['multipleChoiceSingleTrue', 'multipleChoiceSingleFalse', 'trueOrFalseFalse'];
+          const possibleTypes: QuestionType[] = ['multipleChoiceSingleTrue', 'multipleChoiceSingleFalse', 'provideADefinition'];
           questionType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
       } else if (returnedStudentSkill.mastery_score <= 75) {
-          const possibleTypes: QuestionType[] = ['multipleChoiceMultipleTrue', 'multipleChoiceMultipleFalse', 'shortAnswer', 'trueOrFalseFalse'];
+          const possibleTypes: QuestionType[] = ['multipleChoiceMultipleTrue', 'multipleChoiceMultipleFalse', 'shortAnswer', 'provideADefinition'];
           questionType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
       } else if (returnedStudentSkill.mastery_score <= 100) {
           const possibleTypes: QuestionType[] = ['shortAnswer', 'longAnswer'];
@@ -126,6 +126,8 @@ export async function POST(req: Request) {
 
       console.log(`Question type is: ${questionAskingString}`)
 
+
+      //DONESON
       const systemPrompt = [ // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
         {
           "role": "system", 
@@ -141,9 +143,13 @@ export async function POST(req: Request) {
           
           - Student Interests - Consider these to make the question more engaging: ${returnedStudent.interests}.
           
-          Directly pose the question without prefacing it as a 'question'. The question should be formatted as if it were written in a textbook or exam, ensuring it adheres to the specified difficulty level and educational goals.
+          Directly pose the question without prefacing it as a 'question' or any thing else like that. The question should be formatted as if it were written in a textbook or exam, ensuring it adheres to the specified difficulty level and educational goals.
+          
+          Formulate a question that is academically suitable for a student at the Years 10-11 level. Here are some example questions which are about the same key idea and at a similar difficulty. Do not use sample questions directly, they are just meant to be examples of the expected difficulty. Do not return your question in quotes.
 
-          Follow these specific instructions when generating your question:
+          Do not make the question entirely focussed on the users interest - the question should be about the academic content
+
+          Additionally, you should follow these specific instructions when generating your question:
           ${questionAskingString}
           `
         },
@@ -178,22 +184,27 @@ export async function POST(req: Request) {
       // console.log(`Original question start: ${relevantMessages[1].content}`)
       // console.log(``)
 
+      // DONESON
       const feedbackSystemPrompt = [
         {
           "role": "system", 
-          "content": `You are an expert ${returnedSkill.subject} AI assistant who assists students on the topic of ${returnedSkill.skill}.
-          You have already asked the student a question, and the student is currently clarifying the question with you. 
+          "content": `
+          You are an expert ${returnedSkill.subject} teacher AI assistant that has been helping An Australian high school student in year 11 learn by asking the student exam style questions in the field of ${returnedSkill.subject}. Specfically, the topic on which you have created a question them about is ${returnedSkill.skill}. They are now asking to clarify something about the question you have just asked. They have yet to correctly answer the question. You are now tasked with answering their query about the question you have asked. Here is the original exam style question you posed to them
  
           ORIGINAL QUESTION START
           ${relevantMessages[1].content}
           ORIGINAL QUESTION END
+
+          and here is the relevant theory surrounding the posed question
           
           TOPIC THEORY START
           ${returnedSkill.content}
           TOPIC THEORY END
           
-          Provide a response to the student that helps clarify the question without providing an answer. Keep your answer succinct, and focus on answering the student's question.
-          .`
+          It is critical you do not reveal the any solutions as the student is still attempting to answer the question and may attempt to do so again. As an example, if the question you have asked them is "what does the mitochondria do" and the student says "what's the difference between the the mitochondria and the golgi apparatus" then you should try to avoid answering their clarification question in a way that might reveal what the mitochondria does, for example by saying "well the golgi apparatus does not generate most of the chemical energy needed to power the cell's biochemical reactions." as this would reveal the answer to the student. Do not strictly follow this format, it is just an example but it captures the essence of what you should do.  After you provide your clarification to the student, ask the student if they are ready to answer the question or if they need more clarification.
+
+          It is critical your response is appropriate for a student at a year 11 academic level, avoiding the use of sophisticated jargon unless directly asked. Also, consider the depth of your response, ensuring that it is appropriate for the student's year level. Your answer should be sufficiently detailed to provide a comprehensive enough explanation, but not so detailed that it becomes overhwhelming for the student. Finally, it is absolutly critical that your responses are STRICTLY less than a maximum of 5 sentences long, using your own descretion to determine the appropriate length given the query posed by the student.
+          `
         }
       ] as ChatCompletionMessageParam[]
 
@@ -229,17 +240,18 @@ export async function POST(req: Request) {
       // console.log('Answer was: ' + latestMessage)
       // console.log(`Question was: ${messages.slice(-2)[0].content}`)
 
+      //DONESON
       const gradeSystemPrompt = [ // Setting up the system prompt
         {
           "role": "system", 
-          "content": `You are an AI assistant who is given an answer to a question to give a score out of 100. Do not provide any feedback, and only give the score out of 100 in the following JSON format: 
-          "
-          {
-            "score" : insert_score_here
-          }
-          "
-          Do not return the JSON object within quotes, and do not return any other text.
-          The question and relevant theory are as follows:
+          "content": `You are an AI assistant tasked with grading a student's answer to a year 11 exam style ${returnedSkill.subject} question in the topic of ${returnedSkill.skill}. 
+          
+          First: Analysis - you should begin by analysing the student's answer against the relevant theory provided below. Your analysis should include and explaination of why the student has answered the question correctly/incorrectly, pointing what exactly they got right and wrong, including how well they and how well they followed the instructions of the question. Please be mindful that this is a year 11 student and that your analysis should not be so harsh that it is unfair for a student at this academic level but not so lenient that it would be too easy on them. Please use your own discression.
+          
+          Second: Score - Based on your analysis, you should provide a score to the student out of 100. The score should reflect how well the student answered the question, considering the student's academic level and the completeness of their understanding of the key concepts, not necessarily how much of the provided theory was reflected in their answer. Please use your own discression.
+          
+          Here are the relevant question and theory:
+          
           QUESTION START
           ${relevantMessages[1].content}
           QUESTION END
@@ -247,6 +259,17 @@ export async function POST(req: Request) {
           THEORY START
           ${returnedSkill.content}
           THEORY END
+          
+          Your response should STRICTLY follow the following JSON format:
+
+          "
+          {
+            "analysis" : insert_analysis_here,
+            "score" : insert_score_here
+          }
+          "
+
+          where "your_analysis_here" should contain the analysis and insert_score_here should contain the score. Do not return the JSON object within quotes, and do not return any other text. Your analysis should only be about 3 sentences long try to be comprehensive yet brief in your analysis.
           .`
         },
       ] as ChatCompletionMessageParam[]
@@ -292,12 +315,12 @@ export async function POST(req: Request) {
       const updateScores = await updateStudentSkillScores(email, skill, returnedStudentSkill.mastery_score, returnedStudentSkill.retention_score, returnedStudentSkill.need_to_revise, returnedStudentSkill.decay_value, gradeJsonObject.score);
       // console.log('Updated scores: ' + updateScores);
 
+      //DONESON
       const feedbackSystemPrompt = [
         {
           "role": "system", 
-          "content": `You are an AI assistant who is given an answer to a question, and the score it was marked as out of 100.
-          Provide feedback to the student on their answer, and word this in the 2nd person, as if the student is reading it.
-          The question and relevant theory are as follows:
+          "content": `You are an AI assistant who provides feedback to students in year 11 who are answering exam style ${returnedSkill.subject} questions. You are given the question the student has been asked, the student's answer, an analysis of that answer (based on correctness relative to the provided theory), and the score out of 100 that has been assigned to the student. Below is the relevant content information:
+
           QUESTION START
           ${relevantMessages[1].content}
           QUESTION END
@@ -305,12 +328,18 @@ export async function POST(req: Request) {
           THEORY START
           ${returnedSkill.content}
           THEORY END
+          
+          ANALYSIS START
+          ${gradeJsonObject.analysis}
+          ANALYSIS END
 
-          ANSWER SCORE OUT OF 100: ${gradeJsonObject.score} 
+          ANSWER SCORE OUT OF 100: ${gradeJsonObject.score}
 
-          Do not tell the student their score, just let them know whether they got the question correct or incorrect, where scores of less than 60 are incorrect.
-          Keep your feedback short and succinct, focusing on major areas of improvement if any exist.
-          Do not add in extra flavouring text. Do not return your feedback in quotes.
+          Do not tell the student their score, just let them know whether they got the question correct or incorrect, where scores of less than 70 are incorrect.
+
+          It is critical your response is appropriate for a student at a year 11 academic level, avoiding the use of sophisticated jargon unless directly asked. Also, consider the depth of your response, ensuring that it is appropriate for the student's year level. Your answer should be sufficiently detailed to provide a comprehensive enough explanation, but still succinct enough that a student does not lose focus reading it. Finally, it is absolutly critical that your responses are STRICTLY less than a maximum of 6 sentences long, using your own descretion to determine the appropriate length given the query posed by the student.
+
+          Do not add in extra flavouring text. Do not return your feedback in quotes. Once you have provided your response, ask the student if they are ready to move onto a new question of it have any questions about the response you have provided.
           .`
         }
       ] as ChatCompletionMessageParam[]
@@ -349,6 +378,7 @@ export async function POST(req: Request) {
         existingFeedback += `\nFeedback #${i+2}: ` + relevantMessages[3 + onQuestionLoopCounter*2 + i*2].content;
       }
 
+      //DONESON
       const feedbackSystemPrompt = [
         {
           "role": "system", 
@@ -356,25 +386,33 @@ export async function POST(req: Request) {
           The student has answered a question, and you have graded their answer and given feedback.
 
           The student has asked a further clarifying question on the feedback, question, or broader topic.
+
+          Here is the original exam style question that was posed to them:
  
           ORIGINAL QUESTION START
           ${relevantMessages[1].content}
           ORIGINAL QUESTION END
+
+          Here is the relevant theory surrounding the posed question:
           
           TOPIC THEORY START
           ${returnedSkill.content}
           TOPIC THEORY END
 
+          Here is the answer the student gave to the posed question:
+
           STUDENT ANSWER START
           ${relevantMessages[2 + onQuestionLoopCounter*2].content}
           STUDENT ANSWER END
+
+          Here is the feedback you provided thusfar to the student on their answer:
 
           FEEDBACK TO ANSWER START
           ${relevantMessages[3 + onQuestionLoopCounter*2 + onFeedbackLoopCounter*2].content}
           FEEDBACK TO ANSWER END 
           
-          Provide a response to the student, and word this in the 2nd person, as if the student is reading it.
-          .`
+          Provide a response to the student, and word this in the 2nd person, as if the student is reading it. It is critical your response is appropriate for a student at a year 11 academic level, avoiding the use of sophisticated jargon unless directly asked. Also, consider the depth of your response, ensuring that it is appropriate for the student's year level. Your answer should be sufficiently detailed to provide a comprehensive enough explanation, but not so detailed that it becomes overhwhelming for thr student. Finally, your responses should STRICTLY be a maximum of 5 sentences long, using your own descretion to determine the appropriate length given the query posed by the student. At the end of your response, ask the student if they need further clarification or if they are ready to move onto a new question.
+          `
         }
       ] as ChatCompletionMessageParam[]
 
@@ -399,11 +437,12 @@ export async function POST(req: Request) {
 
     } else if (chatAction === 'unknownResponse') {
       // console.log("Responding to an invalid response")
+
+      //DONESON
       const feedbackSystemPrompt = [
         {
           "role": "system", 
-          "content": `You are an AI assistant who assists students in their learning.
-          You have been provided an unknown response, if it is appropriate to provide some sort of response to, do so, however ensure that you ask whether the student has any more questions, or would like to move on.
+          "content": `You are an AI assistant who assists students in their learning. You have been have been conversing with the student, providing it questions, feedback on their answers, discussing theory and helping with any relevant clarifications that had. However, the student has just said something unrelated to the current topic/key idea being discussed. You should respond to the student by telling them that what they are saying is not relevant to the current topic and politely tell them that they should try to stay on topic. Ensure that you ask whether the student has any more questions, or would like to move on. Your response should STRICTLY be a maximum of 3 sentences long, it is absolutely critical you do not answer with longer responses.
           .`
         }
       ] as ChatCompletionMessageParam[]
@@ -481,6 +520,8 @@ export async function POST(req: Request) {
         // console.log(lessonPlanContextString)
 
         // console.log('waiting')
+
+        //DONESON
         const classLessonPlanSystemPrompt = [
           {
             "role": "system", 
