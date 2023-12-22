@@ -325,6 +325,120 @@ async function getAggregatedStudentsForClass(
   }
 }
 
+async function getAggregatedStudentsAndSkillsForClass(schoolClassId : string, firestoreDb = db) {
+  const studentSkillsQuery = query(
+    collection(firestoreDb, "studentSkills"),
+    where("schoolClassID", "==", schoolClassId)
+  )
+  try {
+    const studentSkillsQuerySnapshot = await getDocs(studentSkillsQuery)
+
+    const studentSkills = studentSkillsQuerySnapshot.docs.map((doc) => {
+      return { id: doc.id, ...doc.data() } as FirestoreStudentSkill;
+    });
+
+    // create the student and skill maps
+    const studentMap: Record<string, FirestoreStudentAggregate> = {};
+    const skillMap: Record<string, FirestoreSkillAggregate> = {};
+
+    // do the student first
+    studentSkills.forEach((studentSkill) => {
+      const {
+        firstName,
+        lastName,
+        email,
+        schoolClass,
+        masteryScore,
+        retentionScore,
+        needToRevise,
+      } = studentSkill;
+      const fullName = `${firstName} ${lastName}`;
+
+      if (!studentMap[email]) {
+        studentMap[email] = {
+          fullName,
+          email,
+          schoolClass: schoolClass,
+          masteryScore: 0,
+          retentionScore: 0,
+          skillsToRevise: 0,
+        };
+      }
+
+      studentMap[email].masteryScore += masteryScore;
+      studentMap[email].retentionScore += retentionScore;
+      if (needToRevise) {
+        studentMap[email].skillsToRevise += 1;
+      }
+    });
+
+    // Calculate averages and return the array
+    const aggregatedStudents = Object.values(studentMap).map((studentAggregate) => {
+      const count = studentSkills.filter(
+        (ss) => ss.email === studentAggregate.email,
+      ).length;
+      return {
+        ...studentAggregate,
+        masteryScore: studentAggregate.masteryScore / count,
+        retentionScore: studentAggregate.retentionScore / count,
+      };
+    }) as FirestoreStudentAggregate[];
+
+    // do the skills next
+    studentSkills.forEach((studentSkill) => {
+      const {
+        skill,
+        schoolClass,
+        masteryScore,
+        retentionScore,
+        needToRevise,
+        areDependenciesMet,
+      } = studentSkill;
+
+      if (!skillMap[skill]) {
+        skillMap[skill] = {
+          skill,
+          schoolClass,
+          masteryScore: 0,
+          retentionScore: 0,
+          noStudentsNotMetMastery: 0,
+          noStudentsNotMetDependencies: 0,
+          noStudentsToRevise: 0,
+        };
+      }
+
+      skillMap[skill].masteryScore += masteryScore;
+      skillMap[skill].retentionScore += retentionScore;
+      if (masteryScore < 50) {
+        skillMap[skill].noStudentsNotMetMastery += 1;
+      }
+      if (!areDependenciesMet) {
+        skillMap[skill].noStudentsNotMetDependencies += 1;
+      }
+      if (needToRevise) {
+        skillMap[skill].noStudentsToRevise += 1;
+      }
+    });
+
+    // Calculate averages and return the array
+    const aggregatedSkills = Object.values(skillMap).map((skillAggregate) => {
+      const count = studentSkills.filter(
+        (ss) => ss.skill === skillAggregate.skill,
+      ).length;
+      return {
+        ...skillAggregate,
+        masteryScore: skillAggregate.masteryScore / count,
+        retentionScore: skillAggregate.retentionScore / count,
+      };
+    }) as FirestoreSkillAggregate[];
+
+    return {aggregatedStudents, aggregatedSkills}
+  } catch (error) {
+    console.error("Error aggregating data:", error);
+    throw error; // Propagate the error
+  }
+}
+
 async function updateStudentSkillScore(
   studentSkill: FirestoreStudentSkill,
   answerGrade: number,
@@ -386,4 +500,5 @@ export {
   getAggregatedSkillsForClass,
   getAggregatedStudentsForClass,
   updateStudentSkillScore,
+  getAggregatedStudentsAndSkillsForClass,
 };
