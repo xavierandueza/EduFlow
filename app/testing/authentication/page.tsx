@@ -1,13 +1,13 @@
 "use client";
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Page() {
-  const { data: session, status } = useSession()
-  const userEmail = session?.user?.email
-  console.log(session?.user)
+  const { data: session, status } = useSession();
+  const userEmail = session?.user?.email;
+  console.log(session?.user);
 
   if (status === "loading") {
-    return <p>Loading in the status...</p>
+    return <p>Loading in the status...</p>;
   }
 
   if (status === "authenticated") {
@@ -16,7 +16,7 @@ export default function Page() {
         <p>Signed in as {userEmail}</p>
         <button onClick={() => signOut()}>Sign out</button>
       </>
-    )
+    );
   }
 
   return (
@@ -24,5 +24,5 @@ export default function Page() {
       <p>Not signed in.</p>
       <button onClick={() => signIn("google")}>Sign in</button>
     </>
-  )
+  );
 }

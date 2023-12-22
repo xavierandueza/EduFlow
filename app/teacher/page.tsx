@@ -1,53 +1,47 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { ClassCard } from '../ui/teacher/cards'; 
-import { getTeacherFromDB, getSchoolClassFromDBAll } from '../utils/databaseFunctions';
-import { SchoolClass } from '../utils/interfaces';
- 
+"use client";
+import { useState, useEffect } from "react";
+import { ClassCard } from "../ui/teacher/cards";
+import { SchoolClass, FirestoreTeacher } from "../utils/interfaces";
+import { Firestore } from "firebase-admin/firestore";
+
 export default function Page() {
-  const [schoolClassList, setSchoolClassList] = useState<SchoolClass[]>([]); // [SchoolClass
+  const [teacher, setTeacher] = useState<FirestoreTeacher>(
+    {} as FirestoreTeacher,
+  );
 
-  const email_address = "clara@everdawn.ai";
+  const email = "clara@everdawn.ai";
 
-  /*
-  const teacher = await getTeacherFromDB("clara@everdawn.ai");
-  console.log(teacher);
-
-  const schoolClassList = await getSchoolClassFromDBAll(teacher.school_classes);
-  */
-
-  const fetchSchoolClassList = async () => {
-    // console.log('entered fetching student skill function')
+  const fetchTeacher = async () => {
     try {
-      const response = await fetch('/api/getSchoolClassList', {
-        method: 'POST',
+      const response = await fetch("/api/getTeacherFirestore", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email_address })
+        body: JSON.stringify({ email }),
       });
       const data = await response.json();
       // console.log('Successfully retrieved the student skill')
       // console.log(studentSkill)
-      setSchoolClassList(data);
+      setTeacher(data);
+      console.log(data.schoolClasses);
     } catch (error) {
-      console.error('Error fetching student skill:', error);
+      console.error("Error fetching teacher:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchSchoolClassList();
+    fetchTeacher();
   }, []);
- 
+
   return (
     <main>
-      <h1 className="mb-4 text-xl md:text-2xl">
-        Classes
-      </h1>
+      <h1 className="mb-4 text-xl md:text-2xl">Classes</h1>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {schoolClassList.map((schoolClass, index) => (
-          <ClassCard key={index} schoolClass={schoolClass} />
-        ))}
+        {teacher.schoolClasses &&
+          teacher.schoolClasses.map((schoolClass, index) => (
+            <ClassCard key={index} schoolClass={schoolClass} />
+          ))}
       </div>
       <div className="flex-grow mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
         <p>Placeholder for a calendar </p>

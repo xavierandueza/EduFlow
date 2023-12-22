@@ -1,7 +1,6 @@
-import clsx from 'clsx';
+import clsx from "clsx";
 // import Image from 'next/image';
-import { SkillAggregate } from '../../utils/interfaces';
-
+import { SkillAggregate } from "../../utils/interfaces";
 
 export default async function DisplayAggregateSkills({
   aggregatedSkills,
@@ -10,9 +9,7 @@ export default async function DisplayAggregateSkills({
 }) {
   return (
     <div className="flex w-full flex-col md:col-span-4 lg:col-span-4">
-      <h2 className={"mb-4 text-xl md:text-2xl"}>
-        Class Skills
-      </h2>
+      <h2 className={"mb-4 text-xl md:text-2xl"}>Class Skills</h2>
       <div className="flex grow flex-col justify-between rounded-xl bg-gray-50 p-4">
         {/* NOTE: comment in this code when you get to this point in the course */}
 
@@ -22,9 +19,9 @@ export default async function DisplayAggregateSkills({
               <div
                 key={aggregatedSkill.skill}
                 className={clsx(
-                  'flex flex-row items-center justify-between py-4',
+                  "flex flex-row items-center justify-between py-4",
                   {
-                    'border-t': i !== 0,
+                    "border-t": i !== 0,
                   },
                 )}
               >
@@ -38,14 +35,10 @@ export default async function DisplayAggregateSkills({
                     </p>
                   </div>
                 </div>
-                <p
-                  className={"truncate text-sm font-medium md:text-base"}
-                >
+                <p className={"truncate text-sm font-medium md:text-base"}>
                   {aggregatedSkill.mastery_score}
                 </p>
-                <p
-                  className={"truncate text-sm font-medium md:text-base"}
-                >
+                <p className={"truncate text-sm font-medium md:text-base"}>
                   {aggregatedSkill.retention_score}
                 </p>
               </div>

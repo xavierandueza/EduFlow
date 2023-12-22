@@ -2,7 +2,10 @@ const Dropdown = ({ fieldId, label, options, value, onSelect }) => {
   return (
     <div className="relative inline-block w-full text-gray-700">
       {label && (
-        <label htmlFor={fieldId} className="chatbot-text-primary block text-sm font-medium mb-2">
+        <label
+          htmlFor={fieldId}
+          className="chatbot-text-primary block text-sm font-medium mb-2"
+        >
           {label}
         </label>
       )}
@@ -20,7 +23,11 @@ const Dropdown = ({ fieldId, label, options, value, onSelect }) => {
           ))}
         </select>
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-          <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+          <svg
+            className="fill-current h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+          >
             <path d="M5.3 7.7a1 1 0 011.4 0l3.3 3.3 3.3-3.3a1 1 0 111.4 1.4l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 010-1.4z" />
           </svg>
         </div>
