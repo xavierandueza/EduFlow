@@ -22,7 +22,6 @@ import {
   setDoc,
 } from "firebase/firestore";
 
-// connect to the astraDb instance
 
 async function getSchoolClassSkillFromDB(id?: string, schoolClass? : string, skill? : string, firestoreDb = db) {
   try {

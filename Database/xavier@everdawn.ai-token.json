@@ -1,9 +1,0 @@
-{
-  "clientId": "kivCqAqaGlvASPPvkyCibiZD",
-  "secret": "q9nx190.mfsqcZF4PZ1uah4fT1Pcj7sH+,Dj7Zt09oLLLrMQInW6tK7iZ,tJU4v6e,Fb-uyCy4wcTahDneM6HNxmers.aWxobsDm-P3kQzCQvQbDfXzObZZLFQp.xj,H",
-  "token": "AstraCS:kivCqAqaGlvASPPvkyCibiZD:bcbe83bf5f8c98ab400dd98a804e717719d356e97a58151e5d6c6d0eaa4e5167",
-  "orgId": "9a5f987a-c51d-4619-a746-bbadb2413ef6",
-  "roles": ["ad0566b5-2a67-49de-89e8-92258c2f2c98"],
-  "generatedOn": "2023-11-19T12:41:19.576544407Z",
-  "__typename": "GenerateToken"
-}
