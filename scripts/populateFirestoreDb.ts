@@ -1142,6 +1142,7 @@ async function main() {
   }
 
   console.log("Finished seeding");
+  process.exit(0);
 }
 
 main().catch(console.error);
