@@ -39,8 +39,8 @@ export default function Home() {
   const [lastChatAction, setLastChatAction] = useState<ChatAction>("unknownResponse");
   const [relevantChatMessage, setRelevantChatMessage] = useState<string>("");
   const [relevantMessagesStartIndex, setRelevantMessagesStartIndex] = useState<number>(0); // will need to change when history implemented.
-  const [onQuestionLoopCount, setOnQuestionLoopCount] = useState<number>(0); // Used in the route.ts file
-  const [onFeedbackLoopCount, setOnFeedbackLoopCount] = useState<number>(0); // Used in the route.ts file
+  const [onQuestionLoopCounter, setOnQuestionLoopCounter] = useState<number>(0); // Used in the route.ts file
+  const [onFeedbackLoopCounter, setOnFeedbackLoopCounter] = useState<number>(0); // Used in the route.ts file
 
   // retrieve the studentSkill from the server
   // this is populated then fed into the chat call to determine chat behaviour
@@ -167,12 +167,12 @@ export default function Home() {
     e.preventDefault(); // prevents default form submission behaviour
 
     const textInput = input;
-    console.log("User inputted: " + textInput);
+    // console.log("User inputted: " + textInput);
     console.log("Relevant messages starting index is : " + relevantMessagesStartIndex);
     // let currentChatAction = lastChatAction;
     let tempRelevantMessagesStartIndex = relevantMessagesStartIndex; 
-    let tempOnQuestionLoopCount = onQuestionLoopCount;
-    let tempOnFeedbackLoopCount = onFeedbackLoopCount;
+    let tempOnQuestionLoopCounter = onQuestionLoopCounter;
+    let tempOnFeedbackLoopCounter = onFeedbackLoopCounter;
 
     // get the currentAction from input, relevant message, and next action
     console.log(`Previous chatAction was: ${lastChatAction}`);
@@ -182,12 +182,12 @@ export default function Home() {
       tempRelevantMessagesStartIndex = messages.length;  // so that the "ready" statement is the start index of the current ones
     } else if (lastChatAction === "askingQuestion"){
       tempRelevantMessagesStartIndex = messages.length - 2; // ready statement again, 1 before the last message
-      tempOnQuestionLoopCount = 0; // reset both loop counters
-      tempOnFeedbackLoopCount = 0; // reset both loop counters
+      tempOnQuestionLoopCounter = 0; // reset both loop counters
+      tempOnFeedbackLoopCounter = 0; // reset both loop counters
     } else if (lastChatAction === "clarifyingQuestion") {
-      tempOnQuestionLoopCount = tempOnQuestionLoopCount + 1; // increment the loop counter
+      tempOnQuestionLoopCounter = tempOnQuestionLoopCounter + 1; // increment the loop counter
     } else if (lastChatAction === "providingExtraFeedback" || lastChatAction === "unknownResponse") {
-      tempOnFeedbackLoopCount = tempOnFeedbackLoopCount + 1; // increment the loop counter
+      tempOnFeedbackLoopCounter = tempOnFeedbackLoopCounter + 1; // increment the loop counter
     }
 
     console.log("Temp Relevant Messages Index is: " + tempRelevantMessagesStartIndex)
@@ -195,24 +195,42 @@ export default function Home() {
     handleSubmit(e, {
       options: {
         body: {
-          llm: 'gpt-4-1106-preview', 
+          llm: 'gpt-4-1106-preview' , 
           lastChatAction: lastChatAction, 
           skill: studentSkill.skill, 
           email: studentSkill.email_address, 
           relevantMessagesStartIndex: tempRelevantMessagesStartIndex,
-          onQuestionLoopCount: tempOnQuestionLoopCount,
-          onFeedbackLoopCount: tempOnFeedbackLoopCount,
+          onQuestionLoopCounter: tempOnQuestionLoopCounter,
+          onFeedbackLoopCounter: tempOnFeedbackLoopCounter,
         }
       }
     });
 
+    let relevantChatMessage: string;
+    let tempChatAction: ChatAction;
+    console.log("Messages is of length: " + messages.slice(tempRelevantMessagesStartIndex).length)
     // update states
-    const tempChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction); // input is from the form
+    if (messages.slice(tempRelevantMessagesStartIndex).length <= 1) {
+      // only one message, so chatAction is askingQuestion
+      tempChatAction = 'askingQuestion';
+    } else { // there is a chat action to speak of
+      // the relevant chat action is dependent on where you're at actually
+      if (lastChatAction === 'askingQuestion' || lastChatAction === 'clarifyingQuestion') {
+        // last chat action is the chat question itself
+        relevantChatMessage = messages.slice(tempRelevantMessagesStartIndex)[1].content;
+      } else if (lastChatAction === 'gradingValidAnswer' || lastChatAction === 'gradingInvalidAnswer' || lastChatAction === 'providingExtraFeedback' || lastChatAction === 'unknownResponse') {
+        relevantChatMessage = messages.slice(tempRelevantMessagesStartIndex)[3 + tempOnQuestionLoopCounter*2 + tempOnFeedbackLoopCounter*2].content
+      }
+      tempChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction);
+    }
+
+    console.log("relevantChatMessage is: " + relevantChatMessage);
+
     console.log(`Chat Action was: ${tempChatAction}`);
     setLastChatAction(tempChatAction);
     setRelevantMessagesStartIndex(tempRelevantMessagesStartIndex);
-    setOnFeedbackLoopCount(tempOnFeedbackLoopCount);
-    setOnFeedbackLoopCount(tempOnFeedbackLoopCount);
+    setOnQuestionLoopCounter(tempOnQuestionLoopCounter);
+    setOnFeedbackLoopCounter(tempOnFeedbackLoopCounter);
   }
 
   return (

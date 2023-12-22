@@ -20,7 +20,7 @@ export default function Chatbot({
         { options: 
             { body: 
                 { llm: 'gpt-4', 
-                chatState: 'creating lesson plan', 
+                myChatAction: 'creatingLessonPlan', 
                 email: '', 
                 skill: '',
                 sessionSkillAggregates: sessionSkillAggregates

@@ -97,7 +97,7 @@ export type ChatAction =  'clarifyingQuestion' |
                           'providingExtraFeedback' | 
                           'askingQuestion' | 
                           'unknownResponse' |
-                          'creating lesson plan'; 
+                          'creatingLessonPlan'; 
 
 //For testing purposes
 export interface StudentResponseRequestBody {
@@ -107,3 +107,24 @@ export interface StudentResponseRequestBody {
     lastAction: ChatAction;
   }
 }
+
+// start with easiest question and then get harder over time
+export type QuestionType =  'trueOrFalseTrue' | // 0-25
+                            'trueOrFalseFalse' | // 0-25
+                            'provideADefinition' | // 0-75
+                            'multipleChoiceSingleTrue' | // 25-50
+                            'multipleChoiceSingleFalse' | // 25-50
+                            'multipleChoiceMultipleTrue' | // 50-75
+                            'multipleChoiceMultipleFalse' | // 50-75                      
+                            'shortAnswer' | // 50-100
+                            'longAnswer'; // 75-100
+
+export const questionTypes : QuestionType[] = ['trueOrFalseTrue', // 0-25
+                                              'provideADefinition', // 0-25
+                                              'trueOrFalseFalse', // 0-75                                   
+                                              'multipleChoiceSingleTrue', // 25-50
+                                              'multipleChoiceSingleFalse', // 25-50
+                                              'multipleChoiceMultipleTrue', // 50-75
+                                              'multipleChoiceMultipleFalse', // 50-75
+                                              'shortAnswer', // 50-100
+                                              'longAnswer'] // 75-100
