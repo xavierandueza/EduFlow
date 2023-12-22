@@ -1,6 +1,6 @@
 // import clsx from 'clsx';
 // import Image from 'next/image';
-import { SkillAggregate, ExtendedSkillAggregate } from "../../utils/interfaces";
+import { FirestoreSkillAggregate, ExtendedSkillAggregate } from "../../utils/interfaces";
 import ProgressBar from "../../../components/ProgressBar";
 import Search from "../../ui/search";
 import IncludeInClassLessonPlan from "./status";
@@ -8,7 +8,7 @@ import IncludeInClassLessonPlan from "./status";
 export default function DisplayAggregateSkillsTable({
   skillAggregates,
 }: {
-  skillAggregates: SkillAggregate[];
+  skillAggregates: FirestoreSkillAggregate[];
 }) {
   return (
     <div className="flex w-full flex-col md:col-span-4 lg:col-span-4">
@@ -51,7 +51,7 @@ export default function DisplayAggregateSkillsTable({
                 <td className="whitespace-nowrap py-3 pl-6 pr-3">
                   <div className="flex items-center gap-3">
                     <a
-                      href={`/teacher/classes/skills?class_name=${skillAggregate.school_class_name}&skill=${skillAggregate.skill}`}
+                      href={`/teacher/classes/skills?class_name=${skillAggregate.schoolClass}&skill=${skillAggregate.skill}`}
                       className="hover:text-blue-600" /*FIX LINKING*/
                     >
                       {skillAggregate.skill}
@@ -60,23 +60,23 @@ export default function DisplayAggregateSkillsTable({
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   <ProgressBar
-                    score={skillAggregate.mastery_score}
+                    score={skillAggregate.masteryScore}
                     width="100px"
                     backgroundColor="#388a91"
                   />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   <ProgressBar
-                    score={skillAggregate.retention_score}
+                    score={skillAggregate.retentionScore}
                     width="100px"
                     backgroundColor="#388a91"
                   />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  {skillAggregate.no_students_not_met_dependencies}
+                  {skillAggregate.noStudentsNotMetDependencies}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  {skillAggregate.no_students_to_revise}
+                  {skillAggregate.noStudentsToRevise}
                 </td>
               </tr>
             ))}

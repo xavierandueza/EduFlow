@@ -169,7 +169,7 @@ export interface StudentAggregate {
 export interface FirestoreStudentAggregate {
   fullName: string;
   email: string;
-  className: string;
+  schoolClass: string;
   masteryScore: number;
   retentionScore: number;
   skillsToRevise: number;

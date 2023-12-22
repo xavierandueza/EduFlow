@@ -1,13 +1,13 @@
 // import clsx from 'clsx';
 // import Image from 'next/image';
-import { StudentAggregate } from "../../utils/interfaces";
+import { FirestoreStudentAggregate } from "../../utils/interfaces";
 import ProgressBar from "../../../components/ProgressBar";
 import Search from "../../ui/search";
 
 export default function DisplayAggregateStudentsTable({
   studentAggregates,
 }: {
-  studentAggregates: StudentAggregate[];
+  studentAggregates: FirestoreStudentAggregate[];
 }) {
   return (
     <div className="flex w-full flex-col md:col-span-4 lg:col-span-4">
@@ -39,35 +39,35 @@ export default function DisplayAggregateStudentsTable({
           <tbody className="bg-white">
             {studentAggregates?.map((studentAggregate) => (
               <tr
-                key={studentAggregate.email_address}
+                key={studentAggregate.email}
                 className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
               >
                 <td className="whitespace-nowrap py-3 pl-6 pr-3">
                   <div className="flex items-center gap-3">
                     <a
-                      href={`/teacher/classes/student?email_address=${studentAggregate.email_address}&class_name=${studentAggregate.school_class_name}`}
+                      href={`/teacher/classes/student?email_address=${studentAggregate.email}&class_name=${studentAggregate.schoolClass}`}
                       className="hover:text-blue-600" /*FIX LINKING*/
                     >
-                      {studentAggregate.full_name}
+                      {studentAggregate.fullName}
                     </a>
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   <ProgressBar
-                    score={studentAggregate.mastery_score}
+                    score={studentAggregate.masteryScore}
                     width="100px"
                     backgroundColor="#388a91"
                   />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   <ProgressBar
-                    score={studentAggregate.retention_score}
+                    score={studentAggregate.retentionScore}
                     width="100px"
                     backgroundColor="#388a91"
                   />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  {studentAggregate.skills_to_revise}
+                  {studentAggregate.skillsToRevise}
                 </td>
               </tr>
             ))}

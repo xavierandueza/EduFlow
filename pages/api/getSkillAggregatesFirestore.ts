@@ -5,16 +5,17 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  // console.log("Getting studentSkill from the handler function")
+    // console.log("Getting studentSkill from the handler function")
 
-  const { schoolClassId } = req.body;
-  console.log("The schoolClassId is: " + schoolClassId);
-  const result = await getAggregatedSkillsForClass(schoolClassId);
+    const { schoolClassId } = req.body;
+    console.log("The schoolClassId is: " + schoolClassId)
 
-  console.log(result);
+    const result = await getAggregatedSkillsForClass(schoolClassId);
 
-  // console.log("Skills aggregate is: ");
-  // console.log(result);
+    // console.log(result)
 
-  res.status(200).json(result);
+    // console.log("Skills aggregate is: ");
+    // console.log(result);
+
+    res.status(200).json(result);
 }
