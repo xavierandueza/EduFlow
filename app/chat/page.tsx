@@ -290,7 +290,7 @@ export default function Home() {
             <div className="flex justify-between">
               <div className="flex items-center gap-2">
                 <ProgressBar
-                  score={studentSkill.masteryScore}
+                  score={studentSkill.needToRevise ? studentSkill.retentionScore : studentSkill.masteryScore}
                   width="200px"
                   backgroundColor="#388a91"
                 />
