@@ -15,7 +15,7 @@ const firebaseConfig = {
   storageBucket: "eduflowau.appspot.com",
   messagingSenderId: "911044059845",
   appId: "1:911044059845:web:1355b18ee0390c2b7886ac",
-  measurementId: "G-RD7QKVQ21X"
+  measurementId: "G-RD7QKVQ21X",
 };
 
 // Initialize Firebase

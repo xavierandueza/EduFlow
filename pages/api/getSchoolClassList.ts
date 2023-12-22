@@ -1,16 +1,22 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { getSchoolClassFromDBAll, getTeacherFromDB } from '../../app/utils/databaseFunctions';
+import type { NextApiRequest, NextApiResponse } from "next";
+import {
+  getSchoolClassFromDBAll,
+  getTeacherFromDB,
+} from "../../app/utils/databaseFunctions";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    // console.log("Getting studentSkill from the handler function")
-    console.log("req.body is: ");
-    console.log(req.body);
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  // console.log("Getting studentSkill from the handler function")
+  console.log("req.body is: ");
+  console.log(req.body);
 
-    const { email_address } = req.body;
-    
-    const teacher = await getTeacherFromDB(email_address);
+  const { email_address } = req.body;
 
-    const result = await getSchoolClassFromDBAll(teacher.school_classes);
+  const teacher = await getTeacherFromDB(email_address);
 
-    res.status(200).json(result);
+  const result = await getSchoolClassFromDBAll(teacher.school_classes);
+
+  res.status(200).json(result);
 }

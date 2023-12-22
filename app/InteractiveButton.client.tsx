@@ -1,5 +1,5 @@
-import React from 'react';
-import { db } from './firebase';
+import React from "react";
+import { db } from "./firebase";
 import { collection, addDoc } from "firebase/firestore";
 
 const InteractiveButton = () => {
@@ -8,7 +8,7 @@ const InteractiveButton = () => {
       const docRef = await addDoc(collection(db, "users"), {
         first: "Ada",
         last: "Lovelace",
-        born: 1815
+        born: 1815,
       });
       console.log("Document written with ID: ", docRef.id);
     } catch (e) {

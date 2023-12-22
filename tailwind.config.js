@@ -16,8 +16,8 @@ module.exports = {
         origin: "800px",
       },
       colors: {
-        highlight: '#388a91',
-      }
+        highlight: "#388a91",
+      },
     },
   },
   plugins: [],

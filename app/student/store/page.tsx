@@ -1,19 +1,22 @@
 export default async function Page({
-    searchParams,
-  }: {
-    searchParams?: {
-      query?: string;
-      page?: string;
-    };
-  }) {
-    return (
-      <div className="w-full">
-        <div className="flex w-full items-center justify-between ">
-          <h1 className={`font-bold text-2xl`}>Skills</h1>
-        </div>
-        <p className="mt-4 flex items-center justify-between gap-2 md:mt-8">
-          This is currently a placeholder, however this would be a live environment that all students in a class connect to, so that teachers (on their end) can see what students are up to, what they may be struggling with (key ideas) and more.
-        </p>
+  searchParams,
+}: {
+  searchParams?: {
+    query?: string;
+    page?: string;
+  };
+}) {
+  return (
+    <div className="w-full">
+      <div className="flex w-full items-center justify-between ">
+        <h1 className={`font-bold text-2xl`}>Skills</h1>
       </div>
-    );
-  }
+      <p className="mt-4 flex items-center justify-between gap-2 md:mt-8">
+        This is currently a placeholder, however this would be a live
+        environment that all students in a class connect to, so that teachers
+        (on their end) can see what students are up to, what they may be
+        struggling with (key ideas) and more.
+      </p>
+    </div>
+  );
+}

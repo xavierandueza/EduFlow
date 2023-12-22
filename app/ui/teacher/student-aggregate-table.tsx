@@ -1,8 +1,8 @@
 // import clsx from 'clsx';
 // import Image from 'next/image';
-import { StudentAggregate } from '../../utils/interfaces';
-import ProgressBar from '../../../components/ProgressBar';
-import Search from '../../ui/search';
+import { StudentAggregate } from "../../utils/interfaces";
+import ProgressBar from "../../../components/ProgressBar";
+import Search from "../../ui/search";
 
 export default function DisplayAggregateStudentsTable({
   studentAggregates,
@@ -11,9 +11,7 @@ export default function DisplayAggregateStudentsTable({
 }) {
   return (
     <div className="flex w-full flex-col md:col-span-4 lg:col-span-4">
-      <h2 className={"mb-4 text-xl md:text-2xl"}>
-        Students
-      </h2>
+      <h2 className={"mb-4 text-xl md:text-2xl"}>Students</h2>
       <div className="mb-4 flex items-center justify-between gap-2 ">
         <Search placeholder="Search skills..." />
       </div>
@@ -32,7 +30,9 @@ export default function DisplayAggregateStudentsTable({
                 Average Retention
               </th>
               <th scope="col" className="px-3 py-5 font-medium">
-                Requiring<br />Revision
+                Requiring
+                <br />
+                Revision
               </th>
             </tr>
           </thead>
@@ -44,16 +44,27 @@ export default function DisplayAggregateStudentsTable({
               >
                 <td className="whitespace-nowrap py-3 pl-6 pr-3">
                   <div className="flex items-center gap-3">
-                    <a href={`/teacher/classes/student?email_address=${studentAggregate.email_address}&class_name=${studentAggregate.school_class_name}`} className="hover:text-blue-600" /*FIX LINKING*/ >
+                    <a
+                      href={`/teacher/classes/student?email_address=${studentAggregate.email_address}&class_name=${studentAggregate.school_class_name}`}
+                      className="hover:text-blue-600" /*FIX LINKING*/
+                    >
                       {studentAggregate.full_name}
                     </a>
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  <ProgressBar score={studentAggregate.mastery_score} width="100px" backgroundColor="#388a91" />
+                  <ProgressBar
+                    score={studentAggregate.mastery_score}
+                    width="100px"
+                    backgroundColor="#388a91"
+                  />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  <ProgressBar score={studentAggregate.retention_score} width="100px" backgroundColor="#388a91" />
+                  <ProgressBar
+                    score={studentAggregate.retention_score}
+                    width="100px"
+                    backgroundColor="#388a91"
+                  />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   {studentAggregate.skills_to_revise}

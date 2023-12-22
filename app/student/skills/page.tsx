@@ -1,9 +1,9 @@
-import Pagination from '../../ui/skills/pagination';
-import Search from '../../ui/search';
-import Table from '../../ui/skills/table';
-import { Suspense } from 'react';
-import { InvoicesTableSkeleton } from '../../ui/skeletons';
- 
+import Pagination from "../../ui/skills/pagination";
+import Search from "../../ui/search";
+import Table from "../../ui/skills/table";
+import { Suspense } from "react";
+import { InvoicesTableSkeleton } from "../../ui/skeletons";
+
 export default async function Page({
   searchParams,
 }: {
@@ -12,11 +12,11 @@ export default async function Page({
     page?: string;
   };
 }) {
-  const query = searchParams?.query || '';
+  const query = searchParams?.query || "";
   const currentPage = Number(searchParams?.page) || 1;
 
   const totalPages = 1; //await fetchInvoicesPages(query);
- 
+
   return (
     <div className="w-full">
       <div className="flex w-full items-center justify-between ">
@@ -26,7 +26,11 @@ export default async function Page({
         <Search placeholder="Search skills..." />
       </div>
       <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
-        <Table query={query} currentPage={currentPage} email ={'xand0001@student.monash.edu'} />
+        <Table
+          query={query}
+          currentPage={currentPage}
+          email={"xand0001@student.monash.edu"}
+        />
       </Suspense>
       <div className="mt-5 flex w-full justify-center">
         <Pagination totalPages={totalPages} />

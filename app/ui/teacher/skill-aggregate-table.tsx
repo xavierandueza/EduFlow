@@ -1,9 +1,9 @@
 // import clsx from 'clsx';
 // import Image from 'next/image';
-import { SkillAggregate, ExtendedSkillAggregate } from '../../utils/interfaces';
-import ProgressBar from '../../../components/ProgressBar';
-import Search from '../../ui/search';
-import IncludeInClassLessonPlan from './status';
+import { SkillAggregate, ExtendedSkillAggregate } from "../../utils/interfaces";
+import ProgressBar from "../../../components/ProgressBar";
+import Search from "../../ui/search";
+import IncludeInClassLessonPlan from "./status";
 
 export default function DisplayAggregateSkillsTable({
   skillAggregates,
@@ -12,9 +12,7 @@ export default function DisplayAggregateSkillsTable({
 }) {
   return (
     <div className="flex w-full flex-col md:col-span-4 lg:col-span-4">
-      <h2 className={"mb-4 text-xl md:text-2xl"}>
-        Skills
-      </h2>
+      <h2 className={"mb-4 text-xl md:text-2xl"}>Skills</h2>
       <div className="mb-4 flex items-center justify-between gap-2 ">
         <Search placeholder="Search skills..." />
       </div>
@@ -33,10 +31,14 @@ export default function DisplayAggregateSkillsTable({
                 Retention
               </th>
               <th scope="col" className="px-3 py-5 font-medium">
-                Incomplete<br />Dependencies
+                Incomplete
+                <br />
+                Dependencies
               </th>
               <th scope="col" className="px-3 py-5 font-medium">
-                Requiring<br />Revision
+                Requiring
+                <br />
+                Revision
               </th>
             </tr>
           </thead>
@@ -48,16 +50,27 @@ export default function DisplayAggregateSkillsTable({
               >
                 <td className="whitespace-nowrap py-3 pl-6 pr-3">
                   <div className="flex items-center gap-3">
-                    <a href={`/teacher/classes/skills?class_name=${skillAggregate.school_class_name}&skill=${skillAggregate.skill}`} className="hover:text-blue-600" /*FIX LINKING*/ >
+                    <a
+                      href={`/teacher/classes/skills?class_name=${skillAggregate.school_class_name}&skill=${skillAggregate.skill}`}
+                      className="hover:text-blue-600" /*FIX LINKING*/
+                    >
                       {skillAggregate.skill}
                     </a>
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  <ProgressBar score={skillAggregate.mastery_score} width="100px" backgroundColor="#388a91" />
+                  <ProgressBar
+                    score={skillAggregate.mastery_score}
+                    width="100px"
+                    backgroundColor="#388a91"
+                  />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  <ProgressBar score={skillAggregate.retention_score} width="100px" backgroundColor="#388a91" />
+                  <ProgressBar
+                    score={skillAggregate.retention_score}
+                    width="100px"
+                    backgroundColor="#388a91"
+                  />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   {skillAggregate.no_students_not_met_dependencies}
@@ -74,20 +87,16 @@ export default function DisplayAggregateSkillsTable({
   );
 }
 
-
-
 export function DisplayAggregateSkillsTableWithSelection({
   extendedSkillAggregates,
-  onToggle
+  onToggle,
 }: {
   extendedSkillAggregates: ExtendedSkillAggregate[];
   onToggle: (skillName: string) => void;
 }) {
   return (
     <div className="flex w-full flex-col md:col-span-4 lg:col-span-4">
-      <h2 className={"mb-4 text-xl md:text-2xl"}>
-        Skills
-      </h2>
+      <h2 className={"mb-4 text-xl md:text-2xl"}>Skills</h2>
       <div className="mb-4 flex items-center justify-between gap-2 ">
         <Search placeholder="Search skills..." />
       </div>
@@ -106,10 +115,14 @@ export function DisplayAggregateSkillsTableWithSelection({
                 Retention
               </th>
               <th scope="col" className="px-3 py-5 font-medium">
-                Incomplete<br />Dependencies
+                Incomplete
+                <br />
+                Dependencies
               </th>
               <th scope="col" className="px-3 py-5 font-medium">
-                Requiring<br />Revision
+                Requiring
+                <br />
+                Revision
               </th>
             </tr>
           </thead>
@@ -120,16 +133,31 @@ export function DisplayAggregateSkillsTableWithSelection({
                 className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
               >
                 <td className="whitespace-nowrap py-3 pl-6 pr-3">
-                  <div className="flex items-center gap-3" onClick={() => onToggle(extendedSkillAggregate.skill)}>
-                      <IncludeInClassLessonPlan includeInClassLessonPlan={extendedSkillAggregate.include_in_class_lesson_plan} /> 
-                      {extendedSkillAggregate.skill}
+                  <div
+                    className="flex items-center gap-3"
+                    onClick={() => onToggle(extendedSkillAggregate.skill)}
+                  >
+                    <IncludeInClassLessonPlan
+                      includeInClassLessonPlan={
+                        extendedSkillAggregate.include_in_class_lesson_plan
+                      }
+                    />
+                    {extendedSkillAggregate.skill}
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  <ProgressBar score={extendedSkillAggregate.mastery_score} width="100px" backgroundColor="#388a91" />
+                  <ProgressBar
+                    score={extendedSkillAggregate.mastery_score}
+                    width="100px"
+                    backgroundColor="#388a91"
+                  />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  <ProgressBar score={extendedSkillAggregate.retention_score} width="100px" backgroundColor="#388a91" />
+                  <ProgressBar
+                    score={extendedSkillAggregate.retention_score}
+                    width="100px"
+                    backgroundColor="#388a91"
+                  />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   {extendedSkillAggregate.no_students_not_met_dependencies}

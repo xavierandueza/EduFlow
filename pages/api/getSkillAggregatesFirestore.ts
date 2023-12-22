@@ -1,16 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSkillsAggregateForClassFromDB } from "../../app/utils/databaseFunctions";
+import { getAggregatedSkillsForClass } from "../../app/utils/databaseFunctionsFirestore";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   // console.log("Getting studentSkill from the handler function")
-  console.log("req.body is: ");
-  console.log(req.body);
 
-  const { _id } = req.body;
-  const result = await getSkillsAggregateForClassFromDB(_id);
+  const { schoolClassId } = req.body;
+  console.log("The schoolClassId is: " + schoolClassId);
+  const result = await getAggregatedSkillsForClass(schoolClassId);
+
+  console.log(result);
 
   // console.log("Skills aggregate is: ");
   // console.log(result);

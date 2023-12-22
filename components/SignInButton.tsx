@@ -1,7 +1,5 @@
-import React from 'react';
+import React from "react";
 
 const SignInButton = () => {
-    return (
-        <div>SignInButton</div>
-    )
-}
+  return <div>SignInButton</div>;
+};
