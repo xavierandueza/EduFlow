@@ -472,37 +472,52 @@ async function updateStudentSkillScore(
       if (answerGrade >= 60) {
         // if the answer was correct
         studentSkill.masteryScore +=
-          ((100.0 - studentSkill.masteryScore) * (answerGrade / 100.0)) / 10.0; // return the delta, rounded up
+          Math.ceil(((100.0 - studentSkill.masteryScore) * (answerGrade / 100.0)) / 10.0); // return the delta, rounded up
+        studentSkill.retentionScore += 
+          Math.ceil(((100.0 - studentSkill.retentionScore) * (answerGrade / 100.0)) / 10.0);
+          // check if gone above limit
+          if (studentSkill.masteryScore > 100) {
+            studentSkill.masteryScore = 100;
+            studentSkill.retentionScore = 100-0.01;
+          }
       } else {
         // if the answer was incorrect
-        studentSkill.masteryScore -= studentSkill.masteryScore / 10.0;
+        studentSkill.masteryScore -= Math.ceil(studentSkill.masteryScore / 10.0);
+        studentSkill.retentionScore -= Math.ceil(studentSkill.retentionScore / 10.0);
+        // check if below 0
+        if (studentSkill.masteryScore < 0) {
+          studentSkill.masteryScore = 0.01;
+          studentSkill.retentionScore = 0;
+        }
       }
     } else {
       // updating retention
       if (answerGrade >= 60) {
         // if the answer was correct
         studentSkill.retentionScore +=
-          ((100.0 - studentSkill.retentionScore) * (answerGrade / 100.0)) /
-          10.0; // return the delta, rounded up
+          Math.ceil(((100.0 - studentSkill.retentionScore) * (answerGrade / 100.0)) /
+          10.0); // return the delta, rounded up
+        // check if above mastery score
+        if (studentSkill.retentionScore > studentSkill.masteryScore) {
+          studentSkill.retentionScore = studentSkill.masteryScore - 0.01; 
+          studentSkill.needToRevise = false;
+        } else if (studentSkill.retentionScore > 100) {
+          studentSkill.retentionScore = 100;
+        } else if (studentSkill.retentionScore > studentSkill.masteryScore * 0.75) {
+          studentSkill.needToRevise = false;
+        }
       } else {
         // if the answer was incorrect
-        studentSkill.retentionScore -= studentSkill.retentionScore / 10.0;
+        studentSkill.retentionScore -= Math.ceil(studentSkill.retentionScore / 10.0);
+        if (studentSkill.retentionScore < 0) {
+          studentSkill.retentionScore = 0;
+        }
       }
     }
-    //console.log("New mastery is: " + studentSkill.masteryScore);
-    //console.log("New retention is: " + studentSkill.retentionScore);
 
     const { id, ...studentSkillData } = studentSkill;
     await setDoc(doc(firestoreDb, "studentSkills", id), studentSkillData);
 
-    const retrievedDoc = await getDoc(doc(firestoreDb, "studentSkills", id));
-    /*console.log(
-      "Retrieved doc mastery is: " + retrievedDoc.data().masteryScore,
-    );*/
-    /*
-    console.log(
-      "Retrieved doc retention is: " + retrievedDoc.data().retentionScore,
-    );*/
   } catch (error) {
     console.error("Error updating student skill:", error);
     return ""; // Return an empty string in case of an error
