@@ -43,6 +43,7 @@ export default function Home() {
     useState<number>(0); // will need to change when history implemented.
   const [onQuestionLoopCounter, setOnQuestionLoopCounter] = useState<number>(0); // Used in the route.ts file
   const [onFeedbackLoopCounter, setOnFeedbackLoopCounter] = useState<number>(0); // Used in the route.ts file
+  const [questionTracker, setQuestionTracker] = useState<number[]>([]); // Used in the route.ts file
 
   // retrieve the studentSkill from the server
   // this is populated then fed into the chat call to determine chat behaviour
@@ -98,7 +99,7 @@ export default function Home() {
   ) => {
     // console.log('entered fetching student skill function')
     try {
-      console.log("Getting the current chat action");
+      // console.log("Getting the current chat action");
       const response = await fetch("/api/getStudentChatAction", {
         method: "POST",
         headers: {
@@ -153,9 +154,9 @@ export default function Home() {
   const checkDependencies = useCallback(async () => {
     // Ensure both email and skill are defined and not empty before making the call
     if (!studentSkill.email || !studentSkill.skill) {
-      console.log(
+      /*console.log(
         "Skipping dependency check - email or skill is undefined or empty",
-      );
+      );*/
       return;
     }
 
@@ -190,16 +191,22 @@ export default function Home() {
 
     const textInput = input;
     // console.log("User inputted: " + textInput);
+    /*
     console.log(
       "Relevant messages starting index is : " + relevantMessagesStartIndex,
-    );
+    );*/
     // let currentChatAction = lastChatAction;
     let tempRelevantMessagesStartIndex = relevantMessagesStartIndex;
     let tempOnQuestionLoopCounter = onQuestionLoopCounter;
     let tempOnFeedbackLoopCounter = onFeedbackLoopCounter;
+    let tempQuestionTracker = questionTracker;
+
+    for (var i = 0; i < tempQuestionTracker.length; i++) {
+      console.log('Question at index ' + tempQuestionTracker[i] + ' is: ' + (messages[tempQuestionTracker[i]] ? messages[tempQuestionTracker[i]].content : 'undefined'))
+    } // add the index of the question to the question tracker
 
     // get the currentAction from input, relevant message, and next action
-    console.log(`Previous chatAction was: ${lastChatAction}`);
+    // console.log(`Previous chatAction was: ${lastChatAction}`);
     // currentChatAction = await fetchCurrentChatAction(relevantChatMessage, textInput, lastChatAction); // input is from the form
 
     if (messages.length === 0) {
@@ -217,9 +224,9 @@ export default function Home() {
       tempOnFeedbackLoopCounter = tempOnFeedbackLoopCounter + 1; // increment the loop counter
     }
 
-    console.log(
+    /*console.log(
       "Temp Relevant Messages Index is: " + tempRelevantMessagesStartIndex,
-    );
+    );*/
 
     handleSubmit(e, {
       options: {
@@ -230,16 +237,19 @@ export default function Home() {
           relevantMessagesStartIndex: tempRelevantMessagesStartIndex,
           onQuestionLoopCounter: tempOnQuestionLoopCounter,
           onFeedbackLoopCounter: tempOnFeedbackLoopCounter,
+          questionTracker: tempQuestionTracker,
         },
       },
     });
 
     let relevantChatMessage: string;
     let tempChatAction: ChatAction;
+    /*
     console.log(
       "Messages is of length: " +
         messages.slice(tempRelevantMessagesStartIndex).length,
     );
+    */
     // update states
     if (messages.slice(tempRelevantMessagesStartIndex).length <= 1) {
       // only one message, so chatAction is askingQuestion
@@ -263,13 +273,20 @@ export default function Home() {
       );
     }
 
-    console.log("relevantChatMessage is: " + relevantChatMessage);
+    if (tempChatAction === "askingQuestion") {
+      tempQuestionTracker.push(messages.length + 1) //
+      console.log(tempQuestionTracker)
+      console.log('Question tracker is: ' + tempQuestionTracker)
+    } 
 
-    console.log(`Chat Action was: ${tempChatAction}`);
+    // console.log("relevantChatMessage is: " + relevantChatMessage);
+
+    // console.log(`Chat Action was: ${tempChatAction}`);
     setLastChatAction(tempChatAction);
     setRelevantMessagesStartIndex(tempRelevantMessagesStartIndex);
     setOnQuestionLoopCounter(tempOnQuestionLoopCounter);
     setOnFeedbackLoopCounter(tempOnFeedbackLoopCounter);
+    setQuestionTracker(tempQuestionTracker);
   };
 
   return (

@@ -189,6 +189,7 @@ export interface RouteRequestBody {
   onFeedbackLoopCounter?: number;
   myChatAction?: ChatAction;
   sessionSkillAggregates?: FirestoreExtendedSkillAggregate[];
+  questionTracker?: number[];
 }
 
 export type ChatAction =
