@@ -9,7 +9,6 @@ import {
 import {
   SchoolClassSkill,
   FirestoreStudent,
-  FirestoreStudentSkill,
   ChatAction,
   QuestionType,
 } from "../../utils/interfaces";
@@ -36,6 +35,7 @@ export async function POST(req: Request) {
       onFeedbackLoopCounter,
       onQuestionLoopCounter,
       myChatAction,
+      questionTracker,
     } = requestBody;
 
     let chatAction: ChatAction;
@@ -65,11 +65,11 @@ export async function POST(req: Request) {
           lastChatAction === "unknownResponse"
         ) {
           // relevant message is the last piece of feedback provided
-          console.log("Total relevant messages: " + relevantMessages.length);
-          console.log(
+          // console.log("Total relevant messages: " + relevantMessages.length);
+          /*console.log(
             "Last feedback point index:" +
               (3 + onQuestionLoopCounter * 2 + onFeedbackLoopCounter * 2),
-          );
+          );*/
           relevantChatMessage =
             relevantMessages[
               3 + onQuestionLoopCounter * 2 + onFeedbackLoopCounter * 2
@@ -93,19 +93,25 @@ export async function POST(req: Request) {
       const schoolClassSkill = (await getSchoolClassSkillFromDB(
         studentSkill.skillID,
       )) as SchoolClassSkill;
-      console.log("School class skill is: " + schoolClassSkill.skill);
+      // console.log("School class skill is: " + schoolClassSkill.skill);
 
       const student = (await getStudentFromDB(
         studentSkill.studentID,
       )) as FirestoreStudent;
-      console.log("Student is: " + student);
+      // console.log("Student is: " + student);
 
-      const questions: string[] = [];
+      let previousQuestions = "";
+
+      for (let i = 0; i < questionTracker.length; i++) {
+        // get the question
+        previousQuestions += `question #${i+1}: ${messages[questionTracker[i]].content}\n\n`
+      }
+
+      console.log(`Previous questions are: ${previousQuestions}`)
 
       // Get the question type from the imported questionTypes list, and the mastery score:
       let questionType: QuestionType;
-
-
+      
       if (studentSkill.masteryScore <= 25) {
         const possibleTypes: QuestionType[] = [
           "trueOrFalseTrue",
@@ -196,6 +202,9 @@ export async function POST(req: Request) {
           Formulate a question that is academically suitable for a student at the Years 10-11 level. Here are some example questions which are about the same key idea and at a similar difficulty. Do not use sample questions directly, they are just meant to be examples of the expected difficulty. Do not return your question in quotes.
 
           Do not make the question entirely focussed on the users interest - the question should be about the academic content
+
+          Do not ask the same question again. Here is the list of previous questions:
+          ${previousQuestions}
 
           Additionally, you should follow these specific instructions when generating your question:
           ${questionAskingString}
@@ -563,8 +572,8 @@ export async function POST(req: Request) {
         // Start my string
 
         // Retrieve the skill from the DB
-        console.log("Current skill is: ");
-        console.log(includedSkillAggregate.skill);
+        // console.log("Current skill is: ");
+        // console.log(includedSkillAggregate.skill);
         const currentSkill = await getSchoolClassSkillFromDB(
           null,
           includedSkillAggregate.schoolClass,
