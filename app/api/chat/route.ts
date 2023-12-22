@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { ChatCompletionMessageParam } from "openai/resources";
 import { OpenAIStream, StreamingTextResponse } from "ai";
-// import { getSkillFromDB, getStudentFromDB, getStudentSkillFromDB, updateStudentSkillScores } from '../../utils/databaseFunctions';
 import {
   getSchoolClassSkillFromDB,
   getStudentFromDB,
@@ -22,19 +21,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// const astraDb = new AstraDB(process.env.ASTRA_DB_APPLICATION_TOKEN, process.env.ASTRA_DB_ID, process.env.ASTRA_DB_REGION, process.env.ASTRA_DB_NAMESPACE);
-
-/*
-function determineSampleQuestions(relevantScore : number, easyQuestions : string[], mdrtQuestions : string[], hardQuestions : string[]) {
-  if (relevantScore < 100.0/3.0) {
-    return easyQuestions;
-  } else if (relevantScore < 200.0/3.0) {
-    return mdrtQuestions;
-  } else {
-    return hardQuestions;
-  }
-}
-*/
 
 // Andrew: post sends information to the client
 export async function POST(req: Request) {

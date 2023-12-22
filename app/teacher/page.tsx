@@ -1,10 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { ClassCard } from "../ui/teacher/cards";
-import {
-  getTeacherFromDB,
-  getSchoolClassFromDBAll,
-} from "../utils/databaseFunctions";
 import { SchoolClass, FirestoreTeacher } from "../utils/interfaces";
 import { Firestore } from "firebase-admin/firestore";
 
