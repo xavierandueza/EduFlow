@@ -157,6 +157,10 @@ export interface ExtendedSkillAggregate extends SkillAggregate {
   include_in_class_lesson_plan: boolean;
 }
 
+export interface FirestoreExtendedSkillAggregate extends FirestoreSkillAggregate {
+  includeInLessonPlan: boolean;
+}
+
 export interface StudentAggregate {
   full_name: string;
   email_address: string;
@@ -184,7 +188,7 @@ export interface RouteRequestBody {
   onQuestionLoopCounter?: number;
   onFeedbackLoopCounter?: number;
   myChatAction?: ChatAction;
-  sessionSkillAggregates?: ExtendedSkillAggregate[];
+  sessionSkillAggregates?: FirestoreExtendedSkillAggregate[];
 }
 
 export type ChatAction =

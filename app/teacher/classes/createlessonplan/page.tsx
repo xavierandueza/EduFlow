@@ -1,9 +1,9 @@
 "use client";
 import { DisplayAggregateSkillsTableWithSelection } from "../../../ui/teacher/skill-aggregate-table";
 import {
-  SkillAggregate,
-  StudentAggregate,
-  ExtendedSkillAggregate,
+  FirestoreSkillAggregate,
+  FirestoreStudentAggregate,
+  FirestoreExtendedSkillAggregate,
 } from "../../../utils/interfaces";
 import { useState, useEffect } from "react";
 import { useChat } from "ai/react";
@@ -14,10 +14,10 @@ import { ChatAction } from "../../../utils/interfaces";
 export default function Page() {
   const { messages, input, handleInputChange, handleSubmit } = useChat();
   const [skillAggregates, setSkillAggregates] = useState<
-    ExtendedSkillAggregate[]
+    FirestoreExtendedSkillAggregate[]
   >([]);
   const [studentAggregates, setStudentAggregates] = useState<
-    StudentAggregate[]
+  FirestoreStudentAggregate[]
   >([]);
   const [chatAction, setChatAction] =
     useState<ChatAction>("creatingLessonPlan"); // chatState is used for the route.ts file
@@ -29,13 +29,13 @@ export default function Page() {
     const sessionStudentAggregates =
       sessionStorage.getItem("studentAggregates");
     if (sessionSkillAggregates) {
-      const parsedSkillAggregates: SkillAggregate[] = JSON.parse(
+      const parsedSkillAggregates: FirestoreSkillAggregate[] = JSON.parse(
         sessionSkillAggregates,
       );
-      const extendedSkillAggregates: ExtendedSkillAggregate[] =
+      const extendedSkillAggregates: FirestoreExtendedSkillAggregate[] =
         parsedSkillAggregates.map((skill) => ({
           ...skill,
-          include_in_class_lesson_plan: false,
+          includeInLessonPlan: false,
         }));
       setSkillAggregates(extendedSkillAggregates);
     }
@@ -50,7 +50,7 @@ export default function Page() {
         agg.skill === skillName
           ? {
               ...agg,
-              include_in_class_lesson_plan: !agg.include_in_class_lesson_plan,
+              includeInLessonPlan: !agg.includeInLessonPlan,
             }
           : agg,
       ),
@@ -61,7 +61,7 @@ export default function Page() {
     <main>
       <h1 className={"mb-4 text-xl md:text-2xl"}>
         {skillAggregates[0]
-          ? `Class: ${skillAggregates[0].school_class_name}`
+          ? `Class: ${skillAggregates[0].schoolClass}`
           : ""}
       </h1>
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">

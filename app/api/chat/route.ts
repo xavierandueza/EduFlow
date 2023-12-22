@@ -515,13 +515,14 @@ export async function POST(req: Request) {
 
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
+
     } else if (chatAction === "creatingLessonPlan") {
       // console.log(sessionSkillAggregates)
       // code for pulling out relevant information from the aggregated Skills
 
       // start by looking at the dependencies stuff. First we want to just get all of the skills that have been selected
       const includedSkillAggregates = sessionSkillAggregates.filter(
-        (skill) => skill.include_in_class_lesson_plan,
+        (skill) => skill.includeInLessonPlan,
       );
       const totalIncludedSkills = includedSkillAggregates.length;
 
@@ -538,23 +539,26 @@ export async function POST(req: Request) {
         console.log("Current skill is: ");
         console.log(includedSkillAggregate.skill);
         const currentSkill = await getSchoolClassSkillFromDB(
+          null,
+          includedSkillAggregate.schoolClass,
           includedSkillAggregate.skill,
         ); // NO CLUE IF THIS WORKS PROBS DOESN'T
+
         lessonPlanContextString += `\n\nSkill Number: ${i} out of ${totalIncludedSkills}: ${currentSkill.skill}\n`;
         lessonPlanContextString += `This skill has the following key Ideas: ${currentSkill.keyIdeas}\n`;
         lessonPlanContextString += `Here is the relevant theory on the skill: ${currentSkill.content}\n`;
 
-        if (includedSkillAggregate.no_students_not_met_dependencies > 0) {
-          lessonPlanContextString += `There are ${includedSkillAggregate.no_students_not_met_dependencies} students who have not met the satisfactory mastery level dependencies for this skill.\n`;
+        if (includedSkillAggregate.noStudentsNotMetDependencies > 0) {
+          lessonPlanContextString += `There are ${includedSkillAggregate.noStudentsNotMetDependencies} students who have not met the satisfactory mastery level dependencies for this skill.\n`;
           lessonPlanContextString += `Here are the skills and number of students that have not met dependencies in the skills, that this skill is dependent on:\n`;
           for (const dependency of currentSkill.dependencies) {
             const dependencyAggregate = sessionSkillAggregates.find(
               (skill) => skill.skill === dependency,
             );
-            if (dependencyAggregate.no_students_not_met_mastery > 0) {
-              lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.no_students_not_met_mastery}\n`;
+            if (dependencyAggregate.noStudentsNotMetMastery > 0) {
+              lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.noStudentsNotMetMastery}\n`;
             }
-            lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.no_students_not_met_mastery}\n`;
+            lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.noStudentsNotMetMastery}\n`;
           }
         }
 
@@ -566,12 +570,12 @@ export async function POST(req: Request) {
             const dependencyAggregate = sessionSkillAggregates.find(
               (skill) => skill.skill === dependency,
             );
-            if (dependencyAggregate.no_students_to_revise > 0) {
+            if (dependencyAggregate.noStudentsToRevise > 0) {
               if (!insertedRevisionDependencyText) {
                 lessonPlanContextString += `This skill has some skills that it is dependent on, which students need to revise. Here is the list of those skills, and the number of students needing to revise them:\n`;
                 insertedRevisionDependencyText = true;
               }
-              lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.no_students_not_met_mastery}\n`;
+              lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.noStudentsNotMetMastery}\n`;
             }
           }
         }

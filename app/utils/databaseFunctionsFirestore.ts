@@ -24,14 +24,34 @@ import {
 
 // connect to the astraDb instance
 
-async function getSchoolClassSkillFromDB(id: string, firestoreDb = db) {
+async function getSchoolClassSkillFromDB(id?: string, schoolClass? : string, skill? : string, firestoreDb = db) {
   try {
-    const docSnapshot = await getDoc(doc(firestoreDb, "schoolClassSkills", id));
+    if (id) {
+      const docSnapshot = await getDoc(doc(firestoreDb, "schoolClassSkills", id));
 
-    if (docSnapshot.exists) {
-      return { id: docSnapshot.id, ...docSnapshot.data() } as SchoolClassSkill;
-    } else {
-      throw new Error("No schoolClassSkill found");
+      if (docSnapshot.exists) {
+        return { id: docSnapshot.id, ...docSnapshot.data() } as SchoolClassSkill;
+      } else {
+        throw new Error("No schoolClassSkill found");
+      }
+    }
+    else if (schoolClass && skill) {
+      const q = query(
+        collection(firestoreDb, "schoolClassSkills"),
+        where("schoolClass", "==", schoolClass),
+        where("skill", "==", skill),
+        limit(1)
+      )
+      const querySnapshot = await getDocs(q)
+
+      if (!querySnapshot.empty) {
+        return { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } as SchoolClassSkill;
+      } else {
+        throw new Error("No schoolClassSkill found");
+      }
+    }
+    else {
+      throw new Error("Cannot find unique schoolClassSkill with inputted data");
     }
   } catch (error) {
     console.error(`Error getting studentSkill documents for id: ${id}`, error);

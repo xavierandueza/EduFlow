@@ -2,18 +2,18 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import Bubble from "../../../components/Bubble";
 import FooterTeacher from "../../../components/FooterTeacher";
 import { useChat } from "ai/react";
-import { ExtendedSkillAggregate } from "../../utils/interfaces";
+import { FirestoreExtendedSkillAggregate } from "../../utils/interfaces";
 
 export default function Chatbot({
   sessionSkillAggregates,
 }: {
-  sessionSkillAggregates: ExtendedSkillAggregate[];
+  sessionSkillAggregates: FirestoreExtendedSkillAggregate[];
 }) {
   const { messages, input, handleInputChange, handleSubmit } = useChat();
   const messagesEndRef = useRef(null);
 
   const includedSkills = sessionSkillAggregates.filter(
-    (skill) => skill.include_in_class_lesson_plan,
+    (skill) => skill.includeInLessonPlan,
   );
 
   const handleSend = (e) => {

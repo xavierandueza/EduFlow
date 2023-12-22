@@ -1,6 +1,6 @@
 // import clsx from 'clsx';
 // import Image from 'next/image';
-import { FirestoreSkillAggregate, ExtendedSkillAggregate } from "../../utils/interfaces";
+import { FirestoreSkillAggregate, FirestoreExtendedSkillAggregate } from "../../utils/interfaces";
 import ProgressBar from "../../../components/ProgressBar";
 import Search from "../../ui/search";
 import IncludeInClassLessonPlan from "./status";
@@ -91,7 +91,7 @@ export function DisplayAggregateSkillsTableWithSelection({
   extendedSkillAggregates,
   onToggle,
 }: {
-  extendedSkillAggregates: ExtendedSkillAggregate[];
+  extendedSkillAggregates: FirestoreExtendedSkillAggregate[];
   onToggle: (skillName: string) => void;
 }) {
   return (
@@ -139,7 +139,7 @@ export function DisplayAggregateSkillsTableWithSelection({
                   >
                     <IncludeInClassLessonPlan
                       includeInClassLessonPlan={
-                        extendedSkillAggregate.include_in_class_lesson_plan
+                        extendedSkillAggregate.includeInLessonPlan
                       }
                     />
                     {extendedSkillAggregate.skill}
@@ -147,23 +147,23 @@ export function DisplayAggregateSkillsTableWithSelection({
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   <ProgressBar
-                    score={extendedSkillAggregate.mastery_score}
+                    score={extendedSkillAggregate.masteryScore}
                     width="100px"
                     backgroundColor="#388a91"
                   />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
                   <ProgressBar
-                    score={extendedSkillAggregate.retention_score}
+                    score={extendedSkillAggregate.retentionScore}
                     width="100px"
                     backgroundColor="#388a91"
                   />
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  {extendedSkillAggregate.no_students_not_met_dependencies}
+                  {extendedSkillAggregate.noStudentsNotMetDependencies}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  {extendedSkillAggregate.no_students_to_revise}
+                  {extendedSkillAggregate.noStudentsToRevise}
                 </td>
               </tr>
             ))}
