@@ -1,25 +1,216 @@
-'use server'
+"use server";
 
 // import { updateUser } from '@/lib/mongo/users'
-import { db } from "./firebase"
-import { query, collection, where, limit, setDoc, getDocs } from "firebase/firestore"
+import { db } from "./firebase";
+import { Firestore, arrayUnion, getDoc } from "firebase/firestore";
+import { Role } from "./utils/interfaces";
 
-export async function updateName(name : string, email: string, firestoreDb = db) {
-  // await updateUser(email, { name })
-  // query to find the user from the email
-  const q = query(collection(firestoreDb,"users"), where("email", "==", email), limit(1))
-  const querySnapshot = await getDocs(q)
+import { setDoc, doc, updateDoc } from "firebase/firestore";
 
-  if (!querySnapshot.empty) {
-    const doc = querySnapshot.docs[0]
-    await setDoc(doc.ref, 
-      { name: name }, 
-      { merge: true }
-      )
-  } else {
-    console.error(`No user with email ${email} found`)
-    throw new Error(`No user with email ${email} found`)
+export async function createUser({
+  id,
+  firstName,
+  lastName,
+  email,
+  role,
+  interests,
+  careerGoals,
+  parentLink,
+  firestoreDb = db,
+}: {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: Role;
+  interests: string[] | string | null;
+  careerGoals: string[] | string | null;
+  parentLink: string | null;
+  firestoreDb?: Firestore;
+}) {
+  // need to go ahead and update the user in the database
+  await setDoc(
+    doc(db, "users", id),
+    {
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      role: role.toLowerCase(),
+    },
+    {
+      merge: true,
+    }
+  );
+
+  // if the role is student, create OR update a student. So need to check if the student exists first
+  if (role.toLowerCase() === "student") {
+    try {
+      // Update student
+      await setDoc(
+        doc(db, "students", id),
+        {
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          interests: interests,
+          careerGoals: careerGoals,
+          parentLink: parentLink.trim(),
+        },
+        {
+          merge: true,
+        }
+      );
+
+      const newChildData = {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        interests: interests,
+        careerGoals: careerGoals,
+      };
+
+      // Now update the parent doc
+      await updateDoc(doc(db, "parents", parentLink.trim()), {
+        childrenShort: arrayUnion(id),
+        [`childrenLong.${id}`]: {
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          interests: interests,
+          careerGoals: careerGoals,
+        },
+      });
+    } catch (error) {
+      console.error("error updating student: ", error);
+      throw error;
+    }
+  } else if (role.toLowerCase() === "parent") {
+    await setDoc(
+      doc(db, "parents", id),
+      {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        childrenShort: [],
+        childrenLong: {},
+      },
+      {
+        merge: true,
+      }
+    );
   }
 
   return true;
+}
+
+export async function updateUser({
+  id,
+  firstName,
+  lastName,
+  email,
+  role,
+  interests,
+  careerGoals,
+  parentLink,
+  firestoreDb = db,
+}: {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: Role;
+  interests: string[] | string | null;
+  careerGoals: string[] | string | null;
+  parentLink: string | null;
+  firestoreDb?: Firestore;
+}) {
+  // need to go ahead and update the user in the database
+  await setDoc(
+    doc(firestoreDb, "users", id),
+    {
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+    },
+    {
+      merge: true,
+    }
+  );
+
+  // if the role is student, create OR update a student. So need to check if the student exists first
+  if (role.toLowerCase() === "student") {
+    try {
+      // Update student
+      await setDoc(
+        doc(firestoreDb, "students", id),
+        {
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          interests: interests,
+          careerGoals: careerGoals,
+          parentLink: parentLink.trim(),
+        },
+        {
+          merge: true,
+        }
+      );
+
+      console.log("Trimmed parentLink: ", parentLink.trim());
+      console.log("parentLink: ", parentLink);
+
+      // Now update the parent doc
+      await updateDoc(doc(firestoreDb, "parents", parentLink), {
+        childrenShort: arrayUnion(id),
+        childrenLong: {
+          id: {
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            interests: interests,
+            careerGoals: careerGoals,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("error updating student: ", error);
+      throw error;
+    }
+  } else if (role.toLowerCase() === "parent") {
+    await setDoc(
+      doc(firestoreDb, "parents", id),
+      {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        childrenShort: [],
+        childrenLong: {},
+      },
+      {
+        merge: true,
+      }
+    );
+  }
+
+  return true;
+}
+
+export async function getRoleExtraData({
+  id,
+  role,
+}: {
+  id: string;
+  role: Role;
+}) {
+  switch (role) {
+    case "student":
+      const studentDoc = await getDoc(doc(db, "students", id));
+      return studentDoc.data();
+    case "parent":
+      const parentDoc = await getDoc(doc(db, "parents", id));
+      return parentDoc.data();
+    case "teacher":
+      const teacherDoc = await getDoc(doc(db, "teachers", id));
+      return teacherDoc.data();
+  }
 }

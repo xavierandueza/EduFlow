@@ -22,7 +22,7 @@ export default function Page() {
   return (
     <>
       <p>Not signed in.</p>
-      <button onClick={() => signIn("google")}>Sign in</button>
+      <button onClick={() => signIn()}>Sign in</button>
     </>
   );
 }

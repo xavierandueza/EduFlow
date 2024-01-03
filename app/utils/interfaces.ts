@@ -31,24 +31,28 @@ export interface SchoolClassSkill {
   // ... any other properties
 }
 
-export interface Student {
-  first_name: string;
-  last_name: string;
-  email_address: string;
-  interests: string[];
-  subjects: string[];
-  school_classes: string[];
+interface FirestoreStandardUser {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
 }
 
-export interface FirestoreStudent {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  interests: string[];
-  subjects: string[];
-  schoolClassesLong: string[];
-  schoolClassesShort: string[];
+export interface FirestoreStudent extends FirestoreStandardUser {
+  interests?: string[] | string;
+  careerGoals?: string[] | string;
+  subjects?: string[];
+  parentLink?: string[] | string;
+  schoolClassesLong?: string[];
+  schoolClassesShort?: string[];
+}
+
+export interface FirestoreParent extends FirestoreStandardUser {
+  childrenShort?: string[];
+  childrenLong?:
+    | {
+        [id: string]: FirestoreStandardUser;
+      }[]
+    | null;
 }
 
 export interface StudentSkill {
@@ -157,7 +161,8 @@ export interface ExtendedSkillAggregate extends SkillAggregate {
   include_in_class_lesson_plan: boolean;
 }
 
-export interface FirestoreExtendedSkillAggregate extends FirestoreSkillAggregate {
+export interface FirestoreExtendedSkillAggregate
+  extends FirestoreSkillAggregate {
   includeInLessonPlan: boolean;
 }
 
@@ -200,6 +205,8 @@ export type ChatAction =
   | "askingQuestion"
   | "unknownResponse"
   | "creatingLessonPlan";
+
+export type Role = "student" | "teacher" | "parent";
 
 //For testing purposes
 export interface StudentResponseRequestBody {
