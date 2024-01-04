@@ -31,7 +31,8 @@ export const authOptions: NextAuthOptions = {
           email: profile.email,
           image: profile.picture,
           stripeCustomerId: null, // payments
-          isActive: false, // payments
+          subscriptionActive: false, // payments
+          subscriptionName: null, // payments
           firstName: null,
           lastName: null,
           role: null, // parent, student, teacher
@@ -57,7 +58,7 @@ export const authOptions: NextAuthOptions = {
       session.user.lastName = user.lastName;
       session.user.role = user.role;
       session.user.stripeCustomerId = user.stripeCustomerId;
-      session.user.isActive = user.isActive;
+      session.user.subscriptionActive = user.subscriptionActive;
       return session;
     },
   },

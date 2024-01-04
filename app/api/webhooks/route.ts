@@ -28,7 +28,7 @@ const allowedEventTypes = [
 
 const updateSubscriptionStatus = async (
   stripeCustomerId: string,
-  isActive: boolean,
+  subscriptionActive: boolean,
   productName: string
 ) => {
   try {
@@ -54,8 +54,8 @@ const updateSubscriptionStatus = async (
 
     // update this document
     await updateDoc(user.ref, {
-      isActive: isActive,
-      subscriptionName: isActive ? productName : null,
+      subscriptionActive: subscriptionActive,
+      subscriptionName: subscriptionActive ? productName : null,
     });
 
     if (!user.data().role) {
@@ -69,8 +69,8 @@ const updateSubscriptionStatus = async (
         // update the user account for the student
         try {
           await updateDoc(doc(db, "users", linkedStudent), {
-            isActive: isActive,
-            subscriptionName: isActive ? productName : null,
+            subscriptionActive: subscriptionActive,
+            subscriptionName: subscriptionActive ? productName : null,
           });
         } catch (error) {
           console.error(
@@ -93,8 +93,8 @@ const updateSubscriptionStatus = async (
         // Assume only one parent account for now
         try {
           await updateDoc(doc(db, "users", studentDoc.data().parentLink), {
-            isActive: isActive,
-            subscriptionName: isActive ? productName : null,
+            subscriptionActive: subscriptionActive,
+            subscriptionName: subscriptionActive ? productName : null,
           });
         } catch (error) {
           console.error(

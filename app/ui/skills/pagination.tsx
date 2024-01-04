@@ -45,7 +45,7 @@ export default function Pagination({ totalPages }: { totalPages: number }) {
                 href={createPageURL(page)}
                 page={page}
                 position={position}
-                isActive={currentPage === page}
+                subscriptionActive={currentPage === page}
               />
             );
           })}
@@ -64,26 +64,26 @@ export default function Pagination({ totalPages }: { totalPages: number }) {
 function PaginationNumber({
   page,
   href,
-  isActive,
+  subscriptionActive,
   position,
 }: {
   page: number | string;
   href: string;
   position?: "first" | "last" | "middle" | "single";
-  isActive: boolean;
+  subscriptionActive: boolean;
 }) {
   const className = clsx(
     "flex h-10 w-10 items-center justify-center text-sm border",
     {
       "rounded-l-md": position === "first" || position === "single",
       "rounded-r-md": position === "last" || position === "single",
-      "z-10 bg-388a91 border-388a91 text-white": isActive, // Modified this line
-      "hover:bg-gray-100": !isActive && position !== "middle",
+      "z-10 bg-388a91 border-388a91 text-white": subscriptionActive, // Modified this line
+      "hover:bg-gray-100": !subscriptionActive && position !== "middle",
       "text-gray-300": position === "middle",
-    },
+    }
   );
 
-  return isActive || position === "middle" ? (
+  return subscriptionActive || position === "middle" ? (
     <div className={className}>{page}</div>
   ) : (
     <Link href={href} className={className}>
@@ -108,7 +108,7 @@ function PaginationArrow({
       "hover:bg-gray-100": !isDisabled,
       "mr-2 md:mr-4": direction === "left",
       "ml-2 md:ml-4": direction === "right",
-    },
+    }
   );
 
   const icon = direction === "left" ? <p>Prev</p> : <p>Next</p>;
