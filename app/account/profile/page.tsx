@@ -9,7 +9,7 @@ import getStripe from "../../utils/getStripe";
 const Page = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const priceId = "price_1OUJxgImHqPDmYHJLtML8m2E";
+  const priceId = process.env.NEXT_PUBLIC_STANDARD_PLAN_PRICE_ID;
 
   const handleCreateCheckoutSession = async (priceId: string) => {
     try {
