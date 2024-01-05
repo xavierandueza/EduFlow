@@ -12,6 +12,17 @@ import { db } from "../../../app/firebase";
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    EmailProvider({
+      server: {
+        host: process.env.EMAIL_SERVER_HOST,
+        port: process.env.EMAIL_SERVER_PORT,
+        auth: {
+          user: process.env.EMAIL_SERVER_USER,
+          pass: process.env.EMAIL_SERVER_PASSWORD,
+        },
+      },
+      from: process.env.EMAIL_FROM,
+    }),
     GoogleProvider({
       profile(profile) {
         return {
@@ -32,27 +43,6 @@ export const authOptions: NextAuthOptions = {
       allowDangerousEmailAccountLinking: true,
     }),
   ],
-  callbacks: {
-    session({
-      session,
-      token,
-      user,
-    }: {
-      session: Session;
-      token: JWT;
-      user: AdapterUser;
-    }) {
-      console.log(user);
-      session.user.id = user.id;
-      session.user.firstName = user.firstName;
-      session.user.lastName = user.lastName;
-      session.user.role = user.role;
-      session.user.stripeCustomerId = user.stripeCustomerId;
-      session.user.subscriptionActive = user.subscriptionActive;
-      console.log(session);
-      return session;
-    },
-  },
   events: {
     createUser: async ({ user }) => {
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
