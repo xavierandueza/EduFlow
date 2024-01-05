@@ -13,20 +13,6 @@ import { db } from "../../../app/firebase";
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      profile(profile) {
-        return {
-          id: profile.sub,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture,
-          stripeCustomerId: null, // payments
-          subscriptionActive: false, // payments
-          subscriptionName: null, // payments
-          firstName: null,
-          lastName: null,
-          role: null, // parent, student, teacher
-        };
-      },
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
       allowDangerousEmailAccountLinking: true,
