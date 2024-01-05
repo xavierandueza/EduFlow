@@ -5,6 +5,9 @@ import Stripe from "stripe";
 
 export async function POST(req: NextRequest) {
   // Check that the request exists
+  console.log("req.body: ", req.body);
+  return NextResponse.json({ status: 200 });
+  /*
   try {
     console.log("req.body: ", req.body);
 
@@ -87,4 +90,5 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+  */
 }
