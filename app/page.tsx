@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { signIn } from "next-auth/react";
 import type { ImageLoaderProps } from "next/image";
+import { AppOptions } from "firebase-admin/app";
 
 export default function Page() {
   return (

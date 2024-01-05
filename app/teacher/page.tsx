@@ -1,12 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import { ClassCard } from "../ui/teacher/cards";
-import { SchoolClass, FirestoreTeacher } from "../utils/interfaces";
-import { Firestore } from "firebase-admin/firestore";
+import { FirestoreTeacher } from "../utils/interfaces";
 
 export default function Page() {
   const [teacher, setTeacher] = useState<FirestoreTeacher>(
-    {} as FirestoreTeacher,
+    {} as FirestoreTeacher
   );
 
   const email = "clara@everdawn.ai";
