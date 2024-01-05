@@ -6,7 +6,11 @@ import Stripe from "stripe";
 export async function POST(req: NextRequest) {
   // Check that the request exists
   console.log("req.body: ", req.body);
+
+  const body = await req.json();
+
   return NextResponse.json({ status: 200 });
+
   /*
   try {
     console.log("req.body: ", req.body);
