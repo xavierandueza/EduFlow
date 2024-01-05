@@ -11,19 +11,7 @@ import { setDoc, doc } from "firebase/firestore";
 import { db } from "../../../app/firebase";
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
   providers: [
-    EmailProvider({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST,
-        port: process.env.EMAIL_SERVER_PORT,
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD,
-        },
-      },
-      from: process.env.EMAIL_FROM,
-    }),
     GoogleProvider({
       profile(profile) {
         return {
@@ -54,12 +42,14 @@ export const authOptions: NextAuthOptions = {
       token: JWT;
       user: AdapterUser;
     }) {
+      console.log(user);
       session.user.id = user.id;
       session.user.firstName = user.firstName;
       session.user.lastName = user.lastName;
       session.user.role = user.role;
       session.user.stripeCustomerId = user.stripeCustomerId;
       session.user.subscriptionActive = user.subscriptionActive;
+      console.log(session);
       return session;
     },
   },
