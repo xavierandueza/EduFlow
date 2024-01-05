@@ -4,7 +4,26 @@ import { authOptions } from "../../../../pages/api/auth/[...nextauth]";
 import Stripe from "stripe";
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  // Check that the request exists
+  if (!req.body) {
+    return NextResponse.json({ error: "No request body" }, { status: 400 });
+  }
+
+  // Check that the body has been successfully obtained
+  let body;
+  try {
+    body = await req.json();
+  } catch (error) {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  // Check that the priceId exists
+  if (!body.priceId) {
+    return NextResponse.json(
+      { error: "Missing priceId in request" },
+      { status: 400 }
+    );
+  }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2023-10-16",
