@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
 
   // Get the session
   const session = await getServerSession(authOptions);
+  /*
 
   if (!session?.user) {
     // Must sign in
