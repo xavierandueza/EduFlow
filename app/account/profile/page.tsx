@@ -15,7 +15,7 @@ const Page = () => {
     try {
       const res = await fetch(`/api/stripe/checkoutSession`, {
         method: "POST",
-        body: JSON.stringify({ priceId: priceId }),
+        body: JSON.stringify({ priceId }),
         headers: {
           "Content-Type": "application/json",
         },
