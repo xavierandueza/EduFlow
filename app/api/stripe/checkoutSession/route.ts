@@ -22,9 +22,10 @@ export async function POST(req: NextRequest) {
     apiVersion: "2023-10-16",
   });
 
+  /*
   // Get the session
   const session = await getServerSession(authOptions);
-  /*
+  
 
   if (!session?.user) {
     // Must sign in
