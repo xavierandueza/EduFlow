@@ -13,7 +13,7 @@ const Page = () => {
 
   const handleCreateCheckoutSession = async (priceId: string) => {
     try {
-      const res = await fetch(`/api/stripe/checkout-session`, {
+      const res = await fetch(`/api/stripe/checkoutSession`, {
         method: "POST",
         body: JSON.stringify({ priceId: priceId }),
         headers: {
