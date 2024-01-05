@@ -22,6 +22,35 @@ export async function POST(req: NextRequest) {
     apiVersion: "2023-10-16",
   });
 
+  // Get the session
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user) {
+    // Must sign in
+    return NextResponse.redirect("/api/auth/signin");
+  }
+
+  const checkoutSession = await stripe.checkout.sessions.create({
+    mode: "subscription",
+    customer: session.user.stripeCustomerId,
+    line_items: [
+      {
+        price: body.priceId,
+        quantity: 1,
+      },
+    ],
+    success_url: process.env.NEXT_PUBLIC_WEBSITE_URL + "/paymentSuccess",
+    cancel_url: process.env.NEXT_PUBLIC_WEBSITE_URL,
+    subscription_data: {
+      // can put in a trial period from what copilot recommended
+      trial_period_days: 14,
+      metadata: {
+        // more data attached to the subscription which can be used
+        payingUserId: session.user.id,
+      },
+    },
+  });
+
   return NextResponse.json({ status: 200 });
 
   /*
