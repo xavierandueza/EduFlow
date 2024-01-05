@@ -43,32 +43,6 @@ export const authOptions: NextAuthOptions = {
       allowDangerousEmailAccountLinking: true,
     }),
   ],
-  events: {
-    createUser: async ({ user }) => {
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: "2023-10-16",
-      });
-
-      await stripe.customers
-        .create({
-          email: user.email!, // this is subject to change through account
-          name: user.name!,
-        })
-        .then(async (customer) => {
-          return await setDoc(
-            doc(db, "users", user.id),
-            {
-              stripeCustomerId: customer.id,
-            },
-            { merge: true }
-          );
-        });
-    },
-  },
-  adapter: FirestoreAdapter(firestore),
-  pages: {
-    newUser: "/account/signup", // New users will be directed here on first sign in (leave the property out if not of interest)
-  },
 };
 
 export default NextAuth(authOptions);
