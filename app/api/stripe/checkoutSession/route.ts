@@ -7,7 +7,20 @@ export async function POST(req: NextRequest) {
   // Check that the request exists
   console.log("req.body: ", req.body);
 
+  // get the body through JSON parsing
   const body = await req.json();
+
+  // Check that the priceId exists
+  if (!body.priceId) {
+    return NextResponse.json(
+      { error: "Missing priceId in request" },
+      { status: 400 }
+    );
+  }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2023-10-16",
+  });
 
   return NextResponse.json({ status: 200 });
 
