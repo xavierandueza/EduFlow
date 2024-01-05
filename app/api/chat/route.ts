@@ -14,12 +14,10 @@ import {
 } from "../../utils/interfaces";
 import { RouteRequestBody } from "../../utils/interfaces";
 import { getStudentChatAction } from "../../../pages/api/getStudentChatAction";
-import { db } from "../../firebase";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
 
 // Andrew: post sends information to the client
 export async function POST(req: Request) {
@@ -78,7 +76,7 @@ export async function POST(req: Request) {
         chatAction = await getStudentChatAction(
           relevantChatMessage,
           messages[messages.length - 1].content,
-          lastChatAction,
+          lastChatAction
         );
       }
     } else {
@@ -91,12 +89,12 @@ export async function POST(req: Request) {
       // console.log("Asking a question")
       // get the skill, the student from the db
       const schoolClassSkill = (await getSchoolClassSkillFromDB(
-        studentSkill.skillID,
+        studentSkill.skillID
       )) as SchoolClassSkill;
       // console.log("School class skill is: " + schoolClassSkill.skill);
 
       const student = (await getStudentFromDB(
-        studentSkill.studentID,
+        studentSkill.studentID
       )) as FirestoreStudent;
       // console.log("Student is: " + student);
 
@@ -104,14 +102,16 @@ export async function POST(req: Request) {
 
       for (let i = 0; i < questionTracker.length; i++) {
         // get the question
-        previousQuestions += `question #${i+1}: ${messages[questionTracker[i]].content}\n\n`
+        previousQuestions += `question #${i + 1}: ${
+          messages[questionTracker[i]].content
+        }\n\n`;
       }
 
-      console.log(`Previous questions are: ${previousQuestions}`)
+      console.log(`Previous questions are: ${previousQuestions}`);
 
       // Get the question type from the imported questionTypes list, and the mastery score:
       let questionType: QuestionType;
-      
+
       if (studentSkill.masteryScore <= 25) {
         const possibleTypes: QuestionType[] = [
           "trueOrFalseTrue",
@@ -227,7 +227,7 @@ export async function POST(req: Request) {
           model: llm ?? "gpt-3.5-turbo", // defaults to gpt-3.5-turbo if llm is not provided
           stream: true, // streaming YAY
           messages: [...systemPrompt, ...fixedMessage], // ignore error warning here, it works just fine
-        },
+        }
       );
 
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
@@ -236,7 +236,7 @@ export async function POST(req: Request) {
       // console.log("Clarifying the question")
       // Provide extra feedback
       const schoolClassSkill = (await getSchoolClassSkillFromDB(
-        studentSkill.skillID,
+        studentSkill.skillID
       )) as SchoolClassSkill;
 
       // console.log(`onQuestionLoopCounter is: ${onQuestionLoopCounter}`)
@@ -246,8 +246,8 @@ export async function POST(req: Request) {
       // DONESON
       const feedbackSystemPrompt = [
         {
-          "role": "system", 
-          "content": `
+          role: "system",
+          content: `
           You are an expert ${schoolClassSkill.subject} teacher AI assistant that has been helping An Australian high school student in year 11 learn by asking the student exam style questions in the field of ${schoolClassSkill.subject}. Specfically, the topic on which you have created a question them about is ${schoolClassSkill.skill}. They are now asking to clarify something about the question you have just asked. They have yet to correctly answer the question. You are now tasked with answering their query about the question you have asked. Here is the original exam style question you posed to them
  
           ORIGINAL QUESTION START
@@ -263,9 +263,9 @@ export async function POST(req: Request) {
           It is critical you do not reveal the any solutions as the student is still attempting to answer the question and may attempt to do so again. As an example, if the question you have asked them is "what does the mitochondria do" and the student says "what's the difference between the the mitochondria and the golgi apparatus" then you should try to avoid answering their clarification question in a way that might reveal what the mitochondria does, for example by saying "well the golgi apparatus does not generate most of the chemical energy needed to power the cell's biochemical reactions." as this would reveal the answer to the student. Do not strictly follow this format, it is just an example but it captures the essence of what you should do.  After you provide your clarification to the student, ask the student if they are ready to answer the question or if they need more clarification.
 
           It is critical your response is appropriate for a student at a year 11 academic level, avoiding the use of sophisticated jargon unless directly asked. Also, consider the depth of your response, ensuring that it is appropriate for the student's year level. Your answer should be sufficiently detailed to provide a comprehensive enough explanation, but not so detailed that it becomes overhwhelming for the student. Finally, it is absolutly critical that your responses are STRICTLY less than a maximum of 5 sentences long, using your own descretion to determine the appropriate length given the query posed by the student.
-          `
-        }
-      ] as ChatCompletionMessageParam[]
+          `,
+        },
+      ] as ChatCompletionMessageParam[];
 
       const studentResponse = [
         {
@@ -281,7 +281,7 @@ export async function POST(req: Request) {
           model: llm ?? "gpt-3.5-turbo", // defaults to gpt-3.5-turbo if llm is not provided
           stream: true, // streaming YAY
           messages: [...feedbackSystemPrompt, ...studentResponse], // combine the system prompt with the latest message
-        },
+        }
       );
 
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
@@ -291,11 +291,11 @@ export async function POST(req: Request) {
       chatAction === "gradingInvalidAnswer"
     ) {
       const schoolClassSkill = (await getSchoolClassSkillFromDB(
-        studentSkill.skillID,
+        studentSkill.skillID
       )) as SchoolClassSkill;
 
       const student = (await getStudentFromDB(
-        studentSkill.studentID,
+        studentSkill.studentID
       )) as FirestoreStudent;
 
       const latestMessage =
@@ -306,10 +306,11 @@ export async function POST(req: Request) {
       // console.log(`Question was: ${messages.slice(-2)[0].content}`)
 
       //DONESON
-      const gradeSystemPrompt = [ // Setting up the system prompt
+      const gradeSystemPrompt = [
+        // Setting up the system prompt
         {
-          "role": "system", 
-          "content": `You are an AI assistant tasked with grading a student's answer to a year 11 exam style ${schoolClassSkill.subject} question in the topic of ${schoolClassSkill.skill}. 
+          role: "system",
+          content: `You are an AI assistant tasked with grading a student's answer to a year 11 exam style ${schoolClassSkill.subject} question in the topic of ${schoolClassSkill.skill}. 
           
           You should provide a score to the student out of 100. The score should reflect how well the student answered the question, considering the student's academic level and the completeness of their understanding of the key concepts, not necessarily how much of the provided theory was reflected in their answer. Please use your own discression. If the student's response is something like "I don't know the answer" or anything similar indicating that the student has no idea what the answer is then you should give them a score of 0.0
           
@@ -330,7 +331,7 @@ export async function POST(req: Request) {
             "score" : insert_score_here
           }
           "
-          `
+          `,
         },
       ] as ChatCompletionMessageParam[];
 
@@ -359,7 +360,7 @@ export async function POST(req: Request) {
         {
           model: llm ?? "gpt-3.5-turbo", // defaults to gpt-3.5-turbo if llm is not provided
           messages: [...gradeSystemPrompt, ...studentAnswer], // combine the system prompt with the latest message
-        },
+        }
       );
       let gradeJsonObject: any;
 
@@ -375,15 +376,15 @@ export async function POST(req: Request) {
 
       const updateScores = await updateStudentSkillScore(
         studentSkill,
-        gradeJsonObject.score,
+        gradeJsonObject.score
       );
       // console.log('Updated scores: ' + updateScores);
 
       //DONESON
       const feedbackSystemPrompt = [
         {
-          "role": "system", 
-          "content": `You are an AI assistant who provides feedback to students in year 11 who are answering exam style ${schoolClassSkill.subject} questions. You are given the question the student has been asked, the student's answer, and the score out of 100 that has been assigned to the student. Below is the relevant content information:
+          role: "system",
+          content: `You are an AI assistant who provides feedback to students in year 11 who are answering exam style ${schoolClassSkill.subject} questions. You are given the question the student has been asked, the student's answer, and the score out of 100 that has been assigned to the student. Below is the relevant content information:
 
           QUESTION START
           ${relevantMessages[1].content}
@@ -412,9 +413,9 @@ export async function POST(req: Request) {
           Very importantly your responses should be from the second person, as if you were the teacher asking the student the intial question
           
           Once you have provided your response, ask the student if they are ready to move onto a new question of it have any questions about the response you have provided.
-          .`
-        }
-      ] as ChatCompletionMessageParam[]
+          .`,
+        },
+      ] as ChatCompletionMessageParam[];
 
       // Create the response
       const response = await openai.chat.completions.create(
@@ -432,7 +433,7 @@ export async function POST(req: Request) {
       // console.log("Providing extra feedback")
       // Provide extra feedback
       const schoolClassSkill = await getSchoolClassSkillFromDB(
-        studentSkill.skillID,
+        studentSkill.skillID
       );
 
       // TO DO
@@ -496,9 +497,9 @@ export async function POST(req: Request) {
           FEEDBACK TO ANSWER END 
           
           Provide a response to the student, and word this in the 2nd person, as if the student is reading it. It is critical your response is appropriate for a student at a year 11 academic level, avoiding the use of sophisticated jargon unless directly asked. Also, consider the depth of your response, ensuring that it is appropriate for the student's year level. Your answer should be sufficiently detailed to provide a comprehensive enough explanation, but not so detailed that it becomes overhwhelming for thr student. Finally, your responses should STRICTLY be a maximum of 5 sentences long, using your own descretion to determine the appropriate length given the query posed by the student. At the end of your response, ask the student if they need further clarification or if they are ready to move onto a new question.
-          `
-        }
-      ] as ChatCompletionMessageParam[]
+          `,
+        },
+      ] as ChatCompletionMessageParam[];
 
       const studentResponse = [
         {
@@ -514,7 +515,7 @@ export async function POST(req: Request) {
           model: llm ?? "gpt-3.5-turbo", // defaults to gpt-3.5-turbo if llm is not provided
           stream: true, // streaming YAY
           messages: [...feedbackSystemPrompt, ...studentResponse], // combine the system prompt with the latest message
-        },
+        }
       );
 
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
@@ -525,12 +526,11 @@ export async function POST(req: Request) {
       //DONESON
       const feedbackSystemPrompt = [
         {
-          "role": "system", 
-          "content": `You are an AI assistant who assists students in their learning. You have been have been conversing with the student, providing it questions, feedback on their answers, discussing theory and helping with any relevant clarifications that had. However, the student has just said something unrelated to the current topic/key idea being discussed. You should respond to the student by telling them that what they are saying is not relevant to the current topic and politely tell them that they should try to stay on topic. Ensure that you ask whether the student has any more questions, or would like to move on. Your response should STRICTLY be a maximum of 3 sentences long, it is absolutely critical you do not answer with longer responses.
-          .`
-        }
-      ] as ChatCompletionMessageParam[]
-
+          role: "system",
+          content: `You are an AI assistant who assists students in their learning. You have been have been conversing with the student, providing it questions, feedback on their answers, discussing theory and helping with any relevant clarifications that had. However, the student has just said something unrelated to the current topic/key idea being discussed. You should respond to the student by telling them that what they are saying is not relevant to the current topic and politely tell them that they should try to stay on topic. Ensure that you ask whether the student has any more questions, or would like to move on. Your response should STRICTLY be a maximum of 3 sentences long, it is absolutely critical you do not answer with longer responses.
+          .`,
+        },
+      ] as ChatCompletionMessageParam[];
 
       const studentResponse = [
         {
@@ -546,19 +546,18 @@ export async function POST(req: Request) {
           model: llm ?? "gpt-3.5-turbo", // defaults to gpt-3.5-turbo if llm is not provided
           stream: true, // streaming YAY
           messages: [...feedbackSystemPrompt, ...studentResponse], // combine the system prompt with the latest message
-        },
+        }
       );
 
       const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file
       return new StreamingTextResponse(stream); // returns the stream as a StreamingTextResponse
-
     } else if (chatAction === "creatingLessonPlan") {
       // console.log(sessionSkillAggregates)
       // code for pulling out relevant information from the aggregated Skills
 
       // start by looking at the dependencies stuff. First we want to just get all of the skills that have been selected
       const includedSkillAggregates = sessionSkillAggregates.filter(
-        (skill) => skill.includeInLessonPlan,
+        (skill) => skill.includeInLessonPlan
       );
       const totalIncludedSkills = includedSkillAggregates.length;
 
@@ -577,7 +576,7 @@ export async function POST(req: Request) {
         const currentSkill = await getSchoolClassSkillFromDB(
           null,
           includedSkillAggregate.schoolClass,
-          includedSkillAggregate.skill,
+          includedSkillAggregate.skill
         ); // NO CLUE IF THIS WORKS PROBS DOESN'T
 
         lessonPlanContextString += `\n\nSkill Number: ${i} out of ${totalIncludedSkills}: ${currentSkill.skill}\n`;
@@ -589,7 +588,7 @@ export async function POST(req: Request) {
           lessonPlanContextString += `Here are the skills and number of students that have not met dependencies in the skills, that this skill is dependent on:\n`;
           for (const dependency of currentSkill.dependencies) {
             const dependencyAggregate = sessionSkillAggregates.find(
-              (skill) => skill.skill === dependency,
+              (skill) => skill.skill === dependency
             );
             if (dependencyAggregate.noStudentsNotMetMastery > 0) {
               lessonPlanContextString += `${dependencyAggregate.skill}: ${dependencyAggregate.noStudentsNotMetMastery}\n`;
@@ -604,7 +603,7 @@ export async function POST(req: Request) {
           // Need to check the retention of the dependencies
           for (const dependency of currentSkill.dependencies) {
             const dependencyAggregate = sessionSkillAggregates.find(
-              (skill) => skill.skill === dependency,
+              (skill) => skill.skill === dependency
             );
             if (dependencyAggregate.noStudentsToRevise > 0) {
               if (!insertedRevisionDependencyText) {
@@ -655,7 +654,7 @@ export async function POST(req: Request) {
             model: llm ?? "gpt-3.5-turbo", // defaults to gpt-3.5-turbo if llm is not provided
             stream: true, // streaming YAY
             messages: [...classLessonPlanSystemPrompt, ...messages], // combine the system prompt with the latest message
-          },
+          }
         );
 
         const stream = OpenAIStream(response); // sets up the stream - using the OpenAIStream function from the ai.ts file

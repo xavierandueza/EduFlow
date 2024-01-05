@@ -6,6 +6,16 @@ import Stripe from "stripe";
 export async function POST(req: NextRequest) {
   // Check that the request exists
   try {
+    const contentType = req.headers["content-type"];
+
+    // Check if the Content-Type is 'application/json'
+    if (contentType !== "application/json") {
+      return NextResponse.json(
+        { error: "Invalid content type. Expected application/json" },
+        { status: 400 }
+      );
+    }
+
     console.log("req.body: ", req.body);
 
     if (!req.body) {
