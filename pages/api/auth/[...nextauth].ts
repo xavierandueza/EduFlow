@@ -58,9 +58,6 @@ export const authOptions: NextAuthOptions = {
     updateAge: 24 * 60 * 60, // How frequently to update database for sessions, seconds again
     // generateSessionToken // If we want to generate our own session token, we don't care tho
   },
-  pages: {
-    newUser: "/account/signup", // New users will be directed here on first sign in (leave the property out if not of interest)
-  },
 };
 
 export default NextAuth(authOptions);
