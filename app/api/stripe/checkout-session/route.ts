@@ -3,8 +3,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../../../pages/api/auth/[...nextauth]";
 import Stripe from "stripe";
 
-export async function POST(req: NextRequest) {
+const POST = async (req: NextRequest) => {
   // Check that the request exists
+  console.log("req.body: ", req.body);
+
   if (!req.body) {
     return NextResponse.json({ error: "No request body" }, { status: 400 });
   }
@@ -72,4 +74,6 @@ export async function POST(req: NextRequest) {
 
   // otherwise we return the checkout session
   return NextResponse.json({ session: checkoutSession }, { status: 200 });
-}
+};
+
+export default POST;
