@@ -32,23 +32,26 @@ export const authOptions: NextAuthOptions = {
       allowDangerousEmailAccountLinking: true,
     }),
   ],
-  callbacks: {
-    session({
-      session,
-      token,
-      user,
-    }: {
-      session: Session;
-      token: JWT;
-      user: AdapterUser;
-    }) {
-      session.user.id = user.id;
-      session.user.firstName = user.firstName;
-      session.user.lastName = user.lastName;
-      session.user.role = user.role;
-      session.user.stripeCustomerId = user.stripeCustomerId;
-      session.user.subscriptionActive = user.subscriptionActive;
-      return session;
+  events: {
+    createUser: async ({ user }) => {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: "2023-10-16",
+      });
+
+      await stripe.customers
+        .create({
+          email: user.email!, // this is subject to change through account
+          name: user.name!,
+        })
+        .then(async (customer) => {
+          return await setDoc(
+            doc(db, "users", user.id),
+            {
+              stripeCustomerId: customer.id,
+            },
+            { merge: true }
+          );
+        });
     },
   },
   adapter: FirestoreAdapter(firestore),
@@ -57,6 +60,9 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // in seconds, so 14 days here
     updateAge: 24 * 60 * 60, // How frequently to update database for sessions, seconds again
     // generateSessionToken // If we want to generate our own session token, we don't care tho
+  },
+  pages: {
+    newUser: "/account/signup", // New users will be directed here on first sign in (leave the property out if not of interest)
   },
 };
 
