@@ -43,6 +43,9 @@ const UserCreationForm = () => {
       interests: interests,
       careerGoals: careerGoals,
       parentLink: parentLink,
+      stripeCustomerId: session?.user?.stripeCustomerId,
+      subscriptionActive: session?.user?.subscriptionActive,
+      subscriptionName: session?.user?.subscriptionName,
     });
 
     // Update next-auth session

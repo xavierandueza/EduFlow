@@ -10,6 +10,7 @@ import {
   collection,
   where,
   limit,
+  arrayUnion,
 } from "firebase/firestore";
 import { toCamelCase } from "../../utils/textManipulation";
 import { User } from "next-auth";
@@ -52,13 +53,10 @@ const updateSubscriptionStatus = async (
       );
     }
 
-    // update this document
-    await updateDoc(user.ref, {
-      subscriptionActive: subscriptionActive,
-      subscriptionName: subscriptionActive ? productName : null,
-    });
-
     if (!user.data().role) {
+      console.error(
+        "No role on the user. Cannot modify user or other accounts without a role"
+      );
       return;
     } else if (user.data().role === "parent") {
       // get the parents document
@@ -81,6 +79,12 @@ const updateSubscriptionStatus = async (
       }
       return;
     } else if (user.data().role === "student") {
+      // update this document
+      await updateDoc(user.ref, {
+        subscriptionActive: subscriptionActive,
+        subscriptionName: subscriptionActive ? productName : null,
+      });
+
       // get the student document
       const studentDoc = await getDoc(doc(db, "students", user.id));
 
@@ -88,13 +92,25 @@ const updateSubscriptionStatus = async (
         !studentDoc.data().parentLink ||
         studentDoc.data().parentLink === ""
       ) {
+        console.warn("No parent link on student document");
         return;
       } else {
-        // Assume only one parent account for now
+        // Assume only one parent account for now. We want to update the parents doc, not the parents user
         try {
-          await updateDoc(doc(db, "users", studentDoc.data().parentLink), {
-            subscriptionActive: subscriptionActive,
-            subscriptionName: subscriptionActive ? productName : null,
+          await updateDoc(doc(db, "parents", studentDoc.data().parentLink), {
+            childrenShort: arrayUnion(user.id),
+            childrenLong: {
+              [`childrenLong.${user.id}`]: {
+                firstName: user.data().firstName,
+                lastName: user.data().lastName,
+                email: user.data().email,
+                interests: studentDoc.data().interests,
+                careerGoals: studentDoc.data().careerGoals,
+                stripeCustomerId: stripeCustomerId,
+                subscriptionActive: subscriptionActive,
+                subscriptionName: subscriptionActive ? productName : null,
+              },
+            },
           });
         } catch (error) {
           console.error(
