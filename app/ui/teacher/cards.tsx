@@ -1,7 +1,4 @@
-import {
-  SchoolClass,
-  FirestoreTeacherSchoolClass,
-} from "../../utils/interfaces";
+import { FirestoreTeacherSchoolClass } from "../../utils/interfaces";
 
 export function ClassCard({
   schoolClass,
