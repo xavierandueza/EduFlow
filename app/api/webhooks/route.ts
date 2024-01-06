@@ -30,97 +30,45 @@ const allowedEventTypes = [
 const updateSubscriptionStatus = async (
   stripeCustomerId: string,
   subscriptionActive: boolean,
-  productName: string
+  productName: string,
+  forStudentId: string
 ) => {
   try {
-    // first need to get the user
+    // only want to update the user who has the forStudentId in the metadata
+
+    // first need to update the user
+    await updateDoc(doc(db, "users", forStudentId), {
+      subscriptionActive: subscriptionActive,
+      subscriptionName: subscriptionActive ? productName : null,
+    });
+
+    // Find if any parents have this user as a child
     const q = query(
-      collection(db, "users"),
-      where("stripeCustomerId", "==", stripeCustomerId),
+      collection(db, "parents"),
+      where("childrenShort", "array-contains", forStudentId),
       limit(1)
     );
     const querySnapshot = await getDocs(q);
+
     if (querySnapshot.empty) {
-      console.error("No user found with stripeCustomerId: " + stripeCustomerId);
+      console.warn(
+        "No children found with stripeCustomerId: " + stripeCustomerId
+      );
       return;
     }
 
-    const user = querySnapshot.docs[0];
-
-    if (!user.data()) {
-      console.error(
-        "User data undefined for stripeCustomerId: " + stripeCustomerId
-      );
-    }
-
-    if (!user.data().role) {
-      console.error(
-        "No role on the user. Cannot modify user or other accounts without a role"
-      );
-      return;
-    } else if (user.data().role === "parent") {
-      // get the parents document
-      const parentDoc = await getDoc(doc(db, "parents", user.id));
-
-      // loop over the linked students (the childrenShort array contains all Ids of the linked students)
-      for (const linkedStudent of parentDoc.data().childrenShort) {
-        // update the user account for the student
-        try {
-          await updateDoc(doc(db, "users", linkedStudent), {
-            subscriptionActive: subscriptionActive,
-            subscriptionName: subscriptionActive ? productName : null,
-          });
-        } catch (error) {
-          console.error(
-            "Could not update student user with id: " + linkedStudent
-          );
-          return;
-        }
-      }
-      return;
-    } else if (user.data().role === "student") {
-      // update this document
-      await updateDoc(user.ref, {
-        subscriptionActive: subscriptionActive,
-        subscriptionName: subscriptionActive ? productName : null,
+    // loop over the parents
+    for (const parent of querySnapshot.docs) {
+      // update the parent
+      await updateDoc(parent.ref, {
+        [`childrenLong.${forStudentId}.subscriptionActive`]: subscriptionActive,
+        [`childrenLong.${forStudentId}.subscriptionName`]: subscriptionActive
+          ? productName
+          : null,
       });
-
-      // get the student document
-      const studentDoc = await getDoc(doc(db, "students", user.id));
-
-      if (
-        !studentDoc.data().parentLink ||
-        studentDoc.data().parentLink === ""
-      ) {
-        console.warn("No parent link on student document");
-        return;
-      } else {
-        // Assume only one parent account for now. We want to update the parents doc, not the parents user
-        try {
-          await updateDoc(doc(db, "parents", studentDoc.data().parentLink), {
-            childrenShort: arrayUnion(user.id),
-            childrenLong: {
-              [`childrenLong.${user.id}`]: {
-                firstName: user.data().firstName,
-                lastName: user.data().lastName,
-                email: user.data().email,
-                interests: studentDoc.data().interests,
-                careerGoals: studentDoc.data().careerGoals,
-                stripeCustomerId: stripeCustomerId,
-                subscriptionActive: subscriptionActive,
-                subscriptionName: subscriptionActive ? productName : null,
-              },
-            },
-          });
-        } catch (error) {
-          console.error(
-            "Error updating parent user with id: " +
-              studentDoc.data().parentLink
-          );
-          return;
-        }
-      }
     }
+
+    return;
   } catch (error) {
     console.error(
       "Could not update user with stripeCustomerId: " + stripeCustomerId
@@ -182,7 +130,14 @@ const webhookHandler = async (req: NextRequest) => {
 
     if (!stripeCustomer) {
       console.error("No stripe customer found");
-      throw new Error("No stripe customer found on object");
+      return NextResponse.json(
+        {
+          error: {
+            message: `Webhook Error: No stripe customer found`,
+          },
+        },
+        { status: 400 }
+      );
     }
 
     const stripeCustomerId = stripeCustomer.toString();
@@ -198,13 +153,27 @@ const webhookHandler = async (req: NextRequest) => {
 
       console.log("productId: " + productId);
     } catch (error) {
-      console.error("No priceId found on object");
-      throw new Error("No priceId found on object");
+      console.error("Could not get productId from event");
+      return NextResponse.json(
+        {
+          error: {
+            message: `Webhook Error: Could not get productId from event`,
+          },
+        },
+        { status: 400 }
+      );
     }
 
     if (!productId) {
-      console.error("No priceId found on object");
-      throw new Error("No priceId found on object");
+      console.error("No productId found on object");
+      return NextResponse.json(
+        {
+          error: {
+            message: `Webhook Error: No productId found on object`,
+          },
+        },
+        { status: 400 }
+      );
     }
 
     // code to get the name of the product, convert to camelCase for the database
@@ -212,28 +181,70 @@ const webhookHandler = async (req: NextRequest) => {
       (await stripe.products.retrieve(productId)).name
     );
 
+    // get the forStudentId from the metadata
+    const forStudentId = (event.data.object as Stripe.Subscription).metadata
+      .forStudentId;
+
+    if (!forStudentId) {
+      console.error("No forStudentId found on object");
+      return NextResponse.json(
+        {
+          error: {
+            message: `Webhook Error: No forStudentId found on object`,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
     console.log("productName: " + productName);
+    console.log("forStudentId: " + forStudentId);
 
     switch (event.type) {
       case "customer.subscription.created":
         console.log("Handling customer.subscription.created");
-        await updateSubscriptionStatus(stripeCustomerId, true, productName);
+        await updateSubscriptionStatus(
+          stripeCustomerId,
+          true,
+          productName,
+          forStudentId
+        );
         break;
       case "customer.subscription.deleted":
         console.log("Handling customer.subscription.deleted");
-        await updateSubscriptionStatus(stripeCustomerId, false, productName);
+        await updateSubscriptionStatus(
+          stripeCustomerId,
+          false,
+          productName,
+          forStudentId
+        );
         break;
       case "customer.subscription.resumed":
         console.log("Handling customer.subscription.resumed");
-        await updateSubscriptionStatus(stripeCustomerId, true, productName);
+        await updateSubscriptionStatus(
+          stripeCustomerId,
+          true,
+          productName,
+          forStudentId
+        );
         break;
       case "customer.subscription.paused":
         console.log("Handling customer.subscription.paused");
-        await updateSubscriptionStatus(stripeCustomerId, false, productName);
+        await updateSubscriptionStatus(
+          stripeCustomerId,
+          false,
+          productName,
+          forStudentId
+        );
         break;
       case "customer.subscription.updated":
         console.log("Handling customer.subscription.updated");
-        await updateSubscriptionStatus(stripeCustomerId, true, productName);
+        await updateSubscriptionStatus(
+          stripeCustomerId,
+          true,
+          productName,
+          forStudentId
+        );
         break;
     }
     // successfully went through switch

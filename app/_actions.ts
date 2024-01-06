@@ -2,10 +2,16 @@
 
 // import { updateUser } from '@/lib/mongo/users'
 import { db } from "./firebase";
-import { Firestore, arrayUnion, getDoc } from "firebase/firestore";
+import {
+  Firestore,
+  arrayUnion,
+  getDoc,
+  setDoc,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { Role } from "./utils/interfaces";
-
-import { setDoc, doc, updateDoc } from "firebase/firestore";
+import { FirestoreParentChildLong } from "./utils/interfaces";
 
 export async function createUser({
   id,
@@ -16,7 +22,6 @@ export async function createUser({
   interests,
   careerGoals,
   parentLink,
-  stripeCustomerId,
   subscriptionActive,
   subscriptionName,
   firestoreDb = db,
@@ -29,7 +34,6 @@ export async function createUser({
   interests: string[] | string | null;
   careerGoals: string[] | string | null;
   parentLink: string | null;
-  stripeCustomerId: string; // no null because it is required.
   subscriptionActive: boolean | null;
   subscriptionName: string | null;
   firestoreDb?: Firestore;
@@ -76,7 +80,6 @@ export async function createUser({
           email: email,
           interests: interests,
           careerGoals: careerGoals,
-          stripeCustomerId: stripeCustomerId,
           subscriptionActive: subscriptionActive,
           subscriptionName: subscriptionName ? subscriptionName : null,
         },
@@ -113,7 +116,6 @@ export async function updateUser({
   interests,
   careerGoals,
   parentLink,
-  stripeCustomerId,
   subscriptionActive,
   subscriptionName,
   firestoreDb = db,
@@ -126,7 +128,6 @@ export async function updateUser({
   interests: string[] | string | null;
   careerGoals: string[] | string | null;
   parentLink: string | null;
-  stripeCustomerId: string; // no null because it is required.
   subscriptionActive: boolean | null;
   subscriptionName: string | null;
   firestoreDb?: Firestore;
@@ -170,13 +171,12 @@ export async function updateUser({
       await updateDoc(doc(firestoreDb, "parents", parentLink), {
         childrenShort: arrayUnion(id),
         childrenLong: {
-          [`childrenLong.${id}`]: {
+          [`${id}`]: {
             firstName: firstName,
             lastName: lastName,
             email: email,
             interests: interests,
             careerGoals: careerGoals,
-            stripeCustomerId: stripeCustomerId,
             subscriptionActive: subscriptionActive,
             subscriptionName: subscriptionName ? subscriptionName : null,
           },
@@ -223,4 +223,15 @@ export async function getRoleExtraData({
       const teacherDoc = await getDoc(doc(db, "teachers", id));
       return teacherDoc.data();
   }
+}
+
+export async function getStudentDataFromParents({
+  parentLink,
+}: {
+  parentLink: string;
+}) {
+  const parentDoc = await getDoc(doc(db, "parents", parentLink));
+  return parentDoc.data().childrenLong as {
+    [id: string]: FirestoreParentChildLong;
+  };
 }

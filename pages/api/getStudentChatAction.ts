@@ -13,7 +13,7 @@ const openai = new OpenAI({
 
 export default async function handler(
   req: NextApiRequest | StudentResponseRequestBody,
-  res: NextApiResponse,
+  res: NextApiResponse
 ) {
   const {
     relevantChatMessage,
@@ -43,8 +43,8 @@ export default async function handler(
     const systemPrompt = [
       // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
       {
-        "role": "system", 
-        "content": `You are a helpful AI assistant who classifies messages between a student and an AI teacher having a text conversation. The teacher has just taken one of the following actions:
+        role: "system",
+        content: `You are a helpful AI assistant who classifies messages between a student and an AI teacher having a text conversation. The teacher has just taken one of the following actions:
 
         1. The teacher has either just asked the student an exam-style question or
         2.  the teacher has provided clarification on the exam-style question after the student has asked for some or provided additional clarification on any previous clarification already provided
@@ -60,7 +60,7 @@ export default async function handler(
         Here is the original question the teacher has posed to the student: "${relevantChatMessage}"
         
         Your response should ONLY be one of the original camel case words ("gradingValidAnswer", "clarifyingQuestion", or  "gradingInvalidAnswer") with no quotation marks or punctuation.
-        `
+        `,
       },
     ] as ChatCompletionMessageParam[];
 
@@ -74,12 +74,13 @@ export default async function handler(
     // console.log("Setup everything for chat completion");
 
     try {
-      response = await openai.chat.completions.create( // Actually sending the request to OpenAI
-      {
-        model: 'gpt-4-1106-preview', // defaults to gpt-3.5-turbo if llm is not provided
-        messages: [...systemPrompt, ...studentMessage], // ignore error warning here, it works just fine
-        temperature: 0.0,
-      }
+      response = await openai.chat.completions.create(
+        // Actually sending the request to OpenAI
+        {
+          model: "gpt-4-1106-preview", // defaults to gpt-3.5-turbo if llm is not provided
+          messages: [...systemPrompt, ...studentMessage], // ignore error warning here, it works just fine
+          temperature: 0.0,
+        }
       );
       currentChatAction = response.choices[0].message.content as ChatAction; // setting the currentChatAction to the response from OpenAI
       // console.log("The response is:");
@@ -99,8 +100,8 @@ export default async function handler(
     const systemPrompt = [
       // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
       {
-        "role": "system", 
-        "content": `You are a helpful AI assistant who classifies messages between a student and an AI teacher having a text conversation.  So far the AI teacher has provided the student with an exam-styled question, the student has answered the exam-styled question and the AI teacher has just provided the following feedback on the student's answer to the exam-styled question:
+        role: "system",
+        content: `You are a helpful AI assistant who classifies messages between a student and an AI teacher having a text conversation.  So far the AI teacher has provided the student with an exam-styled question, the student has answered the exam-styled question and the AI teacher has just provided the following feedback on the student's answer to the exam-styled question:
 
         "${relevantChatMessage}"
         
@@ -113,7 +114,7 @@ export default async function handler(
         your task is to determine which of the three possible responses the student has provided ("providingExtraFeedback", "askingQuestion", or  "unknownResponse")
         
         Your response should ONLY be one of the original camel case words ("gradingValidAnswer", "clarifyingQuestion", or  "gradingInvalidAnswer") with no quotation marks or punctuation. 
-        `
+        `,
       },
     ] as ChatCompletionMessageParam[];
 
@@ -130,13 +131,13 @@ export default async function handler(
       response = await openai.chat.completions.create(
         // Actually sending the request to OpenAI
         {
-          model: 'gpt-4-1106-preview', // defaults to gpt-3.5-turbo if llm is not provided
+          model: "gpt-4-1106-preview", // defaults to gpt-3.5-turbo if llm is not provided
           messages: [...systemPrompt, ...studentMessage], // ignore error warning here, it works just fine
           temperature: 0.0,
-        },
+        }
       );
       console.log(
-        "Model classification is: " + response.choices[0].message.content,
+        "Model classification is: " + response.choices[0].message.content
       );
       currentChatAction = response.choices[0].message.content as ChatAction; // setting the currentChatAction to the response from OpenAI
       // console.log("The response is:");
@@ -153,7 +154,7 @@ export default async function handler(
 export async function getStudentChatAction(
   relevantChatMessage: string,
   studentResponse: string,
-  lastAction: ChatAction,
+  lastAction: ChatAction
 ) {
   console.log("Relevant chat message is: " + relevantChatMessage);
   console.log("Student response is: " + studentResponse);
@@ -174,8 +175,8 @@ export async function getStudentChatAction(
     const systemPrompt = [
       // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
       {
-        "role": "system", 
-        "content": `You are a helpful AI assistant who classifies messages between a student and an AI teacher having a text conversation. The teacher has just taken one of the following actions:
+        role: "system",
+        content: `You are a helpful AI assistant who classifies messages between a student and an AI teacher having a text conversation. The teacher has just taken one of the following actions:
 
         1. The teacher has either just asked the student an exam-style question or
         2.  the teacher has provided clarification on the exam-style question after the student has asked for some or provided additional clarification on any previous clarification already provided
@@ -191,7 +192,7 @@ export async function getStudentChatAction(
         Here is the original question the teacher has posed to the student: "${relevantChatMessage}"
         
         Your response should ONLY be one of the original camel case words ("gradingValidAnswer", "clarifyingQuestion", or  "gradingInvalidAnswer") with no quotation marks or punctuation.
-        `
+        `,
       },
     ] as ChatCompletionMessageParam[];
 
@@ -205,12 +206,13 @@ export async function getStudentChatAction(
     // console.log("Setup everything for chat completion");
 
     try {
-      response = await openai.chat.completions.create( // Actually sending the request to OpenAI
-      {
-        model: 'gpt-4-1106-preview', // defaults to gpt-3.5-turbo if llm is not provided
-        messages: [...systemPrompt, ...studentMessage], // ignore error warning here, it works just fine
-        temperature: 0.0,
-      }
+      response = await openai.chat.completions.create(
+        // Actually sending the request to OpenAI
+        {
+          model: "gpt-4-1106-preview", // defaults to gpt-3.5-turbo if llm is not provided
+          messages: [...systemPrompt, ...studentMessage], // ignore error warning here, it works just fine
+          temperature: 0.0,
+        }
       );
       currentChatAction = response.choices[0].message.content as ChatAction; // setting the currentChatAction to the response from OpenAI
       // console.log("The response is:");
@@ -230,8 +232,8 @@ export async function getStudentChatAction(
     const systemPrompt = [
       // Setting up the system prompt - COULD ADD FUNCTION THAT SHOWS ALL PREVIOUS QS AND ASKS NOT TO REPEAT
       {
-        "role": "system", 
-        "content": `You are a helpful AI assistant who classifies messages between a student and an AI teacher having a text conversation.  So far the AI teacher has provided the student with an exam-styled question, the student has answered the exam-styled question and the AI teacher has just provided the following feedback on the student's answer to the exam-styled question (or additinoal feedback on the student's response to the previous feedback):
+        role: "system",
+        content: `You are a helpful AI assistant who classifies messages between a student and an AI teacher having a text conversation.  So far the AI teacher has provided the student with an exam-styled question, the student has answered the exam-styled question and the AI teacher has just provided the following feedback on the student's answer to the exam-styled question (or additional feedback on the student's response to the previous feedback):
 
         "${relevantChatMessage}"
         
@@ -244,7 +246,7 @@ export async function getStudentChatAction(
         your task is to determine which of the three possible responses the student has provided ("providingExtraFeedback", "askingQuestion", or  "unknownResponse")
         
         Your response should ONLY be one of the original camel case words ("gradingValidAnswer", "clarifyingQuestion", or  "gradingInvalidAnswer") with no quotation marks or punctuation. 
-        `
+        `,
       },
     ] as ChatCompletionMessageParam[];
 
@@ -261,13 +263,13 @@ export async function getStudentChatAction(
       response = await openai.chat.completions.create(
         // Actually sending the request to OpenAI
         {
-          model: 'gpt-4-1106-preview', // defaults to gpt-3.5-turbo if llm is not provided
+          model: "gpt-4-1106-preview", // defaults to gpt-3.5-turbo if llm is not provided
           messages: [...systemPrompt, ...studentMessage], // ignore error warning here, it works just fine
           temperature: 0.0,
-        },
+        }
       );
       console.log(
-        "Model classification is: " + response.choices[0].message.content,
+        "Model classification is: " + response.choices[0].message.content
       );
       currentChatAction = response.choices[0].message.content as ChatAction; // setting the currentChatAction to the response from OpenAI
       // console.log("The response is:");

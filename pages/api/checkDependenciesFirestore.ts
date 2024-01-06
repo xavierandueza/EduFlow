@@ -14,7 +14,7 @@ type Dependencies = {
 
 async function checkDependencies(studentSkill: FirestoreStudentSkill) {
   const returnedSchoolClassSkill = await getSchoolClassSkillFromDB(
-    studentSkill.skillID,
+    studentSkill.skillID
   );
 
   // loop over dependencies if they exist
@@ -38,16 +38,16 @@ async function checkDependencies(studentSkill: FirestoreStudentSkill) {
       const dependencyStudentSkill = await getStudentSkillFromDB(
         null,
         studentSkill.email,
-        dependency,
+        dependency
       );
 
       // check if the dependency is valid
       if (dependencyStudentSkill.masteryScore < 40.0) {
-        // modify the inital json object
+        // modify the initial json object
         dependencies.areDependenciesValid = false;
         dependencies.invalidDependencies.push(dependency);
         dependencies.invalidDependenciesScores.push(
-          dependencyStudentSkill.masteryScore,
+          dependencyStudentSkill.masteryScore
         );
       }
     }
@@ -58,7 +58,7 @@ async function checkDependencies(studentSkill: FirestoreStudentSkill) {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse,
+  res: NextApiResponse
 ) {
   // console.log("Checking dependencies in the handler function")
 

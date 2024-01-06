@@ -37,6 +37,16 @@ interface FirestoreStandardUser {
   email?: string;
 }
 
+export interface FireStoreExtendedUser extends FirestoreStandardUser {
+  name: string;
+  role: Role;
+  stripeCustomerId: string;
+  subscriptionActive: boolean | null;
+  subscriptionName: string | null;
+  emailVerified?: boolean | null;
+  image?: string | null;
+}
+
 export interface FirestoreStudent extends FirestoreStandardUser {
   interests?: string[] | string;
   careerGoals?: string[] | string;
@@ -46,27 +56,16 @@ export interface FirestoreStudent extends FirestoreStandardUser {
   schoolClassesShort?: string[];
 }
 
-export interface FirestoreParent extends FirestoreStandardUser {
-  childrenShort?: string[];
-  childrenLong?:
-    | {
-        [id: string]: FirestoreStandardUser;
-      }[]
-    | null;
+export interface FirestoreParentChildLong extends FirestoreStudent {
+  subscriptionActive?: boolean;
+  subscriptionName?: string | null;
 }
 
-export interface StudentSkill {
-  _id: string;
-  email_address: string;
-  subject: string;
-  school_class_name: string;
-  skill: string;
-  mastery_score: number;
-  retention_score: number;
-  need_to_revise: boolean;
-  dependencies_met: boolean;
-  decay_value: number;
-  // ... any other properties
+export interface FirestoreParent extends FirestoreStandardUser {
+  childrenShort?: string[];
+  childrenLong?: {
+    [id: string]: FirestoreParentChildLong;
+  } | null;
 }
 
 export interface FirestoreStudentSkill {
@@ -88,14 +87,6 @@ export interface FirestoreStudentSkill {
   // ... any other properties
 }
 
-export interface Teacher {
-  _id: string;
-  email_address: string;
-  first_name: string;
-  last_name: string;
-  school_classes: string[];
-}
-
 export interface FirestoreTeacherSchoolClass {
   id: string;
   name: string;
@@ -108,12 +99,6 @@ export interface FirestoreTeacher {
   firstName: string;
   lastName: string;
   schoolClasses: FirestoreTeacherSchoolClass[];
-}
-
-export interface SchoolClass {
-  _id: string;
-  school_class_name: string;
-  subject: string;
 }
 
 export interface FirestoreSchoolClass {
@@ -137,16 +122,6 @@ export interface MetricScores {
   retention_score: number;
 }
 
-export interface SkillAggregate {
-  skill: string;
-  school_class_name: string;
-  mastery_score: number;
-  retention_score: number;
-  no_students_not_met_mastery: number;
-  no_students_not_met_dependencies: number;
-  no_students_to_revise: number;
-}
-
 export interface FirestoreSkillAggregate {
   skill: string;
   schoolClass: string;
@@ -157,22 +132,9 @@ export interface FirestoreSkillAggregate {
   noStudentsToRevise: number;
 }
 
-export interface ExtendedSkillAggregate extends SkillAggregate {
-  include_in_class_lesson_plan: boolean;
-}
-
 export interface FirestoreExtendedSkillAggregate
   extends FirestoreSkillAggregate {
   includeInLessonPlan: boolean;
-}
-
-export interface StudentAggregate {
-  full_name: string;
-  email_address: string;
-  school_class_name: string;
-  mastery_score: number;
-  retention_score: number;
-  skills_to_revise: number;
 }
 
 export interface FirestoreStudentAggregate {

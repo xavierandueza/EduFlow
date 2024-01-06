@@ -7,6 +7,7 @@ import {
   FirestoreSchoolClass,
   FirestoreSkillAggregate,
   FirestoreStudentAggregate,
+  FireStoreExtendedUser,
 } from "./interfaces";
 
 import { db } from "../firebase";
@@ -22,34 +23,44 @@ import {
   setDoc,
 } from "firebase/firestore";
 
-
-async function getSchoolClassSkillFromDB(id?: string, schoolClass? : string, skill? : string, firestoreDb = db) {
+async function getSchoolClassSkillFromDB(
+  id?: string,
+  schoolClass?: string,
+  skill?: string,
+  firestoreDb = db
+) {
   try {
     if (id) {
-      const docSnapshot = await getDoc(doc(firestoreDb, "schoolClassSkills", id));
+      const docSnapshot = await getDoc(
+        doc(firestoreDb, "schoolClassSkills", id)
+      );
 
       if (docSnapshot.exists) {
-        return { id: docSnapshot.id, ...docSnapshot.data() } as SchoolClassSkill;
+        return {
+          id: docSnapshot.id,
+          ...docSnapshot.data(),
+        } as SchoolClassSkill;
       } else {
         throw new Error("No schoolClassSkill found");
       }
-    }
-    else if (schoolClass && skill) {
+    } else if (schoolClass && skill) {
       const q = query(
         collection(firestoreDb, "schoolClassSkills"),
         where("schoolClass", "==", schoolClass),
         where("skill", "==", skill),
         limit(1)
-      )
-      const querySnapshot = await getDocs(q)
+      );
+      const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        return { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } as SchoolClassSkill;
+        return {
+          id: querySnapshot.docs[0].id,
+          ...querySnapshot.docs[0].data(),
+        } as SchoolClassSkill;
       } else {
         throw new Error("No schoolClassSkill found");
       }
-    }
-    else {
+    } else {
       throw new Error("Cannot find unique schoolClassSkill with inputted data");
     }
   } catch (error) {
@@ -75,7 +86,7 @@ async function getStudentFromDB(id?: string, email?: string, firestoreDb = db) {
       const q = query(
         collection(firestoreDb, "students"),
         where("email", "==", email),
-        limit(1),
+        limit(1)
       );
       const querySnapshot = await getDocs(q);
 
@@ -93,7 +104,7 @@ async function getStudentFromDB(id?: string, email?: string, firestoreDb = db) {
   } catch (error) {
     console.log(
       `Error getting student document of id: ${id} OR email ${email}`,
-      error,
+      error
     );
     throw error;
   }
@@ -103,7 +114,7 @@ async function getStudentSkillFromDB(
   id?: string,
   email?: string,
   skill?: string,
-  firestoreDb = db,
+  firestoreDb = db
 ) {
   try {
     // console.log("printing ID: ")
@@ -124,7 +135,7 @@ async function getStudentSkillFromDB(
         collection(firestoreDb, "studentSkills"),
         where("email", "==", email),
         where("skill", "==", skill),
-        limit(1),
+        limit(1)
       );
       const querySnapshot = await getDocs(q);
 
@@ -148,7 +159,7 @@ async function getStudentSkillFromDB(
 async function getStudentSkillFromDBAll(email: string, firestoreDb = db) {
   const q = query(
     collection(firestoreDb, "studentSkills"),
-    where("email", "==", email),
+    where("email", "==", email)
   );
 
   try {
@@ -164,7 +175,7 @@ async function getStudentSkillFromDBAll(email: string, firestoreDb = db) {
   } catch (error) {
     console.error(
       `Error getting all studentSkill documents of email ${email}`,
-      error,
+      error
     );
     throw error;
   }
@@ -174,7 +185,7 @@ async function getTeacherFromDB(email: string, firestoreDb = db) {
   const q = query(
     collection(firestoreDb, "teachers"),
     where("email", "==", email),
-    limit(1),
+    limit(1)
   );
   const docSnapshot = (await getDocs(q)).docs[0];
 
@@ -194,7 +205,7 @@ async function getSchoolClassFromDB(schoolClassName: string, firestoreDb = db) {
   const q = query(
     collection(firestoreDb, "schoolClasses"),
     where("name", "==", schoolClassName),
-    limit(1),
+    limit(1)
   );
   getDocs(q).then((querySnapshot) => {
     if (!querySnapshot.empty) {
@@ -208,15 +219,15 @@ async function getSchoolClassFromDB(schoolClassName: string, firestoreDb = db) {
 // this function aggregates skill values for a class - so we should be able to feed in the class and do some aggregation over.
 async function getAggregatedSkillsForClass(
   schoolClassId: string,
-  firestoreDb = db,
+  firestoreDb = db
 ) {
   try {
     // get the list of student skills for this class
     const studentSkillsQuery = query(
       collection(firestoreDb, "studentSkills"),
-      where("schoolClassID", "==", schoolClassId),
+      where("schoolClassID", "==", schoolClassId)
     );
-    const studentSkillsQuerySnapshot = await getDocs(studentSkillsQuery)
+    const studentSkillsQuerySnapshot = await getDocs(studentSkillsQuery);
     const studentSkills = studentSkillsQuerySnapshot.docs.map((doc) => {
       return { id: doc.id, ...doc.data() } as FirestoreStudentSkill;
     });
@@ -266,7 +277,7 @@ async function getAggregatedSkillsForClass(
     // Calculate averages and return the array
     return Object.values(skillMap).map((skillAggregate) => {
       const count = studentSkills.filter(
-        (ss) => ss.skill === skillAggregate.skill,
+        (ss) => ss.skill === skillAggregate.skill
       ).length;
       return {
         ...skillAggregate,
@@ -283,14 +294,14 @@ async function getAggregatedSkillsForClass(
 // Gets the aggregated skills for each student in a class
 async function getAggregatedStudentsForClass(
   schoolClassId: string,
-  firestoreDb = db,
+  firestoreDb = db
 ) {
   try {
     const studentSkillsQuery = query(
       collection(firestoreDb, "studentSkills"),
-      where("schoolClassID", "==", schoolClassId),
+      where("schoolClassID", "==", schoolClassId)
     );
-    const studentSkillsQuerySnapshot = await getDocs(studentSkillsQuery)
+    const studentSkillsQuerySnapshot = await getDocs(studentSkillsQuery);
     const studentSkills = studentSkillsQuerySnapshot.docs.map((doc) => {
       return { id: doc.id, ...doc.data() } as FirestoreStudentSkill;
     });
@@ -330,7 +341,7 @@ async function getAggregatedStudentsForClass(
     // Calculate averages and return the array
     return Object.values(studentMap).map((studentAggregate) => {
       const count = studentSkills.filter(
-        (ss) => ss.email === studentAggregate.email,
+        (ss) => ss.email === studentAggregate.email
       ).length;
       return {
         ...studentAggregate,
@@ -338,19 +349,22 @@ async function getAggregatedStudentsForClass(
         retentionScore: studentAggregate.retentionScore / count,
       };
     }) as FirestoreStudentAggregate[];
-  }  catch (error) {
+  } catch (error) {
     console.error("Error aggregating students data:", error);
     throw error; // Propagate the error
   }
 }
 
-async function getAggregatedStudentsAndSkillsForClass(schoolClassId : string, firestoreDb = db) {
+async function getAggregatedStudentsAndSkillsForClass(
+  schoolClassId: string,
+  firestoreDb = db
+) {
   const studentSkillsQuery = query(
     collection(firestoreDb, "studentSkills"),
     where("schoolClassID", "==", schoolClassId)
-  )
+  );
   try {
-    const studentSkillsQuerySnapshot = await getDocs(studentSkillsQuery)
+    const studentSkillsQuerySnapshot = await getDocs(studentSkillsQuery);
 
     const studentSkills = studentSkillsQuerySnapshot.docs.map((doc) => {
       return { id: doc.id, ...doc.data() } as FirestoreStudentSkill;
@@ -392,16 +406,18 @@ async function getAggregatedStudentsAndSkillsForClass(schoolClassId : string, fi
     });
 
     // Calculate averages and return the array
-    const aggregatedStudents = Object.values(studentMap).map((studentAggregate) => {
-      const count = studentSkills.filter(
-        (ss) => ss.email === studentAggregate.email,
-      ).length;
-      return {
-        ...studentAggregate,
-        masteryScore: studentAggregate.masteryScore / count,
-        retentionScore: studentAggregate.retentionScore / count,
-      };
-    }) as FirestoreStudentAggregate[];
+    const aggregatedStudents = Object.values(studentMap).map(
+      (studentAggregate) => {
+        const count = studentSkills.filter(
+          (ss) => ss.email === studentAggregate.email
+        ).length;
+        return {
+          ...studentAggregate,
+          masteryScore: studentAggregate.masteryScore / count,
+          retentionScore: studentAggregate.retentionScore / count,
+        };
+      }
+    ) as FirestoreStudentAggregate[];
 
     // do the skills next
     studentSkills.forEach((studentSkill) => {
@@ -442,7 +458,7 @@ async function getAggregatedStudentsAndSkillsForClass(schoolClassId : string, fi
     // Calculate averages and return the array
     const aggregatedSkills = Object.values(skillMap).map((skillAggregate) => {
       const count = studentSkills.filter(
-        (ss) => ss.skill === skillAggregate.skill,
+        (ss) => ss.skill === skillAggregate.skill
       ).length;
       return {
         ...skillAggregate,
@@ -451,7 +467,7 @@ async function getAggregatedStudentsAndSkillsForClass(schoolClassId : string, fi
       };
     }) as FirestoreSkillAggregate[];
 
-    return {aggregatedStudents, aggregatedSkills}
+    return { aggregatedStudents, aggregatedSkills };
   } catch (error) {
     console.error("Error aggregating data:", error);
     throw error; // Propagate the error
@@ -461,7 +477,7 @@ async function getAggregatedStudentsAndSkillsForClass(schoolClassId : string, fi
 async function updateStudentSkillScore(
   studentSkill: FirestoreStudentSkill,
   answerGrade: number,
-  firestoreDb = db,
+  firestoreDb = db
 ) {
   try {
     // console.log("Current mastery is: " + studentSkill.masteryScore);
@@ -471,19 +487,25 @@ async function updateStudentSkillScore(
       // updating mastery
       if (answerGrade >= 60) {
         // if the answer was correct
-        studentSkill.masteryScore +=
-          Math.ceil(((100.0 - studentSkill.masteryScore) * (answerGrade / 100.0)) / 10.0); // return the delta, rounded up
-        studentSkill.retentionScore += 
-          Math.ceil(((100.0 - studentSkill.retentionScore) * (answerGrade / 100.0)) / 10.0);
-          // check if gone above limit
-          if (studentSkill.masteryScore > 100) {
-            studentSkill.masteryScore = 100;
-            studentSkill.retentionScore = 100-0.01;
-          }
+        studentSkill.masteryScore += Math.ceil(
+          ((100.0 - studentSkill.masteryScore) * (answerGrade / 100.0)) / 10.0
+        ); // return the delta, rounded up
+        studentSkill.retentionScore += Math.ceil(
+          ((100.0 - studentSkill.retentionScore) * (answerGrade / 100.0)) / 10.0
+        );
+        // check if gone above limit
+        if (studentSkill.masteryScore > 100) {
+          studentSkill.masteryScore = 100;
+          studentSkill.retentionScore = 100 - 0.01;
+        }
       } else {
         // if the answer was incorrect
-        studentSkill.masteryScore -= Math.ceil(studentSkill.masteryScore / 10.0);
-        studentSkill.retentionScore -= Math.ceil(studentSkill.retentionScore / 10.0);
+        studentSkill.masteryScore -= Math.ceil(
+          studentSkill.masteryScore / 10.0
+        );
+        studentSkill.retentionScore -= Math.ceil(
+          studentSkill.retentionScore / 10.0
+        );
         // check if below 0
         if (studentSkill.masteryScore < 0) {
           studentSkill.masteryScore = 0.01;
@@ -494,21 +516,26 @@ async function updateStudentSkillScore(
       // updating retention
       if (answerGrade >= 60) {
         // if the answer was correct
-        studentSkill.retentionScore +=
-          Math.ceil(((100.0 - studentSkill.retentionScore) * (answerGrade / 100.0)) /
-          10.0); // return the delta, rounded up
+        studentSkill.retentionScore += Math.ceil(
+          ((100.0 - studentSkill.retentionScore) * (answerGrade / 100.0)) / 10.0
+        ); // return the delta, rounded up
         // check if above mastery score
         if (studentSkill.retentionScore > studentSkill.masteryScore) {
-          studentSkill.retentionScore = studentSkill.masteryScore - 0.01; 
+          studentSkill.retentionScore = studentSkill.masteryScore - 0.01;
           studentSkill.needToRevise = false;
         } else if (studentSkill.retentionScore > 100) {
           studentSkill.retentionScore = 100;
-        } else if (studentSkill.retentionScore > studentSkill.masteryScore * 0.75) {
+        } else if (
+          studentSkill.retentionScore >
+          studentSkill.masteryScore * 0.75
+        ) {
           studentSkill.needToRevise = false;
         }
       } else {
         // if the answer was incorrect
-        studentSkill.retentionScore -= Math.ceil(studentSkill.retentionScore / 10.0);
+        studentSkill.retentionScore -= Math.ceil(
+          studentSkill.retentionScore / 10.0
+        );
         if (studentSkill.retentionScore < 0) {
           studentSkill.retentionScore = 0;
         }
@@ -517,10 +544,24 @@ async function updateStudentSkillScore(
 
     const { id, ...studentSkillData } = studentSkill;
     await setDoc(doc(firestoreDb, "studentSkills", id), studentSkillData);
-
   } catch (error) {
     console.error("Error updating student skill:", error);
     return ""; // Return an empty string in case of an error
+  }
+}
+
+async function getUserFromDb(id: string, firestoreDb = db) {
+  try {
+    const docSnapshot = await getDoc(doc(firestoreDb, "users", id));
+
+    if (docSnapshot.exists) {
+      return docSnapshot.data() as FireStoreExtendedUser;
+    } else {
+      throw new Error("No user found");
+    }
+  } catch (error) {
+    console.error(`Error getting user document of id: ${id}`, error);
+    throw error;
   }
 }
 
@@ -535,4 +576,5 @@ export {
   getAggregatedStudentsForClass,
   updateStudentSkillScore,
   getAggregatedStudentsAndSkillsForClass,
+  getUserFromDb,
 };
