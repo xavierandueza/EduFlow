@@ -16,6 +16,9 @@ export async function createUser({
   interests,
   careerGoals,
   parentLink,
+  stripeCustomerId,
+  subscriptionActive,
+  subscriptionName,
   firestoreDb = db,
 }: {
   id: string;
@@ -26,6 +29,9 @@ export async function createUser({
   interests: string[] | string | null;
   careerGoals: string[] | string | null;
   parentLink: string | null;
+  stripeCustomerId: string; // no null because it is required.
+  subscriptionActive: boolean | null;
+  subscriptionName: string | null;
   firestoreDb?: Firestore;
 }) {
   // need to go ahead and update the user in the database
@@ -61,14 +67,6 @@ export async function createUser({
         }
       );
 
-      const newChildData = {
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        interests: interests,
-        careerGoals: careerGoals,
-      };
-
       // Now update the parent doc
       await updateDoc(doc(db, "parents", parentLink.trim()), {
         childrenShort: arrayUnion(id),
@@ -78,6 +76,9 @@ export async function createUser({
           email: email,
           interests: interests,
           careerGoals: careerGoals,
+          stripeCustomerId: stripeCustomerId,
+          subscriptionActive: subscriptionActive,
+          subscriptionName: subscriptionName ? subscriptionName : null,
         },
       });
     } catch (error) {
@@ -112,6 +113,9 @@ export async function updateUser({
   interests,
   careerGoals,
   parentLink,
+  stripeCustomerId,
+  subscriptionActive,
+  subscriptionName,
   firestoreDb = db,
 }: {
   id: string;
@@ -122,6 +126,9 @@ export async function updateUser({
   interests: string[] | string | null;
   careerGoals: string[] | string | null;
   parentLink: string | null;
+  stripeCustomerId: string; // no null because it is required.
+  subscriptionActive: boolean | null;
+  subscriptionName: string | null;
   firestoreDb?: Firestore;
 }) {
   // need to go ahead and update the user in the database
@@ -163,12 +170,15 @@ export async function updateUser({
       await updateDoc(doc(firestoreDb, "parents", parentLink), {
         childrenShort: arrayUnion(id),
         childrenLong: {
-          id: {
+          [`childrenLong.${id}`]: {
             firstName: firstName,
             lastName: lastName,
             email: email,
             interests: interests,
             careerGoals: careerGoals,
+            stripeCustomerId: stripeCustomerId,
+            subscriptionActive: subscriptionActive,
+            subscriptionName: subscriptionName ? subscriptionName : null,
           },
         },
       });
