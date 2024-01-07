@@ -62,15 +62,13 @@ const updateSubscriptionStatus = async (
       try {
         await updateDoc(parent.ref, {
           childrenShort: arrayUnion(forStudentId),
-          childrenLong: {
-            [`childrenLong.${forStudentId}`]: {
-              stripeCustomerId: stripeCustomerId,
-              subscriptionActive: subscriptionActive,
-              subscriptionName: subscriptionActive ? productName : null,
-            },
-          },
-        });
-        console.log("Updated parent: ", parent.id);
+          [`childrenLong.${forStudentId}.SubscriptionActive`]:
+            subscriptionActive,
+          [`childrenLong.${forStudentId}.SubscriptionName`]: subscriptionActive
+            ? productName
+            : null,
+        }),
+          console.log("Updated parent: ", parent.id);
       } catch (error) {
         console.error(
           "Could not update parent: ",
