@@ -27,6 +27,8 @@ export default async function handler(
       return res.status(400).json({ error: "Missing priceId in request" });
     } else if (!body.studentId) {
       return res.status(400).json({ error: "Missing studentId in request" });
+    } else if (!body.studentData) {
+      return res.status(400).json({ error: "Missing studentData in request" });
     }
 
     // Initialize Stripe
