@@ -62,13 +62,13 @@ const updateSubscriptionStatus = async (
       try {
         await updateDoc(parent.ref, {
           childrenShort: arrayUnion(forStudentId),
-          [`childrenLong.${forStudentId}.SubscriptionActive`]:
+          [`childrenLong.${forStudentId}.subscriptionActive`]:
             subscriptionActive,
-          [`childrenLong.${forStudentId}.SubscriptionName`]: subscriptionActive
+          [`childrenLong.${forStudentId}.subscriptionName`]: subscriptionActive
             ? productName
             : null,
-        }),
-          console.log("Updated parent: ", parent.id);
+        });
+        console.log("Updated parent: ", parent.id);
       } catch (error) {
         console.error(
           "Could not update parent: ",
