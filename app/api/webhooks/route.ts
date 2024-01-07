@@ -13,7 +13,6 @@ import {
   arrayUnion,
 } from "firebase/firestore";
 import { toCamelCase } from "../../utils/textManipulation";
-import { User } from "next-auth";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2023-10-16",
@@ -60,12 +59,26 @@ const updateSubscriptionStatus = async (
     // loop over the parents
     for (const parent of querySnapshot.docs) {
       // update the parent
-      await updateDoc(parent.ref, {
-        [`childrenLong.${forStudentId}.subscriptionActive`]: subscriptionActive,
-        [`childrenLong.${forStudentId}.subscriptionName`]: subscriptionActive
-          ? productName
-          : null,
-      });
+      try {
+        await updateDoc(parent.ref, {
+          childrenShort: arrayUnion(forStudentId),
+          childrenLong: {
+            [`childrenLong.${forStudentId}`]: {
+              stripeCustomerId: stripeCustomerId,
+              subscriptionActive: subscriptionActive,
+              subscriptionName: subscriptionActive ? productName : null,
+            },
+          },
+        });
+        console.log("Updated parent: ", parent.id);
+      } catch (error) {
+        console.error(
+          "Could not update parent: ",
+          parent.id,
+          " with error: ",
+          error
+        );
+      }
     }
 
     return;
@@ -183,6 +196,21 @@ const webhookHandler = async (req: NextRequest) => {
 
     // get the forStudentId from the metadata
     const forStudentId = (event.data.object as Stripe.Subscription).metadata
+      .forStudentId;
+
+    if (!forStudentId) {
+      console.error("No forStudentId found on object");
+      return NextResponse.json(
+        {
+          error: {
+            message: `Webhook Error: No forStudentId found on object`,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    const forStudentData = (event.data.object as Stripe.Subscription).metadata
       .forStudentId;
 
     if (!forStudentId) {

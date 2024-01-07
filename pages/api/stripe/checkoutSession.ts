@@ -27,8 +27,6 @@ export default async function handler(
       return res.status(400).json({ error: "Missing priceId in request" });
     } else if (!body.studentId) {
       return res.status(400).json({ error: "Missing studentId in request" });
-    } else if (!body.studentData) {
-      return res.status(400).json({ error: "Missing studentData in request" });
     }
 
     // Initialize Stripe
@@ -66,7 +64,9 @@ export default async function handler(
       cancel_url: process.env.NEXT_PUBLIC_WEBSITE_URL,
       subscription_data: {
         trial_period_days: 14,
-        metadata: { forStudentId: body.studentId },
+        metadata: {
+          forStudentId: body.studentId,
+        },
         description: `Subscription for ${body.studentData.firstName} ${
           body.studentData.lastName
         }. Currently has ${
