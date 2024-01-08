@@ -1,3 +1,5 @@
+import { Session } from "next-auth";
+
 export interface Skill {
   subject: string;
   curriculum_point: string;
@@ -35,6 +37,7 @@ interface FirestoreStandardUser {
   firstName?: string;
   lastName?: string;
   email?: string;
+  image?: string | null;
 }
 
 export interface FireStoreExtendedUser extends FirestoreStandardUser {
@@ -44,7 +47,6 @@ export interface FireStoreExtendedUser extends FirestoreStandardUser {
   subscriptionActive: boolean | null;
   subscriptionName: string | null;
   emailVerified?: boolean | null;
-  image?: string | null;
 }
 
 export interface FirestoreStudent extends FirestoreStandardUser {
@@ -168,7 +170,7 @@ export type ChatAction =
   | "unknownResponse"
   | "creatingLessonPlan";
 
-export type Role = "student" | "teacher" | "parent";
+export type Role = "student" | "teacher" | "parent" | "unknown";
 
 //For testing purposes
 export interface StudentResponseRequestBody {
@@ -202,3 +204,13 @@ export const questionTypes: QuestionType[] = [
   "shortAnswer", // 50-100
   "longAnswer",
 ]; // 75-100
+
+export interface SubscriptionPlan {
+  planName: string;
+  planPrice: number;
+  planDescription: string;
+  majorPoints: { [key: string]: boolean };
+  priceId: string;
+  studentId: string | null;
+  session: Session;
+}

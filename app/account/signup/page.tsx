@@ -13,7 +13,7 @@ const Page = () => {
     if (status === "loading") {
       return; // Do nothing while loading
     } else if (status === "unauthenticated") {
-      router.push("/auth/signin"); // Need to log in before accessing this page
+      router.push("/api/auth/signin"); // Need to log in before accessing this page
     } else if (session?.user?.role) {
       router.push("/account/profile");
     } // else actually load the page
