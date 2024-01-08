@@ -57,6 +57,8 @@ export default async function handler(
       }`
     );
 
+    console.log("For student Id" + body.studentId);
+
     // Create a checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
