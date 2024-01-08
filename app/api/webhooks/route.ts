@@ -51,7 +51,8 @@ const updateSubscriptionStatus = async (
 
     if (querySnapshot.empty) {
       console.warn(
-        "No children found with stripeCustomerId: " + stripeCustomerId
+        "No parent found with childrenShort containing studentId: " +
+          forStudentId
       );
       return;
     }
