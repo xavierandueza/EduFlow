@@ -24,6 +24,7 @@ export async function createUser({
   parentLink,
   subscriptionActive,
   subscriptionName,
+  image,
   firestoreDb = db,
 }: {
   id: string;
@@ -36,6 +37,7 @@ export async function createUser({
   parentLink: string | null;
   subscriptionActive: boolean | null;
   subscriptionName: string | null;
+  image: string | null;
   firestoreDb?: Firestore;
 }) {
   // need to go ahead and update the user in the database
@@ -61,6 +63,7 @@ export async function createUser({
         {
           firstName: firstName,
           lastName: lastName,
+          image: image,
           email: email,
           interests: interests,
           careerGoals: careerGoals,
@@ -78,6 +81,7 @@ export async function createUser({
           firstName: firstName,
           lastName: lastName,
           email: email,
+          image: image,
           interests: interests,
           careerGoals: careerGoals,
           subscriptionActive: subscriptionActive,
@@ -94,6 +98,7 @@ export async function createUser({
       {
         firstName: firstName,
         lastName: lastName,
+        image: image,
         email: email,
         childrenShort: [],
         childrenLong: {},
@@ -226,11 +231,11 @@ export async function getRoleExtraData({
 }
 
 export async function getStudentDataFromParents({
-  parentLink,
+  parentId,
 }: {
-  parentLink: string;
+  parentId: string;
 }) {
-  const parentDoc = await getDoc(doc(db, "parents", parentLink));
+  const parentDoc = await getDoc(doc(db, "parents", parentId));
   return parentDoc.data().childrenLong as {
     [id: string]: FirestoreParentChildLong;
   };

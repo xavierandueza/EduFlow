@@ -4,9 +4,9 @@ import UserProfileForm from "../../ui/account/UserProfileForm";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import getStripe from "../../utils/getStripe";
 import { getStudentDataFromParents } from "../../_actions";
 import { FirestoreParentChildLong } from "../../utils/interfaces";
+import handleCreateCheckoutSession from "../../utils/handleCreateCheckoutSession";
 
 const Page = () => {
   const { data: session, status } = useSession();
@@ -16,51 +16,17 @@ const Page = () => {
     [id: string]: FirestoreParentChildLong;
   }>(null);
 
-  const handleCreateCheckoutSession = async (
-    priceId: string,
-    studentId: string,
-    studentData: FirestoreParentChildLong
-  ) => {
-    try {
-      const res = await fetch(`/api/stripe/checkoutSession`, {
-        method: "POST",
-        body: JSON.stringify({ priceId, studentId, studentData }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const checkoutSession = await res.json();
-
-      if (res.ok) {
-        const stripe = await getStripe();
-        await stripe.redirectToCheckout({
-          sessionId: checkoutSession.session.id,
-        });
-      } else {
-        // Handle errors here
-        console.warn(
-          checkoutSession.error
-            ? checkoutSession.error.message
-            : "Error creating checkout session"
-        );
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   useEffect(() => {
     if (status === "loading") {
       return; // Do nothing while loading
     } else if (status === "unauthenticated") {
-      router.push("/auth/signin"); // Need to log in before accessing this page
+      router.push("/api/auth/signin"); // Need to log in before accessing this page
     } else if (status === "authenticated" && !session?.user?.role) {
       router.push("/account/signup");
     } else if (session?.user?.role === "parent") {
       const fetchData = async () => {
         const data = await getStudentDataFromParents({
-          parentLink: session?.user?.id,
+          parentId: session?.user?.id,
         });
         setParentStudentData(data);
       };

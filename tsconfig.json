@@ -17,7 +17,13 @@
         "name": "next"
       }
     ],
-    "strictNullChecks": false
+    "strictNullChecks": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/app/*": ["app/*"],
+      "@/pages/*": ["pages/*"],
+      "@/components/*": ["components/*"]
+    }
   },
   "include": ["next-env.d.ts", ".next/types/**/*.ts", "**/*.ts", "**/*.tsx"],
   "ts-node": {

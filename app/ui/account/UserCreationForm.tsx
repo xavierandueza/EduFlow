@@ -45,6 +45,7 @@ const UserCreationForm = () => {
       parentLink: parentLink,
       subscriptionActive: session?.user?.subscriptionActive,
       subscriptionName: session?.user?.subscriptionName,
+      image: session?.user?.image,
     });
 
     // Update next-auth session
