@@ -40,13 +40,29 @@ interface FirestoreStandardUser {
   image?: string | null;
 }
 
-export interface FireStoreExtendedUser extends FirestoreStandardUser {
+export interface FirestoreExtendedUser extends FirestoreStandardUser {
   name: string;
   role: Role;
   stripeCustomerId: string;
   subscriptionActive: boolean | null;
   subscriptionName: string | null;
   emailVerified?: boolean | null;
+}
+
+export type Weekday =
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday"
+  | "Sunday";
+
+export interface TutoringSession {
+  subject: string;
+  weekday: Weekday;
+  startTime: number; // 24 hour time, eg 6PM = 1800
+  duration: number; // in hours
 }
 
 export interface FirestoreStudent extends FirestoreStandardUser {

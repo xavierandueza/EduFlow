@@ -66,13 +66,17 @@ const UserProfileForm = () => {
     const email = formData.get("email") as string;
     let interests: string;
     let careerGoals: string;
-    let parentLink: string;
+    let parentLink;
     console.log(firstName);
 
-    if (session?.user?.role === "student") {
+    if (session.user.role === "student") {
       interests = formData.get("interests") as string;
       careerGoals = formData.get("careerGoals") as string;
-      parentLink = formData.get("parentLink") as string;
+      // get parentLink but remove whiteSpace
+      parentLink = formData.get("parentLink");
+      parentLink = parentLink
+        ? (parentLink as string).replace(/\s/g, "")
+        : null;
     } else {
       interests = null;
       careerGoals = null;

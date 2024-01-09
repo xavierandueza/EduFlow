@@ -9,7 +9,9 @@ import {
   FirestoreSchoolClass,
   FirestoreSkillAggregate,
   FirestoreStudentAggregate,
-  FireStoreExtendedUser,
+  FirestoreExtendedUser,
+  TutoringSession,
+  Weekday,
 } from "./interfaces";
 
 import { db } from "../firebase";
@@ -557,12 +559,65 @@ async function getUserFromDb(id: string, firestoreDb = db) {
     const docSnapshot = await getDoc(doc(firestoreDb, "users", id));
 
     if (docSnapshot.exists) {
-      return docSnapshot.data() as FireStoreExtendedUser;
+      return docSnapshot.data() as FirestoreExtendedUser;
     } else {
       throw new Error("No user found");
     }
   } catch (error) {
     console.error(`Error getting user document of id: ${id}`, error);
+    throw error;
+  }
+}
+
+async function getTutoringSessionFromDb(id: string, firestoreDb = db) {
+  try {
+    const docSnapshot = await getDocs(
+      collection(firestoreDb, "students", id, "tutoringSessions")
+    );
+
+    if (docSnapshot.empty) {
+      return null;
+    } else {
+      return docSnapshot.docs.map((doc) => {
+        return { [doc.id]: doc.data() } as { [id: string]: TutoringSession };
+      });
+    }
+  } catch (error) {
+    console.error(
+      `Error getting tutoring session document of id: ${id}`,
+      error
+    );
+    throw error;
+  }
+}
+
+async function updateTutoringSession(
+  studentId: string,
+  tutoringSessionId: string,
+  subject: string,
+  weekday: Weekday,
+  startTime: number,
+  duration: number,
+  firestoreDb = db
+) {
+  try {
+    const tutoringSessionRef = doc(
+      firestoreDb,
+      "students",
+      studentId,
+      "tutoringSessions",
+      tutoringSessionId
+    );
+    await setDoc(tutoringSessionRef, {
+      weekday,
+      startTime,
+      duration,
+    });
+  } catch (error) {
+    console.error(
+      `Error updating tutoring session document of id: ${tutoringSessionId}`,
+      error
+    );
     throw error;
   }
 }
@@ -579,4 +634,5 @@ export {
   updateStudentSkillScore,
   getAggregatedStudentsAndSkillsForClass,
   getUserFromDb,
+  getTutoringSessionFromDb,
 };

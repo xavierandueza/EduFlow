@@ -2,9 +2,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { getStudentDataFromParents } from "../_actions";
-import { FirestoreParentChildLong } from "../utils/interfaces";
-import ChildSummaryCard from "../ui/parent/ChildSummaryCard";
+import { getStudentDataFromParents } from "@/app/_actions";
+import { FirestoreParentChildLong } from "@/app/utils/interfaces";
+import ChildSummaryCard from "@/app/ui/parent/ChildSummaryCard";
 
 export default function Page() {
   const { data: session, status } = useSession();
