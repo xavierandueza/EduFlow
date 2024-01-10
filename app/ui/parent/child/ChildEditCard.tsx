@@ -8,8 +8,6 @@ import {
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import ChildTutoringTime from "@/app/ui/parent/child/ChildTutoringTime";
 import Link from "next/link";
-import { DialogDemo } from "@/app/ui/parent/child/TutoringSessionDialog";
-import { SheetDemo } from "@/app/ui/parent/child/SheetDemo";
 // import SummarySkillTable from './SummarySkillTable'; // Import your SummarySkillTable component
 
 const ChildEditCard = ({
