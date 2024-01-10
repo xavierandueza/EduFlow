@@ -1,26 +1,35 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FirestoreParentChildLong } from "@/app/utils/interfaces";
+import {
+  FirestoreExtendedUser,
+  FirestoreStudent,
+  TutoringSession,
+} from "@/app/utils/interfaces";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import ChildTutoringTime from "@/app/ui/parent/child/ChildTutoringTime";
 import Link from "next/link";
 // import SummarySkillTable from './SummarySkillTable'; // Import your SummarySkillTable component
 
-const ChildSummaryCard = ({
+const ChildEditCard = ({
   studentId,
-  studentData,
+  childUserData,
+  childStudentData,
+  childTutoringSession,
   router,
 }: {
   studentId: string;
-  studentData: FirestoreParentChildLong;
+  childUserData: FirestoreExtendedUser;
+  childStudentData: FirestoreStudent;
+  childTutoringSession: { [id: string]: TutoringSession }[];
   router: AppRouterInstance;
 }) => {
   // Get a variable for student full name
   const [studentName, setStudentName] = useState<string>(
-    `${studentData.firstName} ${studentData.lastName}`
+    `${childUserData.firstName} ${childUserData.lastName}`
   );
 
   const renderSubscribeButton = () => {
-    if (studentData.subscriptionActive) {
+    if (childUserData.subscriptionActive) {
       return (
         <button
           className="bg-slate-100 hover:bg-slate-200 text-black no-flex px-2 py-2 rounded-md capitalize font-bold mt-1"
@@ -42,31 +51,31 @@ const ChildSummaryCard = ({
   };
 
   useEffect(() => {
-    setStudentName(`${studentData.firstName} ${studentData.lastName}`);
-  }, [studentData]);
+    setStudentName(`${childUserData.firstName} ${childUserData.lastName}`);
+    console.log("childUserData");
+    console.log(childUserData);
+  }, [childUserData]);
 
   return (
     <div className="bg-white shadow-lg rounded-lg p-6 m-6 w-full md:w-144 xl:w-192">
       <div className="flex items-start justify-between">
-        <Link href={`/parent/child/${studentId}`}>
-          <div className="flex items-center">
-            <img
-              src={studentData?.image}
-              alt={`${studentName}'s profile`}
-              className="w-16 h-16 rounded-full mr-4"
-            />
-            <div>
-              <h2 className="text-xl font-semibold line-clamp-2">
-                {studentName}
-              </h2>
-              <p className="text-gray-600 line-clamp-1">
-                {studentData.subscriptionActive
-                  ? studentData.subscriptionName
-                  : "No active subscription"}
-              </p>
-            </div>
+        <div className="flex items-center">
+          <img
+            src={childUserData?.image}
+            alt={`${studentName}'s profile`}
+            className="w-16 h-16 rounded-full mr-4"
+          />
+          <div>
+            <h2 className="text-xl font-semibold line-clamp-2">
+              {studentName}
+            </h2>
+            <p className="text-gray-600 line-clamp-1">
+              {childUserData.subscriptionActive
+                ? childUserData.subscriptionName
+                : "No active subscription"}
+            </p>
           </div>
-        </Link>
+        </div>
         {renderSubscribeButton()}
       </div>
       <div className="grid grid-cols-2 gap-4 mt-4">
@@ -75,8 +84,7 @@ const ChildSummaryCard = ({
             Tutoring Timeslot:
           </label>
           <div className="mt-1 bg-gray-200 p-2 rounded">
-            {/* Placeholder for timeslot */}
-            []
+            <ChildTutoringTime childTutoringSession={childTutoringSession} />
           </div>
         </div>
         <div>
@@ -106,4 +114,4 @@ const ChildSummaryCard = ({
   );
 };
 
-export default ChildSummaryCard;
+export default ChildEditCard;

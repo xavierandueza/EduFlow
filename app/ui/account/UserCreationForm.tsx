@@ -21,13 +21,17 @@ const UserCreationForm = () => {
     const email = formData.get("email") as string;
     let interests: string;
     let careerGoals: string;
-    let parentLink: string;
+    let parentLink;
     console.log(firstName);
 
     if (role === "student") {
       interests = formData.get("interests") as string;
       careerGoals = formData.get("careerGoals") as string;
-      parentLink = formData.get("parentLink") as string;
+      // get parentLink but remove whiteSpace
+      parentLink = formData.get("parentLink");
+      parentLink = parentLink
+        ? (parentLink as string).replace(/\s/g, "")
+        : null;
     } else {
       interests = null;
       careerGoals = null;
@@ -99,7 +103,6 @@ const UserCreationForm = () => {
                 type="text"
                 name="parentLink"
                 className="border px-2 py-1"
-                required
                 minLength={2}
               />
             </div>

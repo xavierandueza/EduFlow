@@ -9,7 +9,9 @@ import {
   FirestoreSchoolClass,
   FirestoreSkillAggregate,
   FirestoreStudentAggregate,
-  FireStoreExtendedUser,
+  FirestoreExtendedUser,
+  TutoringSession,
+  Weekday,
 } from "./interfaces";
 
 import { db } from "../firebase";
@@ -557,7 +559,7 @@ async function getUserFromDb(id: string, firestoreDb = db) {
     const docSnapshot = await getDoc(doc(firestoreDb, "users", id));
 
     if (docSnapshot.exists) {
-      return docSnapshot.data() as FireStoreExtendedUser;
+      return docSnapshot.data() as FirestoreExtendedUser;
     } else {
       throw new Error("No user found");
     }
@@ -566,6 +568,72 @@ async function getUserFromDb(id: string, firestoreDb = db) {
     throw error;
   }
 }
+
+async function getTutoringSessionFromDb(id: string, firestoreDb = db) {
+  try {
+    const docSnapshot = await getDocs(
+      collection(firestoreDb, "students", id, "tutoringSessions")
+    );
+
+    if (docSnapshot.empty) {
+      return null;
+    } else {
+      return docSnapshot.docs.map((doc) => {
+        return { [doc.id]: doc.data() } as { [id: string]: TutoringSession };
+      });
+    }
+  } catch (error) {
+    console.error(
+      `Error getting tutoring session document of id: ${id}`,
+      error
+    );
+    throw error;
+  }
+}
+
+const insertTutoringSession = async ({
+  studentId,
+  tutoringSession,
+  tutoringSessionId,
+}: {
+  studentId: string;
+  tutoringSession: TutoringSession;
+  tutoringSessionId?: string | null;
+}) => {
+  const firestoreDb = db;
+
+  try {
+    if (tutoringSessionId) {
+      await setDoc(
+        // updating an existing document
+        doc(
+          firestoreDb,
+          "students",
+          studentId,
+          "tutoringSessions",
+          tutoringSessionId
+        ),
+        tutoringSession,
+        { merge: true }
+      );
+    } else {
+      await setDoc(
+        // creating a new document
+        doc(firestoreDb, "students", studentId, "tutoringSessions"),
+        tutoringSession
+      );
+    }
+  } catch (error) {
+    console.error(
+      `Error ${
+        tutoringSessionId
+          ? "replacing existing tutoring session with tutoringSessionId " +
+            tutoringSessionId
+          : "creating new tutoring session"
+      } for student ${studentId} with tutoring session ${tutoringSession}`
+    );
+  }
+};
 
 export {
   getSchoolClassSkillFromDB,
@@ -579,4 +647,6 @@ export {
   updateStudentSkillScore,
   getAggregatedStudentsAndSkillsForClass,
   getUserFromDb,
+  getTutoringSessionFromDb,
+  insertTutoringSession,
 };
