@@ -13,6 +13,7 @@ import {
   getStudentFromDB,
   getTutoringSessionFromDb,
 } from "@/app/utils/databaseFunctionsFirestore";
+import { CodeViewer } from "@/app/ui/parent/child/TutoringSessionDialog";
 
 export default function Page({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -76,6 +77,7 @@ export default function Page({ params }: { params: { id: string } }) {
         ) : null}
       </div>
       <p className="mt-4 flex items-center justify-between md:mt-8"></p>
+      <CodeViewer />
     </div>
   );
 }

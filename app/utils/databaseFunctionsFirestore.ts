@@ -591,36 +591,49 @@ async function getTutoringSessionFromDb(id: string, firestoreDb = db) {
   }
 }
 
-async function updateTutoringSession(
-  studentId: string,
-  tutoringSessionId: string,
-  subject: string,
-  weekday: Weekday,
-  startTime: number,
-  duration: number,
-  firestoreDb = db
-) {
+const insertTutoringSession = async ({
+  studentId,
+  tutoringSession,
+  tutoringSessionId,
+}: {
+  studentId: string;
+  tutoringSession: TutoringSession;
+  tutoringSessionId?: string | null;
+}) => {
+  const firestoreDb = db;
+
   try {
-    const tutoringSessionRef = doc(
-      firestoreDb,
-      "students",
-      studentId,
-      "tutoringSessions",
-      tutoringSessionId
-    );
-    await setDoc(tutoringSessionRef, {
-      weekday,
-      startTime,
-      duration,
-    });
+    if (tutoringSessionId) {
+      await setDoc(
+        // updating an existing document
+        doc(
+          firestoreDb,
+          "students",
+          studentId,
+          "tutoringSessions",
+          tutoringSessionId
+        ),
+        tutoringSession,
+        { merge: true }
+      );
+    } else {
+      await setDoc(
+        // creating a new document
+        doc(firestoreDb, "students", studentId, "tutoringSessions"),
+        tutoringSession
+      );
+    }
   } catch (error) {
     console.error(
-      `Error updating tutoring session document of id: ${tutoringSessionId}`,
-      error
+      `Error ${
+        tutoringSessionId
+          ? "replacing existing tutoring session with tutoringSessionId " +
+            tutoringSessionId
+          : "creating new tutoring session"
+      } for student ${studentId} with tutoring session ${tutoringSession}`
     );
-    throw error;
   }
-}
+};
 
 export {
   getSchoolClassSkillFromDB,
@@ -635,4 +648,5 @@ export {
   getAggregatedStudentsAndSkillsForClass,
   getUserFromDb,
   getTutoringSessionFromDb,
+  insertTutoringSession,
 };
