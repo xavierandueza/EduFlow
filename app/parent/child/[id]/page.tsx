@@ -13,6 +13,7 @@ import {
   getStudentFromDB,
   getTutoringSessionFromDb,
 } from "@/app/utils/databaseFunctionsFirestore";
+import { listenToTutoringSessions } from "@/app/utils/dbListeners";
 
 export default function Page({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -26,6 +27,8 @@ export default function Page({ params }: { params: { id: string } }) {
     useState<{ [id: string]: TutoringSession }[]>(null);
 
   useEffect(() => {
+    let unsubscribeFromSessions = null;
+
     if (status === "loading") {
       return; // Do nothing while loading
     } else if (status === "unauthenticated") {
@@ -40,13 +43,10 @@ export default function Page({ params }: { params: { id: string } }) {
           const childTutoringSession = await getTutoringSessionFromDb(id);
           setChildUserData(userData);
           setChildStudentData(studentData);
-          setChildTutoringSession(childTutoringSession);
-          /*
-          console.log("userData");
-          console.log(userData);
-          console.log("studentData");
-          console.log(studentData);
-          */
+          // setChildTutoringSession(childTutoringSession);
+          unsubscribeFromSessions = listenToTutoringSessions(id, (sessions) => {
+            setChildTutoringSession(sessions);
+          });
         };
         if (!childUserData) {
           // only fetch if we don't have the data

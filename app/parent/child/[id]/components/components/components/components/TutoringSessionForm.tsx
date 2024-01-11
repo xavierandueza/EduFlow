@@ -70,13 +70,13 @@ const TutoringSessionForm = ({
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (existingTutoringSession) {
-      await insertTutoringSession({
+      insertTutoringSession({
         studentId: studentId,
         tutoringSession: values as TutoringSession,
         tutoringSessionId: existingTutoringSessionId,
       });
     } else {
-      await insertTutoringSession({
+      insertTutoringSession({
         studentId: studentId,
         tutoringSession: values as TutoringSession,
       });
