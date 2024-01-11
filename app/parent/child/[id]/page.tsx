@@ -7,13 +7,12 @@ import {
   FirestoreStudent,
   TutoringSession,
 } from "@/app/utils/interfaces";
-import ChildEditCard from "@/app/ui/parent/child/ChildEditCard";
+import ChildEditCard from "./components/ChildEditCard";
 import {
   getUserFromDb,
   getStudentFromDB,
   getTutoringSessionFromDb,
 } from "@/app/utils/databaseFunctionsFirestore";
-import { CodeViewer } from "@/app/ui/parent/child/TutoringSessionDialog";
 
 export default function Page({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -48,8 +47,6 @@ export default function Page({ params }: { params: { id: string } }) {
           console.log("studentData");
           console.log(studentData);
           */
-          console.log("Tutoring session");
-          console.log(childTutoringSession);
         };
         if (!childUserData) {
           // only fetch if we don't have the data
@@ -64,20 +61,21 @@ export default function Page({ params }: { params: { id: string } }) {
   }, [status, session, router]);
 
   return (
-    <div className="w-full">
-      <div className="flex flex-col w-full items-center justify-start">
-        {childUserData ? (
-          <ChildEditCard
-            studentId={id}
-            childUserData={childUserData}
-            childStudentData={childStudentData}
-            childTutoringSession={childTutoringSession}
-            router={router}
-          />
-        ) : null}
+    <main>
+      <div className="w-full">
+        <div className="flex flex-col w-full items-center justify-start">
+          {childUserData ? (
+            <ChildEditCard
+              studentId={id}
+              childUserData={childUserData}
+              childStudentData={childStudentData}
+              childTutoringSession={childTutoringSession}
+              router={router}
+            />
+          ) : null}
+        </div>
+        <p className="mt-4 flex items-center justify-between md:mt-8"></p>
       </div>
-      <p className="mt-4 flex items-center justify-between md:mt-8"></p>
-      <CodeViewer />
-    </div>
+    </main>
   );
 }

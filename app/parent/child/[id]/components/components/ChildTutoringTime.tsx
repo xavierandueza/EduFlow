@@ -1,9 +1,15 @@
 "use client";
 import React, { useState, useRef } from "react";
 import { TutoringSession, Weekday } from "@/app/utils/interfaces";
-import { insertTutoringSession } from "@/app/utils/databaseFunctionsFirestore";
+import EditTutoringSession from "./components/EditTutoringSession";
 
-const ChildTutoringTime = ({ childTutoringSession }) => {
+const ChildTutoringTime = ({
+  studentId,
+  childTutoringSession,
+}: {
+  studentId: string;
+  childTutoringSession: { [id: string]: TutoringSession }[];
+}) => {
   const elementRef = useRef;
   const [editingTutoringSession, setEditingTutoringSession] =
     useState<TutoringSession>(null);
@@ -20,6 +26,8 @@ const ChildTutoringTime = ({ childTutoringSession }) => {
     tutoringSessionId ? setEditingTutoringSessionId(tutoringSessionId) : null;
   };
 
+  console.log("studentId on ChildTutoringTime.tsx file is: " + studentId);
+
   return (
     <div>
       {childTutoringSession && childTutoringSession.length > 0
@@ -33,18 +41,24 @@ const ChildTutoringTime = ({ childTutoringSession }) => {
             return (
               <>
                 <div
-                  className="flex flex-row justify-between"
+                  className="flex flex-row justify-between items-center my-1 bg-gray-200 p-1.5 rounded"
                   key={tutoringSessionId}
                 >
-                  {tutoringSessionData.weekday}: {tutoringSessionData.startTime}{" "}
-                  -{" "}
+                  {tutoringSessionData.weekday} {tutoringSessionData.startTime}-{" "}
                   {tutoringSessionData.startTime +
-                    tutoringSessionData.duration * 100}
+                    tutoringSessionData.duration * (10 / 6)}
+                  : {tutoringSessionData.subject}
+                  <EditTutoringSession
+                    studentId={studentId}
+                    existingTutoringSessionId={tutoringSessionId}
+                    existingTutoringSession={tutoringSessionData}
+                  />
                 </div>
               </>
             );
           })
         : null}
+      <EditTutoringSession studentId={studentId} />
     </div>
   );
 };

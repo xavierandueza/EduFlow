@@ -25,6 +25,7 @@ import {
   where,
   doc,
   setDoc,
+  addDoc,
 } from "firebase/firestore";
 
 async function getSchoolClassSkillFromDB(
@@ -617,9 +618,9 @@ const insertTutoringSession = async ({
         { merge: true }
       );
     } else {
-      await setDoc(
+      await addDoc(
         // creating a new document
-        doc(firestoreDb, "students", studentId, "tutoringSessions"),
+        collection(firestoreDb, "students", studentId, "tutoringSessions"),
         tutoringSession
       );
     }

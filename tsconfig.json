@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -20,9 +21,7 @@
     "strictNullChecks": false,
     "baseUrl": ".",
     "paths": {
-      "@/app/*": ["app/*"],
-      "@/pages/*": ["pages/*"],
-      "@/components/*": ["@/components/*"]
+      "@/*": ["./*"]
     }
   },
   "include": ["next-env.d.ts", ".next/types/**/*.ts", "**/*.ts", "**/*.tsx"],

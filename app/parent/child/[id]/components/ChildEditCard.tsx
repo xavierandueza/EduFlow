@@ -6,8 +6,8 @@ import {
   TutoringSession,
 } from "@/app/utils/interfaces";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import ChildTutoringTime from "@/app/ui/parent/child/ChildTutoringTime";
-import Link from "next/link";
+import ChildTutoringTime from "./components/ChildTutoringTime";
+import { Button } from "@/components/ui/button";
 // import SummarySkillTable from './SummarySkillTable'; // Import your SummarySkillTable component
 
 const ChildEditCard = ({
@@ -31,21 +31,23 @@ const ChildEditCard = ({
   const renderSubscribeButton = () => {
     if (childUserData.subscriptionActive) {
       return (
-        <button
-          className="bg-slate-100 hover:bg-slate-200 text-black no-flex px-2 py-2 rounded-md capitalize font-bold mt-1"
+        <Button
+          variant="default"
+          className="hover:bg-light-teal"
           onClick={() => router.push(`/subscription/${studentId}`)}
         >
           Manage Subscription
-        </button>
+        </Button>
       );
     } else {
       return (
-        <button
-          className="bg-slate-100 hover:bg-slate-200 text-black no-flex px-2 py-2 rounded-md capitalize font-bold mt-1"
-          onClick={() => router.push(`/subscription?studentId=${studentId}`)}
+        <Button
+          variant="default"
+          className="hover:bg-light-teal"
+          onClick={() => router.push(`/subscription/${studentId}`)}
         >
           Subscribe
-        </button>
+        </Button>
       );
     }
   };
@@ -83,9 +85,10 @@ const ChildEditCard = ({
           <label className="block text-sm font-medium text-gray-700">
             Tutoring Timeslot:
           </label>
-          <div className="mt-1 bg-gray-200 p-2 rounded">
-            <ChildTutoringTime childTutoringSession={childTutoringSession} />
-          </div>
+          <ChildTutoringTime
+            studentId={studentId}
+            childTutoringSession={childTutoringSession}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">
