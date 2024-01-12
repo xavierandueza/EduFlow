@@ -4,26 +4,22 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { getStudentDataFromParents } from "@/app/_actions";
 import { FirestoreParentChildLong } from "@/app/utils/interfaces";
-import ChildSummaryCard from "./components/ChildSummaryCard";
+import ChildEditCard from "./components/ChildEditCard";
+import { TutoringSessionsProvider } from "./contexts/TutoringSessionContext";
+import { useTutoringSessions } from "./contexts/TutoringSessionContext";
 
 export default function Page() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [parentStudentData, setParentStudentData] = useState<{
-    [id: string]: FirestoreParentChildLong;
-  }>(null);
+  const [parentStudentData, setParentStudentData] = useState<
+    {
+      [id: string]: FirestoreParentChildLong;
+    }[]
+  >(null);
+  const { setChildTutoringSession } = useTutoringSessions();
 
   const renderChildSummaryCards = () => {
-    return parentStudentData
-      ? Object.entries(parentStudentData).map(([key, student]) => (
-          <ChildSummaryCard
-            key={key}
-            studentId={key}
-            studentData={student}
-            router={router}
-          />
-        ))
-      : null;
+    return;
   };
 
   useEffect(() => {
@@ -54,13 +50,22 @@ export default function Page() {
   }, [status, session, router]);
 
   return (
-    <div className="w-full">
-      <div className="flex flex-col w-full items-center justify-start">
-        {parentStudentData
-          ? renderChildSummaryCards()
-          : "No students to render"}
+    <TutoringSessionsProvider>
+      <div className="w-full">
+        <div className="flex flex-col w-full items-center justify-start">
+          {parentStudentData && parentStudentData.length > 0
+            ? Object.entries(parentStudentData).map(([key, student]) => (
+                <ChildEditCard
+                  key={key}
+                  studentId={key}
+                  childStudentData={student}
+                  router={router}
+                />
+              ))
+            : null}
+        </div>
+        <p className="mt-4 flex items-center justify-between md:mt-8"></p>
       </div>
-      <p className="mt-4 flex items-center justify-between md:mt-8"></p>
-    </div>
+    </TutoringSessionsProvider>
   );
 }

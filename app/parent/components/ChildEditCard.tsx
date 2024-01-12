@@ -1,47 +1,34 @@
 "use client";
 import { useState, useEffect } from "react";
-import {
-  FirestoreExtendedUser,
-  FirestoreStudent,
-  TutoringSession,
-} from "@/app/utils/interfaces";
+import { FirestoreParentChildLong } from "@/app/utils/interfaces";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import ChildTutoringTime from "./components/ChildTutoringTime";
 import { Button } from "@/components/ui/button";
 import { useTutoringSessions } from "../contexts/TutoringSessionContext";
 import { getTutoringSessionFromDb } from "@/app/utils/databaseFunctionsFirestore";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { camelCaseToNormalTextCapitalized } from "@/app/utils/textManipulation";
 // import SummarySkillTable from './SummarySkillTable'; // Import your SummarySkillTable component
 
-const ChildEditCardShadcn = ({
+const ChildEditCard = ({
   studentId,
-  childUserData,
   childStudentData,
   router,
 }: {
   studentId: string;
-  childUserData: FirestoreExtendedUser;
-  childStudentData: FirestoreStudent;
+  childStudentData: FirestoreParentChildLong;
   router: AppRouterInstance;
 }) => {
   const { childTutoringSession, setChildTutoringSession } =
     useTutoringSessions();
   // Get a variable for student full name
   const [studentName, setStudentName] = useState<string>(
-    `${childUserData.firstName} ${childUserData.lastName}`
+    `${childStudentData.firstName} ${childStudentData.lastName}`
   );
 
   const renderSubscribeButton = () => {
-    if (childUserData.subscriptionActive) {
+    if (childStudentData.subscriptionActive) {
       return (
         <Button
           variant="default"
@@ -70,14 +57,16 @@ const ChildEditCardShadcn = ({
       setChildTutoringSession(myChildTutoringSession);
     };
 
-    if (childUserData && !childTutoringSession.length) {
+    if (childStudentData && !childTutoringSession.length) {
       fetchData();
     }
   }, [studentId]);
 
   useEffect(() => {
-    setStudentName(`${childUserData.firstName} ${childUserData.lastName}`);
-  }, [childUserData]);
+    setStudentName(
+      `${childStudentData.firstName} ${childStudentData.lastName}`
+    );
+  }, [childStudentData]);
 
   return (
     <Card className="w-[600px] m-6 shadow-lg">
@@ -87,12 +76,12 @@ const ChildEditCardShadcn = ({
             <div className="flex flex-row justify-start items-center">
               <Avatar className="h-16 w-16">
                 <AvatarImage
-                  src={childUserData?.image}
+                  src={childStudentData?.image}
                   alt={`${studentName}'s profile`}
                 />
                 <AvatarFallback className="h-16 w-16">
-                  {childUserData.firstName[0].toUpperCase()}{" "}
-                  {childUserData.lastName[0].toUpperCase()}
+                  {childStudentData.firstName[0].toUpperCase()}{" "}
+                  {childStudentData.lastName[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col justify-start items-start ml-4">
@@ -100,9 +89,9 @@ const ChildEditCardShadcn = ({
                   {studentName}
                 </h1>
                 <p className="text-gray-600 line-clamp-1 text-xl">
-                  {childUserData.subscriptionActive
+                  {childStudentData.subscriptionActive
                     ? camelCaseToNormalTextCapitalized(
-                        childUserData.subscriptionName
+                        childStudentData.subscriptionName
                       )
                     : "No active subscription"}
                 </p>
@@ -151,4 +140,4 @@ const ChildEditCardShadcn = ({
   );
 };
 
-export default ChildEditCardShadcn;
+export default ChildEditCard;

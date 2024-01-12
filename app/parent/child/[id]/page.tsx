@@ -5,18 +5,14 @@ import { useSession } from "next-auth/react";
 import {
   FirestoreExtendedUser,
   FirestoreStudent,
-  TutoringSession,
 } from "@/app/utils/interfaces";
 import ChildEditCard from "./components/ChildEditCard";
-import ChildEditCardShadcn from "./components/ChildEditCardShadcn";
 import {
   getUserFromDb,
   getStudentFromDB,
 } from "@/app/utils/databaseFunctionsFirestore";
 import { TutoringSessionsProvider } from "./contexts/TutoringSessionContext";
 import { useTutoringSessions } from "./contexts/TutoringSessionContext";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function Page({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -62,9 +58,8 @@ export default function Page({ params }: { params: { id: string } }) {
         <div className="w-full">
           <div className="flex flex-col w-full items-center justify-start">
             {childUserData ? (
-              <ChildEditCardShadcn
+              <ChildEditCard
                 studentId={id}
-                childUserData={childUserData}
                 childStudentData={childStudentData}
                 router={router}
               />
