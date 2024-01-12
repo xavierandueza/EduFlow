@@ -20,6 +20,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { TutoringSession } from "@/app/utils/interfaces";
 import { insertTutoringSession } from "@/app/utils/databaseFunctionsFirestore";
+import { useTutoringSessions } from "../../../../contexts/TutoringSessionContext";
+import { db } from "@/app/firebase";
+import { doc, collection } from "firebase/firestore";
+import { useToast } from "@/components/ui/use-toast";
 
 const subjectOptions = [{ value: "biology", label: "Biology" }];
 
@@ -43,22 +47,36 @@ const formSchema = z.object({
 const TutoringSessionForm = ({
   studentId,
   existingTutoringSessionId,
-  existingTutoringSession,
 }: {
   studentId: string;
   existingTutoringSessionId?: string;
-  existingTutoringSession?: TutoringSession;
 }) => {
-  console.log("studentId on TutoringSessionForm.tsx file is: " + studentId);
+  const { toast } = useToast();
+
+  const { childTutoringSession, setChildTutoringSession } =
+    useTutoringSessions();
+
+  console.log(
+    "existingTutoringSessionId in TutoringSessionForm",
+    existingTutoringSessionId
+  );
+
+  const index = childTutoringSession.findIndex((session) =>
+    session.hasOwnProperty(existingTutoringSessionId)
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: existingTutoringSession
+    defaultValues: existingTutoringSessionId
       ? {
-          subject: existingTutoringSession.subject,
-          weekday: existingTutoringSession.weekday,
-          startTime: existingTutoringSession.startTime,
-          duration: existingTutoringSession.duration,
+          subject:
+            childTutoringSession[index][existingTutoringSessionId].subject,
+          weekday:
+            childTutoringSession[index][existingTutoringSessionId].weekday,
+          startTime:
+            childTutoringSession[index][existingTutoringSessionId].startTime,
+          duration:
+            childTutoringSession[index][existingTutoringSessionId].duration,
         }
       : {
           subject: "biology",
@@ -69,25 +87,80 @@ const TutoringSessionForm = ({
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (existingTutoringSession) {
-      insertTutoringSession({
-        studentId: studentId,
-        tutoringSession: values as TutoringSession,
-        tutoringSessionId: existingTutoringSessionId,
-      });
-    } else {
-      insertTutoringSession({
-        studentId: studentId,
-        tutoringSession: values as TutoringSession,
-      });
-    }
-    console.log(`studentId: ${studentId}`);
-    existingTutoringSession
-      ? console.log(`existingTutoringSessionId: ${existingTutoringSessionId}`)
-      : null;
-    console.log(values);
+    if (existingTutoringSessionId) {
+      try {
+        // make a duplicate of the session context
+        const newChildTutoringSession = [...childTutoringSession];
+        // Modify the session context
+        newChildTutoringSession[index][existingTutoringSessionId] =
+          values as TutoringSession;
 
-    console.log("Successfully updated");
+        await insertTutoringSession({
+          studentId: studentId,
+          tutoringSession: values as TutoringSession,
+          tutoringSessionId: existingTutoringSessionId,
+        });
+        // Save to the context
+        setChildTutoringSession(newChildTutoringSession);
+
+        // toast notify that the session has been updated
+        toast({
+          title: "Tutoring Session Updated",
+          description: "Your tutoring session has been updated.",
+          duration: 3000,
+        });
+      } catch (error) {
+        console.error(error);
+        // toast notify that there was an issue
+        toast({
+          variant: "destructive",
+          title: "Error updating tutoring session",
+          description:
+            "There was an error updating your tutoring session. Please try again later.",
+          duration: 3000,
+        });
+      }
+    } else {
+      // create a new session in the db
+      try {
+        const newSessionRef = await doc(
+          collection(db, "students", studentId, "tutoringSessions")
+        );
+        // get the new session Id
+        const newSessionId = newSessionRef.id;
+
+        // insert data into the db
+        await insertTutoringSession({
+          studentId: studentId,
+          tutoringSession: values as TutoringSession,
+          tutoringSessionId: newSessionId,
+        });
+
+        // logic for adding to the session context
+        const updatedSessions = [
+          ...childTutoringSession,
+          { [newSessionId]: values as TutoringSession },
+        ];
+        setChildTutoringSession(updatedSessions);
+
+        // toast notify that a new session has been created
+        toast({
+          title: "Tutoring Session Added",
+          description: "Your new tutoring session has been added.",
+          duration: 3000,
+        });
+      } catch (error) {
+        console.error(error);
+        // toast notify that there was an issue
+        toast({
+          variant: "destructive",
+          title: "Error creating tutoring session",
+          description:
+            "There was an error creating your tutoring session. Please try again later.",
+          duration: 3000,
+        });
+      }
+    }
   }
 
   return (

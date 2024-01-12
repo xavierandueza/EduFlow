@@ -11,3 +11,11 @@ export function toCamelCase(str) {
     })
     .join(""); // Join the words back into a single string
 }
+
+export function camelCaseToNormalTextCapitalized(text) {
+  // Split the text at uppercase letters and join with a space
+  const splitText = text.replace(/([A-Z])/g, " $1");
+
+  // Capitalize the first letter of each word
+  return splitText.charAt(0).toUpperCase() + splitText.slice(1);
+}

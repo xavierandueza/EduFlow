@@ -27,6 +27,7 @@ import {
   setDoc,
   addDoc,
   onSnapshot,
+  deleteDoc,
 } from "firebase/firestore";
 import { unsubscribe } from "diagnostics_channel";
 
@@ -638,24 +639,32 @@ const insertTutoringSession = async ({
   }
 };
 
-const listenToTutoringSessions = async (
-  studentId: string,
-  onUpdate: (sessions: { [id: string]: TutoringSession }[]) => void
-) => {
+const deleteTutoringSession = async ({
+  studentId,
+  existingTutoringSessionId,
+}: {
+  studentId: string;
+  existingTutoringSessionId: string;
+}) => {
+  // Delete the tutoring session from the database
   const firestoreDb = db;
-  const q = collection(firestoreDb, "students", studentId, "tutoringSessions");
-  const unsubscribe = onSnapshot(q, (querySnapshot) => {
-    if (querySnapshot.empty) {
-      onUpdate([]);
-    } else {
-      const sessions = querySnapshot.docs.map((doc) => {
-        return { [doc.id]: doc.data() } as { [id: string]: TutoringSession };
-      });
-      onUpdate(sessions);
-    }
-  });
-
-  return unsubscribe;
+  try {
+    await deleteDoc(
+      doc(
+        db,
+        "students",
+        studentId,
+        "tutoringSessions",
+        existingTutoringSessionId
+      )
+    );
+    return true;
+  } catch (error) {
+    console.error(
+      `Error deleting tutoring session with id ${existingTutoringSessionId} for student ${studentId}`
+    );
+    return false;
+  }
 };
 
 export {
@@ -672,5 +681,5 @@ export {
   getUserFromDb,
   getTutoringSessionFromDb,
   insertTutoringSession,
-  listenToTutoringSessions,
+  deleteTutoringSession,
 };

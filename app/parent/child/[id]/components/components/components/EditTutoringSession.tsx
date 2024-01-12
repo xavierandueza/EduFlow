@@ -18,14 +18,11 @@ import { clsx } from "clsx";
 const EditTutoringSession = ({
   studentId,
   existingTutoringSessionId,
-  existingTutoringSession,
 }: {
   studentId: string;
   existingTutoringSessionId?: string;
-  existingTutoringSession?: TutoringSession;
 }) => {
-  console.log("studentId on EditTutoringSession.tsx file is: " + studentId);
-
+  console.log();
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -33,10 +30,10 @@ const EditTutoringSession = ({
           variant="outline"
           className={clsx(
             "hover:bg-light-teal px-2 ",
-            existingTutoringSession ? "" : "bg-slate-200"
+            existingTutoringSessionId ? "" : "bg-slate-200"
           )}
         >
-          {existingTutoringSession ? (
+          {existingTutoringSessionId ? (
             <PencilSquareIcon className="h-5 w-5" />
           ) : (
             <PlusIcon className="h-5 w-5" />
@@ -46,12 +43,12 @@ const EditTutoringSession = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {existingTutoringSession
+            {existingTutoringSessionId
               ? "Edit Tutoring Session"
               : "Create New Tutoring Session"}
           </DialogTitle>
           <DialogDescription>
-            {existingTutoringSession
+            {existingTutoringSessionId
               ? "Enter the new values for your tutoring session."
               : "Enter the values for your new tutoring session."}
           </DialogDescription>
@@ -59,7 +56,6 @@ const EditTutoringSession = ({
         <TutoringSessionForm
           studentId={studentId}
           existingTutoringSessionId={existingTutoringSessionId}
-          existingTutoringSession={existingTutoringSession}
         />
       </DialogContent>
     </Dialog>
