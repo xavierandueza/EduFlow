@@ -8,6 +8,7 @@ import {
   capitaliseFirstLetter,
   convertFrom24HourTo12Hour,
 } from "@/app/utils/textManipulation";
+import { format } from "date-fns";
 
 const ChildTutoringTime = ({ studentId }: { studentId: string }) => {
   const { childTutoringSession, setChildTutoringSession } =
@@ -28,15 +29,9 @@ const ChildTutoringTime = ({ studentId }: { studentId: string }) => {
                 className="flex flex-row justify-between items-center my-1 bg-slate-200 p-1.5 rounded"
                 key={tutoringSessionId}
               >
-                {capitaliseFirstLetter(tutoringSessionData.weekday)}{" "}
-                {convertFrom24HourTo12Hour(tutoringSessionData.startTime)} -{" "}
-                {convertFrom24HourTo12Hour(
-                  tutoringSessionData.startTime +
-                    (tutoringSessionData.duration >= 60
-                      ? 100 + (tutoringSessionData.duration % 60)
-                      : tutoringSessionData.duration)
-                )}
-                : {capitaliseFirstLetter(tutoringSessionData.subject)}
+                {format(tutoringSessionData.dateTime, "EEEE")}{" "}
+                {format(tutoringSessionData.dateTime, "h:mma")}:{" "}
+                {tutoringSessionData.duration} minutes
                 <div>
                   <EditTutoringSession
                     studentId={studentId}

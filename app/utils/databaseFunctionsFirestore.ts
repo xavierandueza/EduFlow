@@ -28,6 +28,9 @@ import {
   addDoc,
   onSnapshot,
   deleteDoc,
+  FirestoreDataConverter,
+  QueryDocumentSnapshot,
+  DocumentData,
 } from "firebase/firestore";
 import { unsubscribe } from "diagnostics_channel";
 
@@ -573,10 +576,27 @@ async function getUserFromDb(id: string, firestoreDb = db) {
   }
 }
 
+// Define a converter for the TutoringSession
+const tutoringSessionConverter: FirestoreDataConverter<TutoringSession> = {
+  fromFirestore(snapshot: QueryDocumentSnapshot): TutoringSession {
+    const data = snapshot.data();
+    return {
+      ...data,
+      // Convert the dateTime field to a JavaScript Date object
+      dateTime: data.dateTime.toDate(),
+    } as TutoringSession;
+  },
+  toFirestore(modelObject: TutoringSession): DocumentData {
+    return modelObject;
+  },
+};
+
 async function getTutoringSessionFromDb(id: string, firestoreDb = db) {
   try {
     const docSnapshot = await getDocs(
-      collection(firestoreDb, "students", id, "tutoringSessions")
+      collection(firestoreDb, "students", id, "tutoringSessions").withConverter(
+        tutoringSessionConverter
+      )
     );
 
     if (docSnapshot.empty) {

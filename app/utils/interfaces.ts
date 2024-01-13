@@ -60,9 +60,8 @@ export type Weekday =
 
 export interface TutoringSession {
   subject: string;
-  weekday: Weekday;
-  startTime: number; // 24 hour time, eg 6PM = 1800
-  duration: number; // in hours
+  dateTime: Date;
+  duration: number; // in minutes
 }
 
 export interface FirestoreStudent extends FirestoreStandardUser {

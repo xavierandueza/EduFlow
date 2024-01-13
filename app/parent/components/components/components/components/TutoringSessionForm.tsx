@@ -24,25 +24,57 @@ import { useTutoringSessions } from "../../../contexts/TutoringSessionContext";
 import { db } from "@/app/firebase";
 import { doc, collection } from "firebase/firestore";
 import { useToast } from "@/components/ui/use-toast";
+import { format, addDays } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarDaysIcon } from "@heroicons/react/24/outline";
+import { cn } from "@/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 
 const subjectOptions = [{ value: "biology", label: "Biology" }];
 
-const weekdayOptions = [
-  { value: "monday", label: "Monday" },
-  { value: "tuesday", label: "Tuesday" },
-  { value: "wednesday", label: "Wednesday" },
-  { value: "thursday", label: "Thursday" },
-  { value: "friday", label: "Friday" },
-  { value: "saturday", label: "Saturday" },
-  { value: "sunday", label: "Sunday" },
-];
-
 const formSchema = z.object({
   subject: z.string(),
-  weekday: z.string(),
-  startTime: z.number().gte(0).lte(2400),
-  duration: z.number().gte(0).lte(75), // minutes now
+  date: z.date().refine((date) => date >= new Date(), {
+    message: "Date cannot be in the past",
+  }),
+  startTimeHour: z.number().gte(1).lte(12),
+  startTimeMinute: z.number().gte(0).lte(59),
+  isAM: z.boolean(),
+  duration: z.number().gte(0).lte(75),
 });
+
+const constructDateTime = ({
+  date,
+  startTimeHour,
+  startTimeMinute,
+  isAM,
+}: {
+  date: Date;
+  startTimeHour: number;
+  startTimeMinute: number;
+  isAM: boolean;
+}) => {
+  if (isAM) {
+    // if AM and the hour is 12, then we subtract 12 hours to convert to 24 hour time
+    startTimeHour = startTimeHour % 12;
+  } else {
+    // if PM and the hour is not 12, then we add 12 hours to convert to 24 hour time
+    if (startTimeHour !== 12) {
+      startTimeHour = startTimeHour + 12;
+    }
+  }
+
+  // set the correct time
+  date.setHours(startTimeHour, startTimeMinute);
+
+  // can reset the seconds and milliseconds, but it's not worth doing.
+  return date;
+};
 
 const TutoringSessionForm = ({
   studentId,
@@ -51,6 +83,7 @@ const TutoringSessionForm = ({
   studentId: string;
   existingTutoringSessionId?: string;
 }) => {
+  const currentDate = new Date();
   const { toast } = useToast();
 
   const { childTutoringSession, setChildTutoringSession } =
@@ -65,35 +98,85 @@ const TutoringSessionForm = ({
     session.hasOwnProperty(existingTutoringSessionId)
   );
 
+  const extractDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+
+    return new Date(year, month, day);
+  };
+
+  const extractHour = (date: Date) => {
+    const hour = date.getHours() % 12;
+
+    return hour === 0 ? 12 : hour;
+  };
+
+  const extractIsAM = (date: Date) => {
+    const isAM = date.getHours() < 12;
+
+    return isAM;
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: existingTutoringSessionId
       ? {
           subject:
             childTutoringSession[index][existingTutoringSessionId].subject,
-          weekday:
-            childTutoringSession[index][existingTutoringSessionId].weekday,
-          startTime:
-            childTutoringSession[index][existingTutoringSessionId].startTime,
+          date: extractDate(
+            childTutoringSession[index][existingTutoringSessionId].dateTime
+          ),
+          startTimeHour: extractHour(
+            childTutoringSession[index][existingTutoringSessionId].dateTime
+          ),
+          startTimeMinute:
+            childTutoringSession[index][
+              existingTutoringSessionId
+            ].dateTime.getMinutes(),
+          isAM: extractIsAM([index][existingTutoringSessionId].dateTime),
           duration:
             childTutoringSession[index][existingTutoringSessionId].duration,
         }
       : {
           subject: "biology",
-          weekday: "monday",
-          startTime: 1700,
+          date: addDays(currentDate, 7),
+          startTimeHour: 5,
+          startTimeMinute: 0,
+          isAM: false,
           duration: 60,
         },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("Form submitted with values: ");
+    console.log(values);
+
+    // construct the date time
+    const dateTime = constructDateTime({
+      date: values.date,
+      startTimeHour: values.startTimeHour,
+      startTimeMinute: values.startTimeMinute,
+      isAM: values.isAM,
+    });
+
+    // print the dateTime for confirmation
+    console.log(dateTime);
+
+    // create the new tutoringSession
+    const tutoringSession: TutoringSession = {
+      subject: values.subject,
+      dateTime: dateTime,
+      duration: values.duration,
+    };
+
     if (existingTutoringSessionId) {
       try {
         // make a duplicate of the session context
         const newChildTutoringSession = [...childTutoringSession];
         // Modify the session context
         newChildTutoringSession[index][existingTutoringSessionId] =
-          values as TutoringSession;
+          tutoringSession;
 
         await insertTutoringSession({
           studentId: studentId,
@@ -132,14 +215,14 @@ const TutoringSessionForm = ({
         // insert data into the db
         await insertTutoringSession({
           studentId: studentId,
-          tutoringSession: values as TutoringSession,
+          tutoringSession: tutoringSession,
           tutoringSessionId: newSessionId,
         });
 
         // logic for adding to the session context
         const updatedSessions = [
           ...childTutoringSession,
-          { [newSessionId]: values as TutoringSession },
+          { [newSessionId]: tutoringSession },
         ];
         setChildTutoringSession(updatedSessions);
 
@@ -175,7 +258,7 @@ const TutoringSessionForm = ({
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select the subject for the tutoring session" />
+                    <SelectValue placeholder="Select subject" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -192,52 +275,135 @@ const TutoringSessionForm = ({
         ></FormField>
         <FormField
           control={form.control}
-          name="weekday"
+          name="date"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Day of Week</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a day of the week for the tutoring session" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {weekdayOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <FormItem className="flex flex-col">
+              <FormLabel>Date</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarDaysIcon className="h-4 w-4 opacity-50 mr-2" />
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) => date < new Date()}
+                  />
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
         ></FormField>
-        <FormField
-          control={form.control}
-          name="startTime"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Start Time</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="number"
-                  placeholder="Enter the start time for the tutoring session"
-                  onChange={(e) => {
-                    try {
-                      field.onChange(parseInt(e.target.value, 10));
-                    } catch (error) {
-                      field.onChange(e.target.value);
-                    }
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        ></FormField>
+        <div className="flex flex-row">
+          <div className="w-[70px]">
+            <FormField
+              control={form.control}
+              name="startTimeHour"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Time</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="number"
+                      placeholder="HH"
+                      max="12"
+                      min="1"
+                      onChange={(e) => {
+                        try {
+                          let value = parseInt(e.target.value, 10);
+
+                          // If the value exceeds 55, reset it to 55
+                          if (value > 11) {
+                            value = 12;
+                          }
+                          field.onChange(value);
+                        } catch (error) {
+                          field.onChange(e.target.value.toString());
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            ></FormField>
+          </div>
+          <p className="flex flex-col justify-end mx-2 font-semibold text-2xl py-1.5">
+            :
+          </p>
+          <div className="flex flex-col justify-end w-[74px]">
+            <FormField
+              control={form.control}
+              name="startTimeMinute"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="number"
+                      placeholder="MM"
+                      step="5"
+                      max="59"
+                      min="0"
+                      onChange={(e) => {
+                        try {
+                          let value = parseInt(e.target.value, 10);
+
+                          // If the value exceeds 55, reset it to 55
+                          if (value > 59) {
+                            value = 59;
+                          }
+                          field.onChange(value);
+                        } catch (error) {
+                          field.onChange(e.target.value);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            ></FormField>
+          </div>
+          <div className="flex flex-col justify-end pl-2">
+            <FormField
+              control={form.control}
+              name="isAM"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      type="button" // Make sure to set the type to "button" to prevent form submission
+                      className="hover:text-light-teal"
+                      onClick={() => field.onChange(!field.value)}
+                    >
+                      {field.value ? "AM" : "PM"}
+                    </Button>
+                  </FormControl>
+                </FormItem>
+              )}
+            ></FormField>
+          </div>
+        </div>
         <FormField
           control={form.control}
           name="duration"
@@ -249,9 +415,21 @@ const TutoringSessionForm = ({
                   {...field}
                   type="number"
                   placeholder="Enter the duration for the tutoring session"
+                  step="5"
+                  min="30"
+                  max="75"
                   onChange={(e) => {
                     try {
-                      field.onChange(parseInt(e.target.value, 10));
+                      let value = parseInt(e.target.value, 10);
+
+                      // If the value exceeds 55, reset it to 55
+                      if (value > 75) {
+                        value = 75;
+                      } else if (value < 30 || isNaN(value)) {
+                        // If the value is less than 0 or not a number, reset it to 0
+                        value = 30;
+                      }
+                      field.onChange(value);
                     } catch (error) {
                       field.onChange(e.target.value);
                     }

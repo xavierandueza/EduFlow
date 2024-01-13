@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { getStudentDataFromParents } from "@/app/_actions";
 import { FirestoreParentChildLong } from "@/app/utils/interfaces";
 import ChildEditCard from "./components/ChildEditCard";
-import { useTutoringSessions } from "./components/contexts/TutoringSessionContext";
 
 export default function Page() {
   const { data: session, status } = useSession();
@@ -13,7 +12,6 @@ export default function Page() {
   const [parentStudentData, setParentStudentData] = useState<{
     [id: string]: FirestoreParentChildLong;
   }>(null);
-  const { setChildTutoringSession } = useTutoringSessions();
 
   const renderChildSummaryCards = () => {
     return;
