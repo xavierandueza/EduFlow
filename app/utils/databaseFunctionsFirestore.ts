@@ -25,7 +25,11 @@ import {
   where,
   doc,
   setDoc,
+  addDoc,
+  onSnapshot,
+  deleteDoc,
 } from "firebase/firestore";
+import { unsubscribe } from "diagnostics_channel";
 
 async function getSchoolClassSkillFromDB(
   id?: string,
@@ -576,7 +580,7 @@ async function getTutoringSessionFromDb(id: string, firestoreDb = db) {
     );
 
     if (docSnapshot.empty) {
-      return null;
+      return [];
     } else {
       return docSnapshot.docs.map((doc) => {
         return { [doc.id]: doc.data() } as { [id: string]: TutoringSession };
@@ -617,9 +621,9 @@ const insertTutoringSession = async ({
         { merge: true }
       );
     } else {
-      await setDoc(
+      await addDoc(
         // creating a new document
-        doc(firestoreDb, "students", studentId, "tutoringSessions"),
+        collection(firestoreDb, "students", studentId, "tutoringSessions"),
         tutoringSession
       );
     }
@@ -632,6 +636,34 @@ const insertTutoringSession = async ({
           : "creating new tutoring session"
       } for student ${studentId} with tutoring session ${tutoringSession}`
     );
+  }
+};
+
+const deleteTutoringSession = async ({
+  studentId,
+  existingTutoringSessionId,
+}: {
+  studentId: string;
+  existingTutoringSessionId: string;
+}) => {
+  // Delete the tutoring session from the database
+  const firestoreDb = db;
+  try {
+    await deleteDoc(
+      doc(
+        db,
+        "students",
+        studentId,
+        "tutoringSessions",
+        existingTutoringSessionId
+      )
+    );
+    return true;
+  } catch (error) {
+    console.error(
+      `Error deleting tutoring session with id ${existingTutoringSessionId} for student ${studentId}`
+    );
+    return false;
   }
 };
 
@@ -649,4 +681,5 @@ export {
   getUserFromDb,
   getTutoringSessionFromDb,
   insertTutoringSession,
+  deleteTutoringSession,
 };
