@@ -1,5 +1,5 @@
 "use client";
-
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import * as React from "react";
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
@@ -14,7 +14,7 @@ type CarouselPlugin = UseCarouselParameters[1];
 
 type CarouselProps = {
   opts?: CarouselOptions;
-  plugins?: CarouselPlugin[];
+  plugins?: CarouselPlugin; // <-- From CarouselPlugin[]
   orientation?: "horizontal" | "vertical";
   setApi?: (api: CarouselApi) => void;
 };
