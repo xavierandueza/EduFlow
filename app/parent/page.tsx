@@ -5,17 +5,14 @@ import { useSession } from "next-auth/react";
 import { getStudentDataFromParents } from "@/app/_actions";
 import { FirestoreParentChildLong } from "@/app/utils/interfaces";
 import ChildEditCard from "./components/ChildEditCard";
-import { TutoringSessionsProvider } from "./contexts/TutoringSessionContext";
-import { useTutoringSessions } from "./contexts/TutoringSessionContext";
+import { useTutoringSessions } from "./components/contexts/TutoringSessionContext";
 
 export default function Page() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [parentStudentData, setParentStudentData] = useState<
-    {
-      [id: string]: FirestoreParentChildLong;
-    }[]
-  >(null);
+  const [parentStudentData, setParentStudentData] = useState<{
+    [id: string]: FirestoreParentChildLong;
+  }>(null);
   const { setChildTutoringSession } = useTutoringSessions();
 
   const renderChildSummaryCards = () => {
@@ -35,6 +32,8 @@ export default function Page() {
           const data = await getStudentDataFromParents({
             parentId: session?.user?.id,
           });
+          console.log("Parent Student Data");
+          console.log(data);
           setParentStudentData(data);
         };
         if (!parentStudentData) {
@@ -50,22 +49,20 @@ export default function Page() {
   }, [status, session, router]);
 
   return (
-    <TutoringSessionsProvider>
-      <div className="w-full">
-        <div className="flex flex-col w-full items-center justify-start">
-          {parentStudentData && parentStudentData.length > 0
-            ? Object.entries(parentStudentData).map(([key, student]) => (
-                <ChildEditCard
-                  key={key}
-                  studentId={key}
-                  childStudentData={student}
-                  router={router}
-                />
-              ))
-            : null}
-        </div>
-        <p className="mt-4 flex items-center justify-between md:mt-8"></p>
+    <div className="w-full">
+      <div className="flex flex-col w-full items-center justify-start">
+        {parentStudentData
+          ? Object.entries(parentStudentData).map(([key, student]) => (
+              <ChildEditCard
+                key={key}
+                studentId={key}
+                childStudentData={student}
+                router={router}
+              />
+            ))
+          : null}
       </div>
-    </TutoringSessionsProvider>
+      <p className="mt-4 flex items-center justify-between md:mt-8"></p>
+    </div>
   );
 }

@@ -580,7 +580,7 @@ async function getTutoringSessionFromDb(id: string, firestoreDb = db) {
     );
 
     if (docSnapshot.empty) {
-      return null;
+      return [];
     } else {
       return docSnapshot.docs.map((doc) => {
         return { [doc.id]: doc.data() } as { [id: string]: TutoringSession };

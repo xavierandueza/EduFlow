@@ -14,7 +14,7 @@ import { TrashIcon } from "@heroicons/react/24/outline";
 import { clsx } from "clsx";
 import { useToast } from "@/components/ui/use-toast";
 import { deleteTutoringSession } from "@/app/utils/databaseFunctionsFirestore";
-import { useTutoringSessions } from "../../../contexts/TutoringSessionContext";
+import { useTutoringSessions } from "../../contexts/TutoringSessionContext";
 
 const DeleteTutoringSession = ({
   studentId,
@@ -79,7 +79,7 @@ const DeleteTutoringSession = ({
         <Button
           variant="outline"
           className={clsx(
-            "hover:bg-red-400 px-2 ",
+            "hover:bg-red-500 px-2 ",
             existingTutoringSessionId ? "" : "bg-slate-200"
           )}
         >
@@ -93,17 +93,17 @@ const DeleteTutoringSession = ({
             Are you sure you want to delete your tutoring session?
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="sm:justify-start">
+        <DialogFooter className="justify-start ">
           <DialogClose asChild>
-            <Button type="button" variant="default" className="">
+            <Button type="button" variant="outline" className="">
               Close
             </Button>
           </DialogClose>
           <DialogClose asChild>
             <Button
               type="button"
-              variant="secondary"
-              className="hover:bg-red-400"
+              variant="default"
+              className="hover:bg-red-500"
               onClick={() => DeleteTutoringSession()}
             >
               Confirm

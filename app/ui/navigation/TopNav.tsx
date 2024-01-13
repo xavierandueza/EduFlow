@@ -19,7 +19,7 @@ export default function TopNav() {
 
   return (
     <nav
-      className="bg-dark-blue p-2 w-screen fixed top-0"
+      className="bg-dark-blue p-2 w-screen fixed top-0 z-40"
       style={{ height: topNavHeight }}
     >
       <div className="flex justify-center space-x-4">

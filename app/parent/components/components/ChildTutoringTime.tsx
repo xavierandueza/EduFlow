@@ -2,8 +2,12 @@
 import React, { useState, useRef } from "react";
 import { TutoringSession, Weekday } from "@/app/utils/interfaces";
 import EditTutoringSession from "./components/EditTutoringSession";
-import { useTutoringSessions } from "../../contexts/TutoringSessionContext";
+import { useTutoringSessions } from "../contexts/TutoringSessionContext";
 import DeleteTutoringSession from "./components/DeleteTutoringSession";
+import {
+  capitaliseFirstLetter,
+  convertFrom24HourTo12Hour,
+} from "@/app/utils/textManipulation";
 
 const ChildTutoringTime = ({ studentId }: { studentId: string }) => {
   const { childTutoringSession, setChildTutoringSession } =
@@ -24,10 +28,15 @@ const ChildTutoringTime = ({ studentId }: { studentId: string }) => {
                 className="flex flex-row justify-between items-center my-1 bg-slate-200 p-1.5 rounded"
                 key={tutoringSessionId}
               >
-                {tutoringSessionData.weekday} {tutoringSessionData.startTime}-{" "}
-                {tutoringSessionData.startTime +
-                  tutoringSessionData.duration * (10 / 6)}
-                : {tutoringSessionData.subject}
+                {capitaliseFirstLetter(tutoringSessionData.weekday)}{" "}
+                {convertFrom24HourTo12Hour(tutoringSessionData.startTime)} -{" "}
+                {convertFrom24HourTo12Hour(
+                  tutoringSessionData.startTime +
+                    (tutoringSessionData.duration >= 60
+                      ? 100 + (tutoringSessionData.duration % 60)
+                      : tutoringSessionData.duration)
+                )}
+                : {capitaliseFirstLetter(tutoringSessionData.subject)}
                 <div>
                   <EditTutoringSession
                     studentId={studentId}

@@ -20,7 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { TutoringSession } from "@/app/utils/interfaces";
 import { insertTutoringSession } from "@/app/utils/databaseFunctionsFirestore";
-import { useTutoringSessions } from "../../../../contexts/TutoringSessionContext";
+import { useTutoringSessions } from "../../../contexts/TutoringSessionContext";
 import { db } from "@/app/firebase";
 import { doc, collection } from "firebase/firestore";
 import { useToast } from "@/components/ui/use-toast";

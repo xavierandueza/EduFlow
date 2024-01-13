@@ -4,11 +4,15 @@ import { FirestoreParentChildLong } from "@/app/utils/interfaces";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import ChildTutoringTime from "./components/ChildTutoringTime";
 import { Button } from "@/components/ui/button";
-import { useTutoringSessions } from "../contexts/TutoringSessionContext";
+import {
+  TutoringSessionsProvider,
+  useTutoringSessions,
+} from "./contexts/TutoringSessionContext";
 import { getTutoringSessionFromDb } from "@/app/utils/databaseFunctionsFirestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { camelCaseToNormalTextCapitalized } from "@/app/utils/textManipulation";
+import { useToast } from "@/components/ui/use-toast";
 // import SummarySkillTable from './SummarySkillTable'; // Import your SummarySkillTable component
 
 const ChildEditCard = ({
@@ -26,7 +30,7 @@ const ChildEditCard = ({
   const [studentName, setStudentName] = useState<string>(
     `${childStudentData.firstName} ${childStudentData.lastName}`
   );
-
+  const { toast } = useToast();
   const renderSubscribeButton = () => {
     if (childStudentData.subscriptionActive) {
       return (
@@ -58,7 +62,17 @@ const ChildEditCard = ({
     };
 
     if (childStudentData && !childTutoringSession.length) {
-      fetchData();
+      try {
+        fetchData();
+      } catch (error) {
+        console.error(error);
+        toast({
+          variant: "destructive",
+          title: `Error fetching ${studentName}'s tutoring sessions`,
+          description: `There was an error getting the tutoring sessions for ${studentName}. Please refresh to try again.`,
+          duration: 3000,
+        });
+      }
     }
   }, [studentId]);
 
