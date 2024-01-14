@@ -12,10 +12,7 @@ export default function Page() {
   const [parentStudentData, setParentStudentData] = useState<{
     [id: string]: FirestoreParentChildLong;
   }>(null);
-
-  const renderChildSummaryCards = () => {
-    return;
-  };
+  const [childIndex, setChildIndex] = useState<number>(0);
 
   useEffect(() => {
     if (status === "loading") {

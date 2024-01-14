@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { camelCaseToNormalTextCapitalized } from "@/app/utils/textManipulation";
 import { useToast } from "@/components/ui/use-toast";
+import ChildTutoringSession from "./components/ChildTutoringSession";
+
 // import SummarySkillTable from './SummarySkillTable'; // Import your SummarySkillTable component
 
 const ChildEditCardContent = ({
@@ -80,74 +82,11 @@ const ChildEditCardContent = ({
   }, [childStudentData]);
 
   return (
-    <Card className="w-[600px] m-6 shadow-lg">
-      <CardHeader>
-        <CardTitle>
-          <div className="flex items-center justify-between">
-            <div className="flex flex-row justify-start items-center">
-              <Avatar className="h-16 w-16">
-                <AvatarImage
-                  src={childStudentData?.image}
-                  alt={`${studentName}'s profile`}
-                />
-                <AvatarFallback className="h-16 w-16">
-                  {childStudentData.firstName[0].toUpperCase()}{" "}
-                  {childStudentData.lastName[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col justify-start items-start ml-4">
-                <h1 className="text-2xl font-semibold line-clamp-2">
-                  {studentName}
-                </h1>
-                <p className="text-gray-600 line-clamp-1 text-xl">
-                  {childStudentData.subscriptionActive
-                    ? camelCaseToNormalTextCapitalized(
-                        childStudentData.subscriptionName
-                      )
-                    : "No active subscription"}
-                </p>
-              </div>
-            </div>
-            {renderSubscribeButton()}
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-4">
-          <div>
-            <label className="scroll-m-20 text-xl font-semibold tracking-tight">
-              Tutoring Session(s)
-            </label>
-            <ChildTutoringTime studentId={studentId} />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="scroll-m-20 text-xl font-semibold tracking-tight">
-                Weekly Time Remaining
-              </label>
-              <div className="mt-1 bg-slate-200 p-2 rounded">35 minutes</div>
-            </div>
-            <div>
-              <label className="scroll-m-20 text-xl font-semibold tracking-tight">
-                Last Worked
-              </label>
-              <div className="mt-1 bg-slate-200 p-2 rounded">
-                Monday 5th January
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className="scroll-m-20 text-xl font-semibold tracking-tight">
-              Recent Skills
-            </label>
-            {/*<SummarySkillTable />*/}
-            <div className="mt-1 bg-slate-200 p-2 rounded">
-              Recent skills table here
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <>
+      <div>
+        <ChildTutoringSession studentId={studentId} />
+      </div>
+    </>
   );
 };
 

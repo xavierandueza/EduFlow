@@ -62,6 +62,7 @@ export interface TutoringSession {
   subject: string;
   dateTime: Date;
   duration: number; // in minutes
+  repeats: boolean;
 }
 
 export interface FirestoreStudent extends FirestoreStandardUser {
