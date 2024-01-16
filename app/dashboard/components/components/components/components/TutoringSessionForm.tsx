@@ -13,6 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import * as z from "zod";
@@ -24,7 +25,7 @@ import { useTutoringSessions } from "../../../contexts/TutoringSessionContext";
 import { db } from "@/app/firebase";
 import { doc, collection } from "firebase/firestore";
 import { useToast } from "@/components/ui/use-toast";
-import { format, addDays } from "date-fns";
+import { format, addDays, set } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { useRef, useState, useEffect } from "react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const subjectOptions = [{ value: "biology", label: "Biology" }];
 
@@ -46,6 +50,8 @@ const formSchema = z.object({
   startTimeMinute: z.number().gte(0).lte(59),
   isAM: z.boolean(),
   duration: z.number().gte(0).lte(75),
+  repeats: z.boolean(),
+  mode: z.string(),
 });
 
 const constructDateTime = ({
@@ -70,7 +76,7 @@ const constructDateTime = ({
   }
 
   // set the correct time
-  date.setHours(startTimeHour, startTimeMinute);
+  date.setHours(startTimeHour, startTimeMinute, 0, 0);
 
   // can reset the seconds and milliseconds, but it's not worth doing.
   return date;
@@ -85,6 +91,7 @@ const TutoringSessionForm = ({
 }) => {
   const currentDate = new Date();
   const { toast } = useToast();
+  const [showRepeatsOption, setShowRepeatsOption] = useState(false);
 
   const { childTutoringSession, setChildTutoringSession } =
     useTutoringSessions();
@@ -118,6 +125,15 @@ const TutoringSessionForm = ({
     return isAM;
   };
 
+  useEffect(() => {
+    if (
+      existingTutoringSessionId &&
+      childTutoringSession[index][existingTutoringSessionId].repeats
+    ) {
+      setShowRepeatsOption(true);
+    }
+  }, [existingTutoringSessionId, childTutoringSession, index]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: existingTutoringSessionId
@@ -134,9 +150,14 @@ const TutoringSessionForm = ({
             childTutoringSession[index][
               existingTutoringSessionId
             ].dateTime.getMinutes(),
-          isAM: extractIsAM([index][existingTutoringSessionId].dateTime),
+          isAM: extractIsAM(
+            childTutoringSession[index][existingTutoringSessionId].dateTime
+          ),
           duration:
             childTutoringSession[index][existingTutoringSessionId].duration,
+          repeats:
+            childTutoringSession[index][existingTutoringSessionId].repeats,
+          mode: "single",
         }
       : {
           subject: "biology",
@@ -145,6 +166,8 @@ const TutoringSessionForm = ({
           startTimeMinute: 0,
           isAM: false,
           duration: 60,
+          repeats: false,
+          mode: "single",
         },
   });
 
@@ -163,27 +186,149 @@ const TutoringSessionForm = ({
     // print the dateTime for confirmation
     console.log(dateTime);
 
-    // create the new tutoringSession
+    // create the new tutoringSession, not doing the repeatsFromOriginalSessionId yet
     const tutoringSession: TutoringSession = {
       subject: values.subject,
       dateTime: dateTime,
       duration: values.duration,
+      repeats: values.repeats,
     };
+
+    // make a duplicate of the session context for modification
+    let newChildTutoringSession = [...childTutoringSession];
 
     if (existingTutoringSessionId) {
       try {
-        // make a duplicate of the session context
-        const newChildTutoringSession = [...childTutoringSession];
-        // Modify the session context
-        newChildTutoringSession[index][existingTutoringSessionId] =
-          tutoringSession;
+        // Updating an existingTutoringSession
+        if (
+          values.mode === "single" &&
+          childTutoringSession[index][existingTutoringSessionId].repeats &&
+          values.repeats
+        ) {
+          // IF the mode is single AND the session was previously repeating AND is currently set to repeating
+          // set the repeats value to false
+          tutoringSession.repeats = false;
 
-        await insertTutoringSession({
-          studentId: studentId,
-          tutoringSession: values as TutoringSession,
-          tutoringSessionId: existingTutoringSessionId,
-        });
-        // Save to the context
+          // Create a DateTime that is a week from the current value
+          const pushedBackDateTime = constructDateTime({
+            date: addDays(
+              childTutoringSession[index][existingTutoringSessionId].dateTime,
+              6
+            ) as Date, // add 7 days to the current date, not sure why I need to use 6 tbh, 0 indexing?
+            startTimeHour:
+              childTutoringSession[index][
+                existingTutoringSessionId
+              ].dateTime.getHours(),
+            startTimeMinute:
+              childTutoringSession[index][
+                existingTutoringSessionId
+              ].dateTime.getMinutes(),
+            isAM:
+              childTutoringSession[index][
+                existingTutoringSessionId
+              ].dateTime.getHours() < 12,
+          });
+
+          console.log("pushedBackDateTime: ", pushedBackDateTime);
+          // Create a new session with this time
+          const pushedBackTutoringSession: TutoringSession = {
+            subject:
+              childTutoringSession[index][existingTutoringSessionId].subject,
+            dateTime: pushedBackDateTime,
+            duration:
+              childTutoringSession[index][existingTutoringSessionId].duration,
+            repeats: true,
+            repeatsFromOriginalSessionId:
+              childTutoringSession[index][existingTutoringSessionId]
+                .repeatsFromOriginalSessionId,
+          };
+
+          // Now for the new session
+          // By definition this cannot repeat, so the repeatsFromOriginalSessionId is null
+          tutoringSession.repeatsFromOriginalSessionId = null;
+
+          // modify the session context
+          newChildTutoringSession[index][existingTutoringSessionId] =
+            tutoringSession;
+
+          // insert the new childTutoringSession into this list
+          const newSessionRef = await doc(
+            collection(db, "students", studentId, "tutoringSessions")
+          );
+
+          newChildTutoringSession = [
+            ...newChildTutoringSession,
+            { [newSessionRef.id]: pushedBackTutoringSession },
+          ];
+
+          // new doc into db
+          await insertTutoringSession({
+            studentId: studentId,
+            tutoringSession: pushedBackTutoringSession,
+          });
+
+          // update the childTutoringSession context with pushed back value
+          setChildTutoringSession(newChildTutoringSession);
+
+          // update the current document
+          await insertTutoringSession({
+            studentId: studentId,
+            tutoringSession: tutoringSession,
+            tutoringSessionId: existingTutoringSessionId,
+          });
+
+          // update the id for the tutoringSession
+          newChildTutoringSession[index][existingTutoringSessionId] =
+            tutoringSession;
+        } else if (
+          values.mode === "single" &&
+          !childTutoringSession[index][existingTutoringSessionId].repeats
+        ) {
+          // IF the mode is single, wasn't repeating before, and now IS repeating
+          // simple logic - just update the current one
+          // set the repeatsFromOriginalSessionId
+          tutoringSession.repeatsFromOriginalSessionId =
+            existingTutoringSessionId;
+
+          // modify the session context
+          newChildTutoringSession[index][existingTutoringSessionId] =
+            tutoringSession;
+
+          // insert data into db
+          await insertTutoringSession({
+            studentId: studentId,
+            tutoringSession: tutoringSession,
+            tutoringSessionId: existingTutoringSessionId,
+          });
+        } else if (
+          values.mode === "all" &&
+          childTutoringSession[index][existingTutoringSessionId].repeats
+        ) {
+          // can only happen when its repeating
+          // Need to update all the sessions that have the same repeatsFromOriginalSessionId
+          // Pretty complex logic to do this.
+          // Probably best to change the next one, then push back all of the rest 7 days from this?
+
+          // simplify logic - for now just update the current one
+          // set the repeatsFromOriginalSessionId
+          tutoringSession.repeatsFromOriginalSessionId =
+            childTutoringSession[index][
+              existingTutoringSessionId
+            ].repeatsFromOriginalSessionId;
+
+          // modify the session context
+          newChildTutoringSession[index][existingTutoringSessionId] =
+            tutoringSession;
+
+          // insert data into db
+          await insertTutoringSession({
+            studentId: studentId,
+            tutoringSession: tutoringSession,
+            tutoringSessionId: existingTutoringSessionId,
+          });
+        }
+
+        // update session context from the if/else statements
         setChildTutoringSession(newChildTutoringSession);
 
         // toast notify that the session has been updated
@@ -206,11 +351,17 @@ const TutoringSessionForm = ({
     } else {
       // create a new session in the db
       try {
+        // create a new doc in the db
         const newSessionRef = await doc(
           collection(db, "students", studentId, "tutoringSessions")
         );
         // get the new session Id
         const newSessionId = newSessionRef.id;
+
+        // set the repeatsFromOriginalSessionId
+        tutoringSession.repeatsFromOriginalSessionId = values.repeats
+          ? newSessionRef.id
+          : null;
 
         // insert data into the db
         await insertTutoringSession({
@@ -220,11 +371,11 @@ const TutoringSessionForm = ({
         });
 
         // logic for adding to the session context
-        const updatedSessions = [
+        newChildTutoringSession = [
           ...childTutoringSession,
           { [newSessionId]: tutoringSession },
         ];
-        setChildTutoringSession(updatedSessions);
+        setChildTutoringSession(newChildTutoringSession);
 
         // toast notify that a new session has been created
         toast({
@@ -254,7 +405,7 @@ const TutoringSessionForm = ({
           name="subject"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Subject</FormLabel>
+              <FormLabel className="font-semibold">Subject</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -278,7 +429,7 @@ const TutoringSessionForm = ({
           name="date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Date</FormLabel>
+              <FormLabel className="font-semibold">Date</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -318,7 +469,7 @@ const TutoringSessionForm = ({
               name="startTimeHour"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Start Time</FormLabel>
+                  <FormLabel className="font-semibold">Start Time</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -409,7 +560,9 @@ const TutoringSessionForm = ({
           name="duration"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Session Duration (Minutes)</FormLabel>
+              <FormLabel className="font-semibold">
+                Session Duration (Minutes)
+              </FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -440,6 +593,72 @@ const TutoringSessionForm = ({
             </FormItem>
           )}
         ></FormField>
+        {/*If this is a repeating session, we don't want to show this */}
+        {showRepeatsOption ? (
+          <FormField
+            control={form.control}
+            name="repeats"
+            render={({ field }) => <></>}
+          />
+        ) : (
+          <FormField
+            control={form.control}
+            name="repeats"
+            render={({ field }) => (
+              <FormItem className="">
+                <div className="space-y-0.5">
+                  <FormLabel className="font-semibold">
+                    Set as repeating
+                  </FormLabel>
+                  <FormDescription>
+                    Do you want this tutoring session to repeat every week?
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        )}
+        {showRepeatsOption ? (
+          <FormField
+            control={form.control}
+            name="mode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="font-semibold">Edit</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue="single"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="single" id="r1" />
+                      <Label htmlFor="r1">Only this session</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 mb-3">
+                      <RadioGroupItem value="all" id="r2" />
+                      <Label htmlFor="r2">
+                        All recurring sessions at this time
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </FormControl>
+              </FormItem>
+            )}
+          ></FormField>
+        ) : (
+          <FormField
+            control={form.control}
+            name="mode"
+            defaultValue="single"
+            render={({ field }) => <></>}
+          ></FormField>
+        )}
         <Button className="float-right hover:text-light-teal" type="submit">
           Submit
         </Button>

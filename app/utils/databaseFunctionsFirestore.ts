@@ -662,23 +662,49 @@ const insertTutoringSession = async ({
 const deleteTutoringSession = async ({
   studentId,
   existingTutoringSessionId,
+  mode,
+  repeatsFromOriginalSessionId,
 }: {
   studentId: string;
   existingTutoringSessionId: string;
+  mode: string;
+  repeatsFromOriginalSessionId: string;
 }) => {
   // Delete the tutoring session from the database
   const firestoreDb = db;
   try {
-    await deleteDoc(
-      doc(
-        db,
-        "students",
-        studentId,
-        "tutoringSessions",
-        existingTutoringSessionId
-      )
-    );
-    return true;
+    if (mode === "single") {
+      await deleteDoc(
+        doc(
+          db,
+          "students",
+          studentId,
+          "tutoringSessions",
+          existingTutoringSessionId
+        )
+      );
+      return true;
+    } else if (mode === "all") {
+      console.log(
+        "Deleting all tutoring sessions with repeatsFromOriginalSessionId: " +
+          repeatsFromOriginalSessionId
+      );
+      const q = query(
+        collection(firestoreDb, "students", studentId, "tutoringSessions"),
+        where(
+          "repeatsFromOriginalSessionId",
+          "==",
+          repeatsFromOriginalSessionId
+        )
+      );
+
+      // delete documents
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        deleteDoc(doc.ref);
+      });
+      return true;
+    }
   } catch (error) {
     console.error(
       `Error deleting tutoring session with id ${existingTutoringSessionId} for student ${studentId}`

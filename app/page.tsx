@@ -20,7 +20,11 @@ export default function Page() {
             Personalised learning for every student
           </p>
           <button
-            onClick={() => signIn()}
+            onClick={() =>
+              signIn(undefined, {
+                callbackUrl: `${process.env.NEXT_PUBLIC_WEBSITE_URL}/dashboard`,
+              })
+            }
             className="flex items-center gap-5 self-start rounded-lg bg-dark-teal px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-17363f md:text-base"
           >
             <span>Login</span>

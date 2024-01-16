@@ -85,7 +85,7 @@ const ChildTutoringSession = ({ studentId }: { studentId: string }) => {
             : null}
         </TableBody>
       </Table>
-      <div className="ml-2">
+      <div className="ml-2 my-4">
         <EditTutoringSession studentId={studentId} />
       </div>
     </div>

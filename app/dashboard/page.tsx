@@ -1,6 +1,4 @@
 "use client";
-import Link from "next/link";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CardTitle, CardHeader, CardContent, Card } from "@/components/ui/card";
 import {
@@ -13,15 +11,14 @@ import {
 } from "@/components/ui/table";
 import { ResponsiveLine } from "@nivo/line";
 import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { getStudentDataFromParents } from "@/app/_actions";
 import { FirestoreParentChildLong } from "@/app/utils/interfaces";
 import { camelCaseToNormalTextCapitalized } from "@/app/utils/textManipulation";
-import { PlusIcon } from "@heroicons/react/24/outline";
 import ChildEditCard from "./components/ChildEditCard";
+import Nav from "./components/Nav";
 
 const Page = () => {
   // Declaring constants
@@ -85,43 +82,7 @@ const Page = () => {
   return (
     <div key="1" className="flex flex-col h-screen max-w-[1800px]">
       <header className="flex h-16 items-center px-4 border-b shrink-0 md:px-6">
-        <nav className="flex-col hidden gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
-          <Button variant="ghost" className="p-0">
-            <Avatar className="h-10 w-10">
-              <AvatarImage
-                src={
-                  "https://lh3.googleusercontent.com/a/ACg8ocIuzKCL5p4HMLr8UONbwbY7PV0o1QFxOs2gQnATCy5KHw=s96-c"
-                }
-                alt={"Placeholder avatar"}
-              />
-              <AvatarFallback className="h-16 w-16 flex item-center">
-                {"x".toUpperCase()}
-                {"a".toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
-          <Link className="font-bold" href="#">
-            Dashboard
-          </Link>
-          <Link className="text-gray-500 dark:text-gray-400" href="#">
-            Subscription
-          </Link>
-          <Link className="text-gray-500 dark:text-gray-400" href="#">
-            Settings
-          </Link>
-        </nav>
-        <div className="flex items-center w-full gap-4 md:ml-auto md:gap-2 lg:gap-4">
-          <form className="flex-1 ml-auto sm:flex-initial">
-            <div className="relative">
-              <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Input
-                className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
-                placeholder="Search..."
-                type="search"
-              />
-            </div>
-          </form>
-        </div>
+        <Nav session={session} />
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -171,7 +132,7 @@ const Page = () => {
             </CardContent>
           </Card>
         </div>
-        <div className="mt-8">
+        <div>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-2xl font-bold">
