@@ -54,7 +54,7 @@ const Nav = ({ session }: { session: Session }) => {
               className={
                 pathname === link.href
                   ? "font-bold"
-                  : "text-gray-500 dark:text-gray-400"
+                  : "text-gray-500 dark:text-gray-400 font-semibold hover:text-black"
               }
             >
               {link.name}

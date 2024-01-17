@@ -19,12 +19,15 @@ export async function createUser({
   lastName,
   email,
   role,
+  image,
+  yearLevel,
+  subjects,
+  school,
   interests,
-  careerGoals,
+  tutoringGoal,
   parentLink,
   subscriptionActive,
   subscriptionName,
-  image,
   firestoreDb = db,
 }: {
   id: string;
@@ -32,12 +35,15 @@ export async function createUser({
   lastName: string;
   email: string;
   role: Role;
-  interests: string[] | string | null;
-  careerGoals: string[] | string | null;
-  parentLink: string | null;
-  subscriptionActive: boolean | null;
-  subscriptionName: string | null;
   image: string | null;
+  yearLevel?: number | null;
+  subjects?: string[] | null;
+  school?: string | null;
+  interests?: string[] | null;
+  tutoringGoal?: string | null;
+  parentLink?: string | null;
+  subscriptionActive?: boolean | null;
+  subscriptionName?: string | null;
   firestoreDb?: Firestore;
 }) {
   // need to go ahead and update the user in the database
@@ -57,43 +63,45 @@ export async function createUser({
   // if the role is student, create OR update a student. So need to check if the student exists first
   if (role.toLowerCase() === "student") {
     try {
-      // Update student
-      await setDoc(
-        doc(db, "students", id),
-        {
-          firstName: firstName,
-          lastName: lastName,
-          image: image,
-          email: email,
-          interests: interests,
-          careerGoals: careerGoals,
-          parentLink: parentLink.trim(),
-        },
-        {
-          merge: true,
-        }
-      );
-
-      // Now update the parent doc
-      await updateDoc(doc(db, "parents", parentLink.trim()), {
-        childrenShort: arrayUnion(id),
-        [`childrenLong.${id}`]: {
-          firstName: firstName,
-          lastName: lastName,
-          email: email,
-          image: image,
-          interests: interests,
-          careerGoals: careerGoals,
-          subscriptionActive: subscriptionActive,
-          subscriptionName: subscriptionName ? subscriptionName : null,
-        },
+      // Create student in Db
+      await setDoc(doc(db, "students", id), {
+        firstName: firstName,
+        lastName: lastName,
+        image: image,
+        email: email,
+        yearLevel: yearLevel,
+        subjects: subjects,
+        school: school,
+        interests: interests,
+        tutoringGoal: tutoringGoal,
+        parentLink: parentLink ? parentLink.trim() : null,
       });
+
+      if (parentLink) {
+        // Now update the parent doc
+        await updateDoc(doc(db, "parents", parentLink.trim()), {
+          childrenShort: arrayUnion(id),
+          [`childrenLong.${id}`]: {
+            firstName: firstName,
+            lastName: lastName,
+            image: image,
+            email: email,
+            yearLevel: yearLevel,
+            subjects: subjects,
+            school: school,
+            interests: interests,
+            subscriptionActive: subscriptionActive,
+            subscriptionName: subscriptionName ? subscriptionName : null,
+          },
+        });
+      }
     } catch (error) {
       console.error("error updating student: ", error);
       throw error;
     }
   } else if (role.toLowerCase() === "parent") {
     await setDoc(
+      // create parent in the db
       doc(db, "parents", id),
       {
         firstName: firstName,
@@ -102,13 +110,9 @@ export async function createUser({
         email: email,
         childrenShort: [],
         childrenLong: {},
-      },
-      {
-        merge: true,
       }
     );
   }
-
   return true;
 }
 
@@ -162,15 +166,12 @@ export async function updateUser({
           email: email,
           interests: interests,
           careerGoals: careerGoals,
-          parentLink: parentLink.trim(),
+          parentLink: parentLink ? parentLink.trim() : null,
         },
         {
           merge: true,
         }
       );
-
-      console.log("Trimmed parentLink: ", parentLink.trim());
-      console.log("parentLink: ", parentLink);
 
       // Now update the parent doc
       await updateDoc(doc(firestoreDb, "parents", parentLink), {

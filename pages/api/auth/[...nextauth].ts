@@ -92,7 +92,7 @@ export const authOptions: NextAuthOptions = {
     // generateSessionToken // If we want to generate our own session token, we don't care tho
   },
   pages: {
-    newUser: "/account/signup", // New users will be directed here on first sign in (leave the property out if not of interest)
+    newUser: "/profile/signup", // New users will be directed here on first sign in (leave the property out if not of interest)
   },
 };
 

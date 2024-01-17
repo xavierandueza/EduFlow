@@ -23,6 +23,12 @@ import { camelCaseToNormalTextCapitalized } from "@/app/utils/textManipulation";
 import ChildEditCard from "./components/ChildEditCard";
 import Nav from "./components/Nav";
 import { getStudentFromDB } from "../utils/databaseFunctionsFirestore";
+import {
+  User,
+  Package,
+  Clock4,
+  LineChart as LineChartIcon,
+} from "lucide-react";
 
 const Page = () => {
   // Declaring constants
@@ -101,7 +107,7 @@ const Page = () => {
                 <CardTitle className="text-sm font-medium">
                   Child's Name
                 </CardTitle>
-                <UserIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <User className="w-6 h-5 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -117,7 +123,7 @@ const Page = () => {
                 <CardTitle className="text-sm font-medium">
                   Subscription Plan
                 </CardTitle>
-                <PackageIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <Package className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -134,7 +140,7 @@ const Page = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium">Usage</CardTitle>
-                <ClockIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <Clock4 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">2 hours</div>
@@ -165,7 +171,7 @@ const Page = () => {
                 <CardTitle className="text-2xl font-bold">
                   Time Spent Graph
                 </CardTitle>
-                <BarChartIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <LineChartIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
                 <LineChart className="aspect-[9/4]" />
@@ -250,17 +256,14 @@ const Page = () => {
             </Card>
           </div>
         </main>
-        <footer className="flex h-16 items-center px-4 shrink-0 md:px-6">
-          <div className="flex-1" />
-          <Button className="w-full md:w-auto" variant="outline">
-            Manage Subscription
-          </Button>
-        </footer>
       </div>
     );
   } else {
     return (
-      <div key="1" className="flex flex-col h-screen max-w-[1800px]">
+      <div
+        key="1"
+        className="flex flex-col h-screen max-w-[1800px] w-full mx-auto"
+      >
         <header className="flex h-16 items-center px-4 border-b shrink-0 md:px-6">
           <Nav session={session} />
         </header>
@@ -269,7 +272,7 @@ const Page = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium">Name</CardTitle>
-                <UserIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -283,7 +286,7 @@ const Page = () => {
                 <CardTitle className="text-sm font-medium">
                   Subscription Plan
                 </CardTitle>
-                <PackageIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <Package className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -300,7 +303,7 @@ const Page = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium">Usage</CardTitle>
-                <ClockIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <Clock4 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">2 hours</div>
@@ -331,7 +334,7 @@ const Page = () => {
                 <CardTitle className="text-2xl font-bold">
                   Time Spent Graph
                 </CardTitle>
-                <BarChartIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <LineChartIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
                 <LineChart className="aspect-[9/4]" />
@@ -416,57 +419,10 @@ const Page = () => {
             </Card>
           </div>
         </main>
-        <footer className="flex h-16 items-center px-4 shrink-0 md:px-6">
-          <div className="flex-1" />
-          <Button className="w-full md:w-auto" variant="outline">
-            Manage Subscription
-          </Button>
-        </footer>
       </div>
     );
   }
 };
-
-function BarChartIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="12" x2="12" y1="20" y2="10" />
-      <line x1="18" x2="18" y1="20" y2="4" />
-      <line x1="6" x2="6" y1="20" y2="16" />
-    </svg>
-  );
-}
-
-function ClockIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-}
 
 function LineChart(props) {
   return (
@@ -538,89 +494,6 @@ function LineChart(props) {
         role="application"
       />
     </div>
-  );
-}
-
-function Package2Icon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
-      <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9" />
-      <path d="M12 3v6" />
-    </svg>
-  );
-}
-
-function PackageIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m7.5 4.27 9 5.15" />
-      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-      <path d="m3.3 7 8.7 5 8.7-5" />
-      <path d="M12 22V12" />
-    </svg>
-  );
-}
-
-function SearchIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  );
-}
-
-function UserIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
   );
 }
 

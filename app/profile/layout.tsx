@@ -13,7 +13,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="flex flex-col w-screen min-h-screen">
         <main
           style={{ paddingTop: topNavHeight }}
-          className="flex-grow p-6 md:overflow-y-auto md:p-12"
+          className="flex-grow md:overflow-y-auto"
         >
           {children}
         </main>
