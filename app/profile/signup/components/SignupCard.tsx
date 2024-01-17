@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState, KeyboardEvent } from "react";
+import { useState, KeyboardEvent, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, UserPlus, User } from "lucide-react";
 
@@ -42,7 +42,7 @@ const formSchema = z.object({
   lastName: z.string().min(1, "Required"),
   email: z.string().email("Invalid email address").min(1, "Required"),
   role: z.enum(["parent", "student"]),
-  yearLevel: z.enum(["7", "8", "9", "10", "11", "12"]),
+  yearLevel: z.enum(["7", "8", "9", "10", "11", "12", "N/A"]),
   subjects: z.array(z.string()).min(1, "Required"),
   school: z.string().min(1, "Required"),
   interests: z.array(z.string()).min(1, "Required"),
@@ -73,6 +73,28 @@ const SignupCard = ({ session }: { session: Session }) => {
         }
       : {},
   });
+
+  // watch the role
+  const { handleSubmit, control, register, setValue, watch } = form;
+  const role = watch("role");
+
+  const isParent = watch("role") === "parent";
+
+  useEffect(() => {
+    if (isParent) {
+      setValue("yearLevel", "N/A"); // default value for parents
+      setValue("subjects", ["N/A"]); // default value for parents
+      setValue("school", "N/A"); // default value for parents
+      setValue("interests", ["N/A"]); // default value for parents
+      setValue("tutoringGoal", "N/A"); // default value for parents
+    } else {
+      setValue("yearLevel", "12"); // default value for students
+      setValue("subjects", ["Biology"]); // default value for students
+      setValue("school", ""); // default value for students
+      setValue("interests", []); // default value for students
+      setValue("tutoringGoal", ""); // default value for students
+    }
+  }, [isParent, setValue]);
 
   // handle subject change
   const handleSelectSubject = (selectedSubject: string) => {
@@ -167,14 +189,15 @@ const SignupCard = ({ session }: { session: Session }) => {
     }
   };
 
+  useEffect(() => {
+    setValue("subjects", subjects);
+    setValue("interests", interests);
+  }, [subjects, interests, setValue]);
+
   // handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log(values);
   };
-
-  // watch the role
-  const { handleSubmit, control, watch } = form;
-  const role = watch("role");
 
   if (session?.user) {
     // render the form component
@@ -339,6 +362,8 @@ const SignupCard = ({ session }: { session: Session }) => {
                           </FormControl>
                           <FormMessage />
                           <RenderSubjects />
+                          {/* Register the subjects */}
+                          <input {...register("subjects")} type="hidden" />
                         </FormItem>
                       )}
                     />
@@ -368,6 +393,10 @@ const SignupCard = ({ session }: { session: Session }) => {
                           <FormLabel className="font-semibold">
                             Interests
                           </FormLabel>
+                          <FormDescription>
+                            Your interests help us make content that is
+                            relevant, and interesting to you.
+                          </FormDescription>
                           <div className="flex items-center">
                             <FormControl>
                               <Input
@@ -376,19 +405,22 @@ const SignupCard = ({ session }: { session: Session }) => {
                                   setCurrentInterest(e.target.value)
                                 }
                                 onKeyPress={handleKeyPress}
-                                placeholder="Type and press enter to add an interest"
+                                placeholder="Enter one or more interests"
                               />
                             </FormControl>
                             <Button
                               type="button"
                               onClick={handleAddInterest}
                               size="icon"
+                              className="ml-2"
                             >
                               <Plus className="h-5 w-5" />
                             </Button>
                           </div>
                           <FormMessage />
                           <RenderInterests />
+                          {/* Register the interests */}
+                          <input {...register("interests")} type="hidden" />
                         </FormItem>
                       )}
                     />
@@ -400,6 +432,9 @@ const SignupCard = ({ session }: { session: Session }) => {
                           <FormLabel className="font-semibold">
                             Tutoring Goal
                           </FormLabel>
+                          <FormDescription>
+                            What do you want to achieve from tutoring?
+                          </FormDescription>
                           <FormControl>
                             <Input
                               {...field}
@@ -420,7 +455,7 @@ const SignupCard = ({ session }: { session: Session }) => {
                           </FormLabel>
                           <FormDescription>
                             If your parent sent you a link, please paste that
-                            link below
+                            link below.
                           </FormDescription>
                           <FormControl>
                             <Input {...field} placeholder="Your parent Link" />
@@ -431,7 +466,9 @@ const SignupCard = ({ session }: { session: Session }) => {
                     />
                   </>
                 ) : (
-                  <></>
+                  <>
+                    {/* Parent form - create dummy/default values for the remaining values */}
+                  </>
                 )}
                 <div className="flex justify-end">
                   <Button type="submit" className="hover:bg-light-teal">
