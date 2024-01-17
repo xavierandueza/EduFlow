@@ -7,20 +7,14 @@ import ChildEditCardContent from "./ChildEditCardContent";
 
 const ChildEditCard = ({
   studentId,
-  childStudentData,
-  router,
+  studentName,
 }: {
   studentId: string;
-  childStudentData: FirestoreParentChildLong;
-  router: AppRouterInstance;
+  studentName: string;
 }) => {
   return (
     <TutoringSessionsProvider>
-      <ChildEditCardContent
-        studentId={studentId}
-        childStudentData={childStudentData}
-        router={router}
-      />
+      <ChildEditCardContent studentId={studentId} studentName={studentName} />
     </TutoringSessionsProvider>
   );
 };
