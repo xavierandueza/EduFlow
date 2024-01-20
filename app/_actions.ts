@@ -11,7 +11,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { Role } from "./utils/interfaces";
-import { FirestoreParentChildLong } from "./utils/interfaces";
+import { LinkedUser } from "./utils/interfaces";
 
 export async function createUser({
   id,
@@ -238,6 +238,6 @@ export async function getStudentDataFromParents({
 }) {
   const parentDoc = await getDoc(doc(db, "parents", parentId));
   return parentDoc.data().childrenLong as {
-    [id: string]: FirestoreParentChildLong;
+    [id: string]: LinkedUser;
   };
 }

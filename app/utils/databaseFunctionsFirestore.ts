@@ -4,18 +4,16 @@ import {
   FirestoreStudent,
   FirestoreStudentSkill,
   SchoolClassSkill,
-  MetricScores,
   FirestoreTeacher,
   FirestoreSchoolClass,
   FirestoreSkillAggregate,
   FirestoreStudentAggregate,
   FirestoreExtendedUser,
   TutoringSession,
-  Weekday,
+  FirestoreParent,
 } from "./interfaces";
 
 import { db } from "../firebase";
-import { Firestore } from "firebase-admin/firestore";
 import {
   collection,
   getDoc,
@@ -31,8 +29,9 @@ import {
   FirestoreDataConverter,
   QueryDocumentSnapshot,
   DocumentData,
+  updateDoc,
+  arrayUnion,
 } from "firebase/firestore";
-import { unsubscribe } from "diagnostics_channel";
 
 async function getSchoolClassSkillFromDB(
   id?: string,
@@ -80,46 +79,26 @@ async function getSchoolClassSkillFromDB(
   }
 }
 
-async function getStudentFromDB(id?: string, email?: string, firestoreDb = db) {
+const getStudentFromDb = async ({ id, role }: { id: string; role: string }) => {
+  // logic for loading in student
   try {
-    if (id) {
-      const docSnapshot = await getDoc(doc(firestoreDb, "students", id));
+    if (role === "student") {
+      // just get the doc and return it
+      const studentDoc = await getDoc(doc(db, "students", id));
 
-      if (docSnapshot.exists) {
-        return {
-          id: docSnapshot.id,
-          ...docSnapshot.data(),
-        } as FirestoreStudent;
-      } else {
-        throw new Error("No student found");
-      }
-    } else if (email) {
-      const q = query(
-        collection(firestoreDb, "students"),
-        where("email", "==", email),
-        limit(1)
-      );
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        return {
-          id: querySnapshot.docs[0].id,
-          ...querySnapshot.docs[0].data(),
-        } as FirestoreStudent;
-      } else {
-        throw new Error("No student found");
-      }
+      return studentDoc.data() as FirestoreStudent;
+    } else if (role === "parent") {
+      // logic here later
     } else {
-      throw new Error("No student found");
+      throw new Error("Invalid role provided: " + role);
     }
   } catch (error) {
-    console.log(
-      `Error getting student document of id: ${id} OR email ${email}`,
-      error
+    console.error(
+      `Error getting student document of id: ${id} and role ${role}. Specific error of: ${error}`
     );
-    throw error;
+    return null;
   }
-}
+};
 
 async function getStudentSkillFromDB(
   id?: string,
@@ -561,7 +540,8 @@ async function updateStudentSkillScore(
   }
 }
 
-async function getUserFromDb(id: string, firestoreDb = db) {
+const getUserFromDb = async ({ id }: { id: string }) => {
+  const firestoreDb = db;
   try {
     const docSnapshot = await getDoc(doc(firestoreDb, "users", id));
 
@@ -572,9 +552,9 @@ async function getUserFromDb(id: string, firestoreDb = db) {
     }
   } catch (error) {
     console.error(`Error getting user document of id: ${id}`, error);
-    throw error;
+    return null;
   }
-}
+};
 
 // Define a converter for the TutoringSession
 const tutoringSessionConverter: FirestoreDataConverter<TutoringSession> = {
@@ -713,9 +693,258 @@ const deleteTutoringSession = async ({
   }
 };
 
+const getParentFromDb = async ({ id, role }: { id: string; role: string }) => {
+  // will only ever have a parent OR a student ID being inputted
+  // Check if neither inputted
+  if (role !== "parent" && role !== "student") {
+    throw new Error("Invalid role provided: " + role);
+  }
+
+  const firestoreDb = db;
+
+  // studentId being fed in logic
+  if (role === "student") {
+    try {
+      const q = query(
+        collection(firestoreDb, "parents"),
+        where("childrenShort", "array-contains", id)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const parentsData = {};
+        querySnapshot.docs.forEach((doc) => {
+          parentsData[doc.id] = doc.data() as FirestoreParent;
+        });
+        return parentsData;
+      } else {
+        console.warn("no parent found for student ID: " + id);
+        return null;
+      }
+    } catch (error) {
+      console.error(
+        `Error getting parent document for student ID ${id}`,
+        error
+      );
+      throw error;
+    }
+  } else if (role === "parent") {
+    // parentId, so just get the parent
+    try {
+      const parentDoc = await getDoc(doc(firestoreDb, "parents", id));
+      if (parentDoc.exists) {
+        return parentDoc.data() as FirestoreParent;
+      } else {
+        console.warn("no parent found for parent ID: " + id);
+        return null;
+      }
+    } catch (error) {
+      console.error(`Error getting parent document for parent ID ${id}`, error);
+    }
+  }
+};
+
+const linkUsersInDb = async ({
+  userId,
+  linkToUserId,
+  role,
+}: {
+  userId: string;
+  linkToUserId: string;
+  role: string;
+}) => {
+  try {
+    // different logic between linking a parent and a student
+    if (role === "student") {
+      // first need to add the linkToUserId to the child
+      // need to load in the parent user account
+      const parentUserDoc = await getDoc(doc(db, "users", linkToUserId));
+
+      // now update the user
+      await updateDoc(doc(db, "students", userId), {
+        parentsShort: arrayUnion(linkToUserId),
+        parentsLong: {
+          [`${userId}`]: {
+            firstName: parentUserDoc.data().firstName,
+            lastName: parentUserDoc.data().lastName,
+            email: parentUserDoc.data().email,
+            image: parentUserDoc.data().image,
+            childAcceptedRequest: true,
+            parentAcceptedRequest: false,
+          },
+        },
+      });
+
+      // need to load in the studentUserDoc to update the parentDoc
+      const studentUserDoc = await getDoc(doc(db, "users", userId));
+      console.log(studentUserDoc.data());
+
+      // then need to add the userId to the parent
+      await updateDoc(doc(db, "parents", linkToUserId), {
+        childrenShort: arrayUnion(userId),
+        childrenLong: {
+          [`${userId}`]: {
+            firstName: studentUserDoc.data().firstName,
+            lastName: studentUserDoc.data().lastName,
+            email: studentUserDoc.data().email,
+            image: studentUserDoc.data().image,
+            subscriptionActive: studentUserDoc.data().subscriptionActive,
+            subscriptionName: studentUserDoc.data().subscriptionName,
+            childAcceptedRequest: true,
+            parentAcceptedRequest: false,
+          },
+        },
+      });
+
+      return true;
+    } else if (role === "parent") {
+      // logic later
+    } else {
+      // invalid role
+    }
+  } catch (error) {
+    console.error(
+      `Error linking users ${userId} and ${linkToUserId} with role ${role}. Error of: ${error}`
+    );
+    return false;
+  }
+};
+
+const handleProfileUpdate = async ({
+  id,
+  role,
+  firstName,
+  lastName,
+  email,
+  yearLevel,
+  subjects,
+  school,
+  interests,
+  tutoringGoal,
+}: {
+  id: string;
+  role: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  yearLevel: number;
+  subjects: string[];
+  school: string;
+  interests: string[];
+  tutoringGoal: string;
+}) => {
+  // logic for updating the profile
+  try {
+    // update user regardless of profile type
+    await updateDoc(doc(db, "users", id), {
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+    });
+
+    // student logic
+    if (role === "student") {
+      // update the student account
+      await updateDoc(doc(db, "students", id), {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        yearLevel: yearLevel,
+        subjects: subjects,
+        school: school,
+        interests: interests,
+        tutoringGoal: tutoringGoal,
+      });
+
+      // update the parent accounts that might be linked
+      // find the parents that have this account in their childrenShort
+      const q = query(
+        collection(db, "parents"),
+        where("childrenShort", "array-contains", id)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        querySnapshot.docs.forEach(async (myDoc) => {
+          await updateDoc(doc(db, "parents", myDoc.id), {
+            [`childrenLong.${id}.firstName`]: firstName,
+            [`childrenLong.${id}.lastName`]: lastName,
+            [`childrenLong.${id}.email`]: email,
+          });
+        });
+      }
+
+      return true;
+    } else if (role === "parent") {
+      // update the parent account
+      await updateDoc(doc(db, "parents", id), {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+      });
+
+      // update the student accounts that might be linked
+      // find the students that have this account in their parentsShort
+      const q = query(
+        collection(db, "students"),
+        where("parentsShort", "array-contains", id)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        querySnapshot.docs.forEach(async (myDoc) => {
+          await updateDoc(doc(db, "students", myDoc.id), {
+            [`parentsLong.${id}.firstName`]: firstName,
+            [`parentsLong.${id}.lastName`]: lastName,
+            [`parentsLong.${id}.email`]: email,
+          });
+        });
+      }
+
+      return true;
+    }
+  } catch (error) {
+    console.error("error updating profile: ", error);
+    return false;
+  }
+};
+
+const acceptLinkRequest = async ({
+  childId,
+  parentId,
+}: {
+  childId: string;
+  parentId: string;
+}) => {
+  try {
+    // already accepted by requester, but we can just update both
+    // updating the student doc
+    await updateDoc(doc(db, "students", childId), {
+      [`parentsLong.${parentId}.childAcceptedRequest`]: true,
+      [`parentsLong.${parentId}.parentAcceptedRequest`]: true,
+    });
+
+    // the same for the parentDoc
+    await updateDoc(doc(db, "parents", parentId), {
+      [`childrenLong.${childId}.childAcceptedRequest`]: true,
+      [`childrenLong.${childId}.parentAcceptedRequest`]: true,
+    });
+
+    return true;
+  } catch (error) {
+    console.error(
+      `Error accepting link request for student ${childId} with parent ${parentId} Error of: ${error}`
+    );
+    return false;
+  }
+};
+
 export {
   getSchoolClassSkillFromDB,
-  getStudentFromDB,
+  getStudentFromDb,
   getStudentSkillFromDB,
   getStudentSkillFromDBAll,
   getTeacherFromDB,
@@ -728,4 +957,8 @@ export {
   getTutoringSessionFromDb,
   insertTutoringSession,
   deleteTutoringSession,
+  getParentFromDb,
+  linkUsersInDb,
+  acceptLinkRequest,
+  handleProfileUpdate,
 };

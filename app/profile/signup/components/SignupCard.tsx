@@ -244,7 +244,7 @@ const SignupCard = ({
   session: Session;
   updateSession: UpdateSession; // our updateSession func passed from main page
 }) => {
-  // Local state management for subjects
+  // Local state management for subjects and interests
   const [subjects, setSubjects] = useState<string[]>(["Biology"]);
   const [interests, setInterests] = useState<string[]>([]);
   const [currentInterest, setCurrentInterest] = useState<string>("");

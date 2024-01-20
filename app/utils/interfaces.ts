@@ -66,24 +66,25 @@ export interface TutoringSession {
   repeatsFromOriginalSessionId?: string | null;
 }
 
-export interface FirestoreStudent extends FirestoreStandardUser {
-  interests?: string[] | string;
-  careerGoals?: string[] | string;
-  subjects?: string[];
-  parentLink?: string[] | string;
-  schoolClassesLong?: string[];
-  schoolClassesShort?: string[];
+export interface LinkedUser extends FirestoreExtendedUser {
+  parentAcceptedRequest: boolean;
+  childAcceptedRequest: boolean;
 }
 
-export interface FirestoreParentChildLong extends FirestoreStudent {
-  subscriptionActive?: boolean;
-  subscriptionName?: string | null;
+export interface FirestoreStudent extends FirestoreStandardUser {
+  interests?: string[];
+  tutoringGoal?: string;
+  subjects?: string[];
+  parentsShort?: string[];
+  parentsLong?: { [id: string]: LinkedUser };
+  schoolClassesLong?: string[];
+  schoolClassesShort?: string[];
 }
 
 export interface FirestoreParent extends FirestoreStandardUser {
   childrenShort?: string[];
   childrenLong?: {
-    [id: string]: FirestoreParentChildLong;
+    [id: string]: LinkedUser;
   } | null;
 }
 

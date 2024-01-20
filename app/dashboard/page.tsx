@@ -22,13 +22,14 @@ import {
 import { camelCaseToNormalTextCapitalized } from "@/app/utils/textManipulation";
 import ChildEditCard from "./components/ChildEditCard";
 import Nav from "./components/Nav";
-import { getStudentFromDB } from "../utils/databaseFunctionsFirestore";
+import { getStudentFromDb } from "../utils/databaseFunctionsFirestore";
 import {
   User,
   Package,
   Clock4,
   LineChart as LineChartIcon,
 } from "lucide-react";
+import ChildDetailCards from "./components/ChildDetailCards";
 
 const Page = () => {
   // Declaring constants
@@ -70,7 +71,7 @@ const Page = () => {
       } else if (session?.user?.role == "student") {
         // If student, we need to load the student data
         const fetchData = async () => {
-          const data = await getStudentFromDB(session?.user?.id);
+          const data = await getStudentFromDb({ studentId: session?.user?.id });
 
           setStudentData(data);
         };
@@ -101,53 +102,12 @@ const Page = () => {
           <Nav session={session} />
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-medium">
-                  Child's Name
-                </CardTitle>
-                <User className="w-6 h-5 text-gray-500 dark:text-gray-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {parentChildData && childId
-                    ? `${parentChildData[childId].firstName} 
-                ${parentChildData[childId].lastName}`
-                    : null}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-medium">
-                  Subscription Plan
-                </CardTitle>
-                <Package className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {parentChildData && childId
-                    ? parentChildData[childId].subscriptionActive
-                      ? camelCaseToNormalTextCapitalized(
-                          parentChildData[childId].subscriptionName
-                        )
-                      : "Unsubscribed"
-                    : null}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <CardTitle className="text-sm font-medium">Usage</CardTitle>
-                <Clock4 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">2 hours</div>
-                <Progress className="mt-2 h-4" value={50} />
-              </CardContent>
-            </Card>
-          </div>
+          <ChildDetailCards
+            firstName={parentChildData[childId]?.firstName}
+            lastName={parentChildData[childId]?.lastName}
+            subscriptionActive={parentChildData[childId]?.subscriptionActive}
+            subscriptionName={parentChildData[childId]?.subscriptionName}
+          />
           <div>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
