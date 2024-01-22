@@ -15,10 +15,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { getStudentDataFromParents } from "@/app/_actions";
-import {
-  FirestoreParentChildLong,
-  FirestoreStudent,
-} from "@/app/utils/interfaces";
+import { LinkedUser, FirestoreStudent } from "@/app/utils/interfaces";
 import { camelCaseToNormalTextCapitalized } from "@/app/utils/textManipulation";
 import ChildEditCard from "./components/ChildEditCard";
 import Nav from "./components/Nav";
@@ -36,7 +33,7 @@ const Page = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [parentChildData, setParentChildData] = useState<{
-    [id: string]: FirestoreParentChildLong;
+    [id: string]: LinkedUser;
   }>(null);
   // used for swapping between the accounts of children - default of 0 for first child (most people only have 1)
   const [childIndex, setChildIndex] = useState<number>(0);
@@ -71,7 +68,10 @@ const Page = () => {
       } else if (session?.user?.role == "student") {
         // If student, we need to load the student data
         const fetchData = async () => {
-          const data = await getStudentFromDb({ studentId: session?.user?.id });
+          const data = await getStudentFromDb({
+            id: session?.user?.id,
+            role: session?.user?.role,
+          });
 
           setStudentData(data);
         };
@@ -103,10 +103,23 @@ const Page = () => {
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10">
           <ChildDetailCards
-            firstName={parentChildData[childId]?.firstName}
-            lastName={parentChildData[childId]?.lastName}
-            subscriptionActive={parentChildData[childId]?.subscriptionActive}
-            subscriptionName={parentChildData[childId]?.subscriptionName}
+            firstName={
+              parentChildData ? parentChildData[childId]?.firstName : null
+            }
+            lastName={
+              parentChildData ? parentChildData[childId]?.lastName : null
+            }
+            subscriptionActive={
+              parentChildData
+                ? parentChildData[childId]?.subscriptionActive
+                : null
+            }
+            subscriptionName={
+              parentChildData
+                ? parentChildData[childId]?.subscriptionName
+                : null
+            }
+            role={session?.user?.role}
           />
           <div>
             <Card>

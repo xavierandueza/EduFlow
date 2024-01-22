@@ -10,7 +10,10 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { acceptLinkRequest } from "@/app/utils/databaseFunctionsFirestore";
+import {
+  acceptLinkRequest,
+  rejectLinkRequest,
+} from "@/app/utils/databaseFunctionsFirestore";
 
 const ManageLinkRequestDialog = ({
   role,
@@ -34,8 +37,11 @@ const ManageLinkRequestDialog = ({
   parentLastName: string;
 }) => {
   const handleAcceptClick = () => {
-    console.log("accepting link request");
     acceptLinkRequest({ childId: childId, parentId: parentId });
+  };
+
+  const handleRejectClick = () => {
+    rejectLinkRequest({ childId: childId, parentId: parentId });
   };
 
   // an alert dialog that will pop up when the user wants to delete a linked account
@@ -65,7 +71,11 @@ const ManageLinkRequestDialog = ({
           </DialogDescription>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="secondary" className="hover:bg-red-500">
+              <Button
+                variant="secondary"
+                className="hover:bg-red-500"
+                onClick={handleRejectClick}
+              >
                 Reject
               </Button>
             </DialogClose>

@@ -41,12 +41,22 @@ import {
 } from "@/app/utils/databaseFunctionsFirestore";
 import { linkUsersInDb } from "@/app/utils/databaseFunctionsFirestore";
 import { useToast } from "@/components/ui/use-toast";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { ToastAction } from "@/components/ui/toast";
 
 const formSchema = z.object({
   accountLink: z.string().min(1, "Required"),
 });
 
-const LinkAccountDialog = ({ id, role }: { id: string; role: string }) => {
+const LinkAccountDialog = ({
+  id,
+  role,
+  router,
+}: {
+  id: string;
+  role: string;
+  router: AppRouterInstance;
+}) => {
   const [linkOption, setLinkOption] = useState<string>(null);
   const [isValidAccount, setIsValidAccount] = useState<boolean>(false);
   const [accountCheckMessage, setAccountCheckMessage] = useState<string>(null);
@@ -93,7 +103,12 @@ const LinkAccountDialog = ({ id, role }: { id: string; role: string }) => {
       toast({
         title: "Successfully requested accounts to be linked",
         description:
-          "The other user will need to accept you on their end to finalise linking",
+          "The other user will need to accept you on their end to finalise linking. Refresh the page to see the changes.",
+        action: (
+          <ToastAction altText="Refresh" onClick={router.refresh}>
+            Refresh
+          </ToastAction>
+        ),
       });
     } else {
       // failure
@@ -160,7 +175,34 @@ const LinkAccountDialog = ({ id, role }: { id: string; role: string }) => {
         );
       }
     } else if (role === "parent") {
-      // logic here later
+      // Check if a user exists within the database
+      const user = await getUserFromDb({ id: link });
+
+      if (id === link) {
+        console.error("Cannot link to yourself");
+        setIsValidAccount(false);
+        setAccountCheckMessage(
+          "You cannot link to yourself. Please double-check the account link has been inputted correctly."
+        );
+      } else if (!user) {
+        console.error("No user found");
+        setIsValidAccount(false);
+        setAccountCheckMessage(
+          "No user found for the account. Please double-check the account link has been inputted correctly."
+        );
+      } else if (user.role !== "student") {
+        console.error("User account found, but not a student account");
+        setIsValidAccount(false);
+        setAccountCheckMessage(
+          "An account was found, however it is not a student account. This could be because the account has not finished setup, or the account is not a parent account. Please double-check the account link has been inputted correctly."
+        );
+      } else {
+        // got through checks just fine, now set the details
+        setIsValidAccount(true);
+        setAccountCheckMessage(
+          `Account for ${user.firstName} ${user.lastName} found! Please click submit to link the account.`
+        );
+      }
     }
 
     // done with everything, so now just set loading to false
@@ -190,8 +232,9 @@ const LinkAccountDialog = ({ id, role }: { id: string; role: string }) => {
           <DialogHeader>
             <DialogTitle>Send Link Account Request</DialogTitle>
             <DialogDescription>
-              Do you have a link, or would you like to generate a link to send
-              to someone else?
+              {role === "student"
+                ? "Do you have a link, or would you like to generate a link to send to a parent/guardian?"
+                : "Do you have a link, or would you like to generate a link to send to your child?"}
             </DialogDescription>
           </DialogHeader>
           {/* Need to have a radio or something similar that, depending on the value, will fill out the rest of the dialog */}

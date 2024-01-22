@@ -24,14 +24,16 @@ import {
   doc,
   setDoc,
   addDoc,
-  onSnapshot,
   deleteDoc,
   FirestoreDataConverter,
   QueryDocumentSnapshot,
   DocumentData,
   updateDoc,
   arrayUnion,
+  arrayRemove,
+  deleteField,
 } from "firebase/firestore";
+import { string } from "zod";
 
 async function getSchoolClassSkillFromDB(
   id?: string,
@@ -693,13 +695,15 @@ const deleteTutoringSession = async ({
   }
 };
 
-const getParentFromDb = async ({ id, role }: { id: string; role: string }) => {
+const getParentFromDb = async ({
+  id,
+  role,
+}: {
+  id: string;
+  role: string;
+}): Promise<FirestoreParent | null> => {
   // will only ever have a parent OR a student ID being inputted
   // Check if neither inputted
-  if (role !== "parent" && role !== "student") {
-    throw new Error("Invalid role provided: " + role);
-  }
-
   const firestoreDb = db;
 
   // studentId being fed in logic
@@ -727,7 +731,7 @@ const getParentFromDb = async ({ id, role }: { id: string; role: string }) => {
         `Error getting parent document for student ID ${id}`,
         error
       );
-      throw error;
+      return null;
     }
   } else if (role === "parent") {
     // parentId, so just get the parent
@@ -741,7 +745,11 @@ const getParentFromDb = async ({ id, role }: { id: string; role: string }) => {
       }
     } catch (error) {
       console.error(`Error getting parent document for parent ID ${id}`, error);
+      return null;
     }
+  } else {
+    console.error("Invalid role provided: " + role);
+    return null;
   }
 };
 
@@ -799,7 +807,47 @@ const linkUsersInDb = async ({
 
       return true;
     } else if (role === "parent") {
-      // logic later
+      // first need to add the linkToUserId to the child
+      // need to load in the student user account
+      const studentUserDoc = await getDoc(doc(db, "users", linkToUserId));
+
+      // now update the user
+      await updateDoc(doc(db, "parents", userId), {
+        childrenShort: arrayUnion(linkToUserId),
+        childrenLong: {
+          [`${linkToUserId}`]: {
+            firstName: studentUserDoc.data().firstName,
+            lastName: studentUserDoc.data().lastName,
+            email: studentUserDoc.data().email,
+            image: studentUserDoc.data().image,
+            subscriptionActive: studentUserDoc.data().subscriptionActive,
+            subscriptionName: studentUserDoc.data().subscriptionName,
+            childAcceptedRequest: false,
+            parentAcceptedRequest: true,
+          },
+        },
+      });
+
+      // need to load in the studentUserDoc to update the parentDoc
+      const parentUserDoc = await getDoc(doc(db, "users", userId));
+      console.log(parentUserDoc.data());
+
+      // then need to add the userId to the parent
+      await updateDoc(doc(db, "students", linkToUserId), {
+        parentsShort: arrayUnion(userId),
+        parentsLong: {
+          [`${userId}`]: {
+            firstName: parentUserDoc.data().firstName,
+            lastName: parentUserDoc.data().lastName,
+            email: parentUserDoc.data().email,
+            image: parentUserDoc.data().image,
+            childAcceptedRequest: false,
+            parentAcceptedRequest: true,
+          },
+        },
+      });
+
+      return true;
     } else {
       // invalid role
     }
@@ -942,6 +990,69 @@ const acceptLinkRequest = async ({
   }
 };
 
+const unlinkAccounts = async ({
+  parentId,
+  childId,
+}: {
+  parentId: string;
+  childId: string;
+}) => {
+  // can only be done from parent account, simplifies logic
+  try {
+    // first need to remove the childId from the parent
+    await updateDoc(doc(db, "parents", parentId), {
+      childrenShort: arrayRemove(childId),
+      [`childrenLong.${childId}`]: deleteField(),
+    });
+
+    // now unlink from the student
+    await updateDoc(doc(db, "students", childId), {
+      parentsShort: arrayRemove(parentId),
+      [`parentsLong.${parentId}`]: deleteField(),
+    });
+
+    // if both successful, can return true
+    return true;
+  } catch (error) {
+    console.error(
+      `Error unlinking accounts ${parentId} and ${childId}. Error of: ${error}`
+    );
+    return false;
+  }
+};
+
+const rejectLinkRequest = async ({
+  childId,
+  parentId,
+}: {
+  childId: string;
+  parentId: string;
+}) => {
+  // Destroys the links between the parent and child accounts
+  // Can be done from both the parent or child account
+  try {
+    // first need to remove the childId from the parent
+    await updateDoc(doc(db, "parents", parentId), {
+      childrenShort: arrayRemove(childId),
+      [`childrenLong.${childId}`]: deleteField(),
+    });
+
+    // now unlink from the student
+    await updateDoc(doc(db, "students", childId), {
+      parentsShort: arrayRemove(parentId),
+      [`parentsLong.${parentId}`]: deleteField(),
+    });
+
+    // if both successful, can return true
+    return true;
+  } catch (error) {
+    console.error(
+      `Error unlinking accounts ${parentId} and ${childId}. Error of: ${error}`
+    );
+    return false;
+  }
+};
+
 export {
   getSchoolClassSkillFromDB,
   getStudentFromDb,
@@ -961,4 +1072,6 @@ export {
   linkUsersInDb,
   acceptLinkRequest,
   handleProfileUpdate,
+  unlinkAccounts,
+  rejectLinkRequest,
 };

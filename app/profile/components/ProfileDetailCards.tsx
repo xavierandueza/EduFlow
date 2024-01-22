@@ -1,11 +1,12 @@
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Package, Clock4 } from "lucide-react";
+import { User, Package, Clock4, Users } from "lucide-react";
 import { camelCaseToNormalTextCapitalized } from "@/app/utils/textManipulation";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
+import { capitaliseFirstLetter } from "@/app/utils/textManipulation";
 
-const ChildDetailCards = ({
+const ProfileDetailCards = ({
   firstName,
   lastName,
   subscriptionActive,
@@ -23,41 +24,31 @@ const ChildDetailCards = ({
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">
-              {firstName ? "Child's Name" : "No linked children found"}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Name</CardTitle>
             <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {firstName ? (
-                `${firstName} ${lastName}`
-              ) : (
-                <Link href="/profile">Add a Child</Link>
-              )}
+              {firstName ? `${firstName} ${lastName}` : null}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Account Role</CardTitle>
+            <Users className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {capitaliseFirstLetter(role)}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">
-              Subscription Plan
+              Usage - Replace with something else for parent?
             </CardTitle>
-            <Package className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {subscriptionActive ? (
-                camelCaseToNormalTextCapitalized(subscriptionName)
-              ) : (
-                <Link href="/subscribe">Unsubscribed</Link>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Usage</CardTitle>
             <Clock4 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </CardHeader>
           <CardContent>
@@ -111,4 +102,4 @@ const ChildDetailCards = ({
   }
 };
 
-export default ChildDetailCards;
+export default ProfileDetailCards;

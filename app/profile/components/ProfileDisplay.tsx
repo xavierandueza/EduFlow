@@ -54,6 +54,8 @@ type UpdateSession = (data?: any) => Promise<Session | null>;
 // import subject and yearLevelOptions
 import * as subjectOptions from "@/app/data/SubjectOptions";
 import yearLevelOptions from "@/app/data/YearLevelOptions";
+import { useToast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 // declare the formSchema
 const formSchema = z.object({
@@ -93,6 +95,7 @@ const ProfileDisplay = ({
   const [tempSubjects, setTempSubjects] = useState<string[]>([]);
   const [tempInterests, setTempInterests] = useState<string[]>([]);
   const [currentInterest, setCurrentInterest] = useState<string>("");
+  const { toast } = useToast();
 
   // on page render, check if we have the data for the right account. If not, we need to set it.
   useEffect(() => {
@@ -135,14 +138,17 @@ const ProfileDisplay = ({
       setValue("school", studentData.school);
       setValue("tutoringGoal", studentData.tutoringGoal);
     } else if (parentData) {
+      setValue("firstName", parentData.firstName);
+      setValue("lastName", parentData.lastName);
+      setValue("email", parentData.email);
       // logic for this
-      setValue("yearLevel", "12");
-      setValue("school", "");
-      setValue("tutoringGoal", "");
-      setSubjects([]);
-      setInterests([]);
+      setValue("yearLevel", "N/A"); // default value for parents
+      setValue("subjects", ["N/A"]); // default value for parents
+      setValue("school", "N/A"); // default value for parents
+      setValue("interests", ["N/A"]); // default value for parents
+      setValue("tutoringGoal", "N/A"); // default value for parents
     }
-  }, [studentData]);
+  }, [studentData, parentData]);
 
   // Now have the right data no matter how we loaded in. Just have to render details now.
   // create the zod form
@@ -262,7 +268,7 @@ const ProfileDisplay = ({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log(values);
 
-    handleProfileUpdate({
+    const profileUpdated = handleProfileUpdate({
       id: id,
       role: role,
       firstName: values.firstName,
@@ -275,29 +281,52 @@ const ProfileDisplay = ({
       tutoringGoal: values.tutoringGoal,
     });
 
-    // update the session
-    /*
     updateSession({
       firstName: values.firstName,
       lastName: values.lastName,
-      role: values.role,
       email: values.email,
     });
-    */
 
     setIsEditMode(false);
+
+    if (profileUpdated) {
+      // show the success message
+      toast({
+        variant: "default",
+        title: "Profile details successfully updated",
+        description: "Your account details have been successfully updated.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error: Profile details unsuccessfully updated",
+        description:
+          "There was an error updating your account details, please try again later.",
+      });
+    }
   };
 
   const handleCancel = () => {
     // reset the values
-    setSubjects(studentData.subjects);
-    setInterests(studentData.interests);
-    setValue("firstName", studentData.firstName);
-    setValue("lastName", studentData.lastName);
-    setValue("email", studentData.email);
-    setValue("yearLevel", studentData.yearLevel.toString());
-    setValue("school", studentData.school);
-    setValue("tutoringGoal", studentData.tutoringGoal);
+    if (role === "student") {
+      setSubjects(studentData.subjects);
+      setInterests(studentData.interests);
+      setValue("firstName", studentData.firstName);
+      setValue("lastName", studentData.lastName);
+      setValue("email", studentData.email);
+      setValue("yearLevel", studentData.yearLevel.toString());
+      setValue("school", studentData.school);
+      setValue("tutoringGoal", studentData.tutoringGoal);
+    } else if (role === "parent") {
+      setValue("firstName", parentData.firstName);
+      setValue("lastName", parentData.lastName);
+      setValue("email", parentData.email);
+      setValue("yearLevel", "N/A"); // default value for parents
+      setValue("subjects", ["N/A"]); // default value for parents
+      setValue("school", "N/A"); // default value for parents
+      setValue("interests", ["N/A"]); // default value for parents
+      setValue("tutoringGoal", "N/A"); // default value for parents
+    }
 
     // toggle the edit mode
     setIsEditMode(false);
@@ -308,7 +337,7 @@ const ProfileDisplay = ({
   };
 
   // render the form component
-  if (studentData) {
+  if (studentData || parentData) {
     return (
       <Card className="w-full">
         <CardHeader>
