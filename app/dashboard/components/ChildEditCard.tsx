@@ -1,5 +1,5 @@
 "use client";
-import { FirestoreParentChildLong } from "@/app/utils/interfaces";
+import { LinkedUser } from "@/app/utils/interfaces";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { TutoringSessionsProvider } from "./contexts/TutoringSessionContext";
 import ChildEditCardContent from "./ChildEditCardContent";
