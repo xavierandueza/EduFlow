@@ -1,3 +1,4 @@
+/*
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import Bubble from "../../components/Bubble";
@@ -156,7 +157,7 @@ export default function Home() {
     if (!studentSkill.email || !studentSkill.skill) {
       /*console.log(
         "Skipping dependency check - email or skill is undefined or empty",
-      );*/
+      );
       return;
     }
 
@@ -194,7 +195,7 @@ export default function Home() {
     /*
     console.log(
       "Relevant messages starting index is : " + relevantMessagesStartIndex,
-    );*/
+    );
     // let currentChatAction = lastChatAction;
     let tempRelevantMessagesStartIndex = relevantMessagesStartIndex;
     let tempOnQuestionLoopCounter = onQuestionLoopCounter;
@@ -226,7 +227,7 @@ export default function Home() {
 
     /*console.log(
       "Temp Relevant Messages Index is: " + tempRelevantMessagesStartIndex,
-    );*/
+    );
 
     handleSubmit(e, {
       options: {
@@ -249,7 +250,7 @@ export default function Home() {
       "Messages is of length: " +
         messages.slice(tempRelevantMessagesStartIndex).length,
     );
-    */
+    
     // update states
     if (messages.slice(tempRelevantMessagesStartIndex).length <= 1) {
       // only one message, so chatAction is askingQuestion
@@ -358,3 +359,10 @@ export default function Home() {
     </>
   );
 }
+*/
+
+const Page = () => {
+  return <></>;
+};
+
+export default Page;

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { FirestoreParentChildLong } from "@/app/utils/interfaces";
+import { LinkedUser } from "@/app/utils/interfaces";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import handleCreateCheckoutSession from "@/app/utils/handleCreateCheckoutSession";
 import { getStudentDataFromParents } from "@/app/_actions";
@@ -26,23 +26,25 @@ const SubscriptionPlanCard = ({
   router: AppRouterInstance;
   session: Session;
 }) => {
+  return <></>;
+  /*
   const [childUserData, setChildUserData] = useState<
-    FirestoreParentChildLong | { [id: string]: FirestoreParentChildLong } | null
+    LinkedUser | null
   >(null);
   const hasFetchedChildData = useRef(false);
 
   useEffect(() => {
     const fetchChildData = async () => {
       if (studentId || session?.user?.role === "student") {
-        const user = await getUserFromDb(
-          studentId ? studentId : session.user.id
-        );
+        const user = await getUserFromDb({
+          id: studentId ? studentId : session.user.id,
+        });
         setChildUserData({
           firstName: user.firstName,
           lastName: user.lastName,
           subscriptionActive: user.subscriptionActive,
           subscriptionName: user.subscriptionName,
-        } as FirestoreParentChildLong);
+        } as LinkedUser);
       } else if (session?.user?.role === "parent") {
         const data = await getStudentDataFromParents({
           parentId: session.user.id,
@@ -198,6 +200,7 @@ const SubscriptionPlanCard = ({
       </div>
     </div>
   );
+    */
 };
 
 export default SubscriptionPlanCard;

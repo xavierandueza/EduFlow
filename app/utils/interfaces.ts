@@ -2,16 +2,16 @@ import { Session } from "next-auth";
 
 export interface Skill {
   subject: string;
-  curriculum_point: string;
+  curriculumPoint: string;
   skill: string;
-  skill_description: string;
-  key_ideas: string[];
-  key_idea_summaries: string[];
-  easy_questions: string[];
-  mdrt_questions: string[];
-  hard_questions: string[];
+  skillDescription: string;
+  keyIdeas: string[];
+  keyIdeasSummaries: string[];
   content: string;
   dependencies: string[];
+  decayValue: number;
+  questions: string[];
+  id: string;
   // ... any other properties
 }
 
@@ -60,29 +60,33 @@ export type Weekday =
 
 export interface TutoringSession {
   subject: string;
-  weekday: Weekday;
-  startTime: number; // 24 hour time, eg 6PM = 1800
-  duration: number; // in hours
+  dateTime: Date;
+  duration: number; // in minutes
+  repeats: boolean;
+  repeatsFromOriginalSessionId?: string | null;
+}
+
+export interface LinkedUser extends FirestoreExtendedUser {
+  parentAcceptedRequest: boolean;
+  childAcceptedRequest: boolean;
 }
 
 export interface FirestoreStudent extends FirestoreStandardUser {
-  interests?: string[] | string;
-  careerGoals?: string[] | string;
+  interests?: string[];
+  tutoringGoal?: string;
   subjects?: string[];
-  parentLink?: string[] | string;
+  yearLevel?: number;
+  school?: string;
+  parentsShort?: string[];
+  parentsLong?: { [id: string]: LinkedUser };
   schoolClassesLong?: string[];
   schoolClassesShort?: string[];
-}
-
-export interface FirestoreParentChildLong extends FirestoreStudent {
-  subscriptionActive?: boolean;
-  subscriptionName?: string | null;
 }
 
 export interface FirestoreParent extends FirestoreStandardUser {
   childrenShort?: string[];
   childrenLong?: {
-    [id: string]: FirestoreParentChildLong;
+    [id: string]: LinkedUser;
   } | null;
 }
 
@@ -93,8 +97,8 @@ export interface FirestoreStudentSkill {
   firstName: string;
   lastName: string;
   subject: string;
-  schoolClass: string;
-  schoolClassID: string;
+  schoolClass?: string;
+  schoolClassID?: string;
   skill: string;
   skillID: string;
   masteryScore: number;

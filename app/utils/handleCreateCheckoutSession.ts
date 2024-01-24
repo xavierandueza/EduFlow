@@ -1,10 +1,10 @@
 import getStripe from "./getStripe";
-import { FirestoreParentChildLong } from "./interfaces";
+import { LinkedUser } from "./interfaces";
 
 const handleCreateCheckoutSession = async (
   priceId: string,
   studentId: string,
-  studentData: FirestoreParentChildLong
+  studentData: LinkedUser
 ) => {
   try {
     const res = await fetch(`/api/stripe/checkoutSession`, {

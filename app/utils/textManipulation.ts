@@ -32,3 +32,7 @@ export function convertFrom24HourTo12Hour(time: number) {
     hour >= 12 ? "PM" : "AM"
   }`;
 }
+
+export function returnStartAndEndTimes(startTime: number, duration: number) {
+  // takes in the startTime in 24 hour time and the endTime in minutes and returns a string that shows the start-end time in 12 hour time.
+}

@@ -4,18 +4,17 @@ import {
   FirestoreStudent,
   FirestoreStudentSkill,
   SchoolClassSkill,
-  MetricScores,
   FirestoreTeacher,
   FirestoreSchoolClass,
   FirestoreSkillAggregate,
   FirestoreStudentAggregate,
   FirestoreExtendedUser,
   TutoringSession,
-  Weekday,
+  FirestoreParent,
+  Skill,
 } from "./interfaces";
 
 import { db } from "../firebase";
-import { Firestore } from "firebase-admin/firestore";
 import {
   collection,
   getDoc,
@@ -26,10 +25,17 @@ import {
   doc,
   setDoc,
   addDoc,
-  onSnapshot,
   deleteDoc,
+  FirestoreDataConverter,
+  QueryDocumentSnapshot,
+  DocumentData,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  deleteField,
+  Firestore,
 } from "firebase/firestore";
-import { unsubscribe } from "diagnostics_channel";
+import { string } from "zod";
 
 async function getSchoolClassSkillFromDB(
   id?: string,
@@ -77,117 +83,96 @@ async function getSchoolClassSkillFromDB(
   }
 }
 
-async function getStudentFromDB(id?: string, email?: string, firestoreDb = db) {
+const getStudentFromDb = async ({ id, role }: { id: string; role: string }) => {
+  // logic for loading in student
   try {
-    if (id) {
-      const docSnapshot = await getDoc(doc(firestoreDb, "students", id));
+    if (role === "student") {
+      // just get the doc and return it
+      const studentDoc = await getDoc(doc(db, "students", id));
 
-      if (docSnapshot.exists) {
-        return {
-          id: docSnapshot.id,
-          ...docSnapshot.data(),
-        } as FirestoreStudent;
-      } else {
-        throw new Error("No student found");
-      }
-    } else if (email) {
-      const q = query(
-        collection(firestoreDb, "students"),
-        where("email", "==", email),
-        limit(1)
-      );
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        return {
-          id: querySnapshot.docs[0].id,
-          ...querySnapshot.docs[0].data(),
-        } as FirestoreStudent;
-      } else {
-        throw new Error("No student found");
-      }
+      return studentDoc.data() as FirestoreStudent;
+    } else if (role === "parent") {
+      // logic here later
     } else {
-      throw new Error("No student found");
-    }
-  } catch (error) {
-    console.log(
-      `Error getting student document of id: ${id} OR email ${email}`,
-      error
-    );
-    throw error;
-  }
-}
-
-async function getStudentSkillFromDB(
-  id?: string,
-  email?: string,
-  skill?: string,
-  firestoreDb = db
-) {
-  try {
-    // console.log("printing ID: ")
-    // console.log(id)
-    if (id) {
-      const docSnapshot = await getDoc(doc(firestoreDb, "studentSkills", id));
-
-      if (docSnapshot.exists) {
-        return {
-          id: docSnapshot.id,
-          ...docSnapshot.data(),
-        } as FirestoreStudentSkill;
-      } else {
-        throw new Error("No studentSkill found");
-      }
-    } else if (email && skill) {
-      const q = query(
-        collection(firestoreDb, "studentSkills"),
-        where("email", "==", email),
-        where("skill", "==", skill),
-        limit(1)
-      );
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        return {
-          id: querySnapshot.docs[0].id,
-          ...querySnapshot.docs[0].data(),
-        } as FirestoreStudentSkill;
-      } else {
-        throw new Error("No studentSkill found");
-      }
-    } else {
-      throw new Error("Cannot find unique studentSkill with inputted data");
-    }
-  } catch (error) {
-    console.error(`Error getting studentSkill documents for id: ${id}`, error);
-    throw error;
-  }
-}
-
-async function getStudentSkillFromDBAll(email: string, firestoreDb = db) {
-  const q = query(
-    collection(firestoreDb, "studentSkills"),
-    where("email", "==", email)
-  );
-
-  try {
-    const querySnapshot = await getDocs(q);
-
-    if (!querySnapshot.empty) {
-      return querySnapshot.docs.map((doc) => {
-        return { id: doc.id, ...doc.data() } as FirestoreStudentSkill;
-      });
-    } else {
-      throw new Error("No studentSkill found");
+      throw new Error("Invalid role provided: " + role);
     }
   } catch (error) {
     console.error(
-      `Error getting all studentSkill documents of email ${email}`,
-      error
+      `Error getting student document of id: ${id} and role ${role}. Specific error of: ${error}`
     );
-    throw error;
+    return null;
   }
-}
+};
+
+const getStudentSkillFromDb = async ({
+  studentSkillId,
+  studentId,
+  firestoreDb = db,
+}: {
+  studentSkillId?: string;
+  studentId?: string;
+  firestoreDb?: Firestore;
+}): Promise<FirestoreStudentSkill[]> => {
+  // pass in a studentSkillId OR a studentId. StudentId gets all for the student.
+
+  if (studentSkillId) {
+    // retrieve just this specific studentSkillId
+    try {
+      const fetchedStudentSkill = await getDoc(
+        doc(firestoreDb, "studentSkills", studentSkillId)
+      );
+
+      if (!fetchedStudentSkill.exists) {
+        console.error("No studentSkill found for id: " + studentSkillId);
+        return null;
+      }
+
+      return [
+        {
+          id: studentSkillId,
+          ...fetchedStudentSkill.data(),
+        },
+      ] as FirestoreStudentSkill[];
+    } catch (error) {
+      console.error(
+        `Error getting studentSkill document of id: ${studentSkillId}`,
+        error
+      );
+      return null;
+    }
+  } else if (studentId) {
+    // retrieve all studentSkills for this studentId
+    try {
+      const studentSkills = await getDocs(
+        query(
+          collection(firestoreDb, "studentSkills"),
+          where("studentId", "==", studentId)
+        )
+      );
+
+      if (studentSkills.empty) {
+        console.warn("No skills found for student ID: " + studentId);
+        return null;
+      }
+
+      // else we want to return the array
+      return studentSkills.docs.map((doc) => {
+        return { id: doc.id, ...doc.data() } as FirestoreStudentSkill;
+      });
+    } catch (error) {
+      console.error(
+        `Error getting studentSkill documents for studentId: ${studentId}`,
+        error
+      );
+      return null;
+    }
+  } else {
+    console.error(
+      "No studentId or studentSkillId provided, cannot retrieve data"
+    );
+    return null;
+  }
+};
 
 async function getTeacherFromDB(email: string, firestoreDb = db) {
   const q = query(
@@ -558,7 +543,8 @@ async function updateStudentSkillScore(
   }
 }
 
-async function getUserFromDb(id: string, firestoreDb = db) {
+const getUserFromDb = async ({ id }: { id: string }) => {
+  const firestoreDb = db;
   try {
     const docSnapshot = await getDoc(doc(firestoreDb, "users", id));
 
@@ -569,14 +555,31 @@ async function getUserFromDb(id: string, firestoreDb = db) {
     }
   } catch (error) {
     console.error(`Error getting user document of id: ${id}`, error);
-    throw error;
+    return null;
   }
-}
+};
+
+// Define a converter for the TutoringSession
+const tutoringSessionConverter: FirestoreDataConverter<TutoringSession> = {
+  fromFirestore(snapshot: QueryDocumentSnapshot): TutoringSession {
+    const data = snapshot.data();
+    return {
+      ...data,
+      // Convert the dateTime field to a JavaScript Date object
+      dateTime: data.dateTime.toDate(),
+    } as TutoringSession;
+  },
+  toFirestore(modelObject: TutoringSession): DocumentData {
+    return modelObject;
+  },
+};
 
 async function getTutoringSessionFromDb(id: string, firestoreDb = db) {
   try {
     const docSnapshot = await getDocs(
-      collection(firestoreDb, "students", id, "tutoringSessions")
+      collection(firestoreDb, "students", id, "tutoringSessions").withConverter(
+        tutoringSessionConverter
+      )
     );
 
     if (docSnapshot.empty) {
@@ -642,23 +645,49 @@ const insertTutoringSession = async ({
 const deleteTutoringSession = async ({
   studentId,
   existingTutoringSessionId,
+  mode,
+  repeatsFromOriginalSessionId,
 }: {
   studentId: string;
   existingTutoringSessionId: string;
+  mode: string;
+  repeatsFromOriginalSessionId: string;
 }) => {
   // Delete the tutoring session from the database
   const firestoreDb = db;
   try {
-    await deleteDoc(
-      doc(
-        db,
-        "students",
-        studentId,
-        "tutoringSessions",
-        existingTutoringSessionId
-      )
-    );
-    return true;
+    if (mode === "single") {
+      await deleteDoc(
+        doc(
+          db,
+          "students",
+          studentId,
+          "tutoringSessions",
+          existingTutoringSessionId
+        )
+      );
+      return true;
+    } else if (mode === "all") {
+      console.log(
+        "Deleting all tutoring sessions with repeatsFromOriginalSessionId: " +
+          repeatsFromOriginalSessionId
+      );
+      const q = query(
+        collection(firestoreDb, "students", studentId, "tutoringSessions"),
+        where(
+          "repeatsFromOriginalSessionId",
+          "==",
+          repeatsFromOriginalSessionId
+        )
+      );
+
+      // delete documents
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        deleteDoc(doc.ref);
+      });
+      return true;
+    }
   } catch (error) {
     console.error(
       `Error deleting tutoring session with id ${existingTutoringSessionId} for student ${studentId}`
@@ -667,11 +696,449 @@ const deleteTutoringSession = async ({
   }
 };
 
+const getParentFromDb = async ({
+  id,
+  role,
+}: {
+  id: string;
+  role: string;
+}): Promise<FirestoreParent | null> => {
+  // will only ever have a parent OR a student ID being inputted
+  // Check if neither inputted
+  const firestoreDb = db;
+
+  // studentId being fed in logic
+  if (role === "student") {
+    try {
+      const q = query(
+        collection(firestoreDb, "parents"),
+        where("childrenShort", "array-contains", id)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const parentsData = {};
+        querySnapshot.docs.forEach((doc) => {
+          parentsData[doc.id] = doc.data() as FirestoreParent;
+        });
+        return parentsData;
+      } else {
+        console.warn("no parent found for student ID: " + id);
+        return null;
+      }
+    } catch (error) {
+      console.error(
+        `Error getting parent document for student ID ${id}`,
+        error
+      );
+      return null;
+    }
+  } else if (role === "parent") {
+    // parentId, so just get the parent
+    try {
+      const parentDoc = await getDoc(doc(firestoreDb, "parents", id));
+      if (parentDoc.exists) {
+        return parentDoc.data() as FirestoreParent;
+      } else {
+        console.warn("no parent found for parent ID: " + id);
+        return null;
+      }
+    } catch (error) {
+      console.error(`Error getting parent document for parent ID ${id}`, error);
+      return null;
+    }
+  } else {
+    console.error("Invalid role provided: " + role);
+    return null;
+  }
+};
+
+const linkUsersInDb = async ({
+  userId,
+  linkToUserId,
+  role,
+}: {
+  userId: string;
+  linkToUserId: string;
+  role: string;
+}) => {
+  try {
+    // different logic between linking a parent and a student
+    if (role === "student") {
+      // first need to add the linkToUserId to the child
+      // need to load in the parent user account
+      const parentUserDoc = await getDoc(doc(db, "users", linkToUserId));
+
+      // now update the user
+      await updateDoc(doc(db, "students", userId), {
+        parentsShort: arrayUnion(linkToUserId),
+        parentsLong: {
+          [`${userId}`]: {
+            firstName: parentUserDoc.data().firstName,
+            lastName: parentUserDoc.data().lastName,
+            email: parentUserDoc.data().email,
+            image: parentUserDoc.data().image,
+            childAcceptedRequest: true,
+            parentAcceptedRequest: false,
+          },
+        },
+      });
+
+      // need to load in the studentUserDoc to update the parentDoc
+      const studentUserDoc = await getDoc(doc(db, "users", userId));
+      console.log(studentUserDoc.data());
+
+      // then need to add the userId to the parent
+      await updateDoc(doc(db, "parents", linkToUserId), {
+        childrenShort: arrayUnion(userId),
+        childrenLong: {
+          [`${userId}`]: {
+            firstName: studentUserDoc.data().firstName,
+            lastName: studentUserDoc.data().lastName,
+            email: studentUserDoc.data().email,
+            image: studentUserDoc.data().image,
+            subscriptionActive: studentUserDoc.data().subscriptionActive,
+            subscriptionName: studentUserDoc.data().subscriptionName,
+            childAcceptedRequest: true,
+            parentAcceptedRequest: false,
+          },
+        },
+      });
+
+      return true;
+    } else if (role === "parent") {
+      // first need to add the linkToUserId to the child
+      // need to load in the student user account
+      const studentUserDoc = await getDoc(doc(db, "users", linkToUserId));
+
+      // now update the user
+      await updateDoc(doc(db, "parents", userId), {
+        childrenShort: arrayUnion(linkToUserId),
+        childrenLong: {
+          [`${linkToUserId}`]: {
+            firstName: studentUserDoc.data().firstName,
+            lastName: studentUserDoc.data().lastName,
+            email: studentUserDoc.data().email,
+            image: studentUserDoc.data().image,
+            subscriptionActive: studentUserDoc.data().subscriptionActive,
+            subscriptionName: studentUserDoc.data().subscriptionName,
+            childAcceptedRequest: false,
+            parentAcceptedRequest: true,
+          },
+        },
+      });
+
+      // need to load in the studentUserDoc to update the parentDoc
+      const parentUserDoc = await getDoc(doc(db, "users", userId));
+      console.log(parentUserDoc.data());
+
+      // then need to add the userId to the parent
+      await updateDoc(doc(db, "students", linkToUserId), {
+        parentsShort: arrayUnion(userId),
+        parentsLong: {
+          [`${userId}`]: {
+            firstName: parentUserDoc.data().firstName,
+            lastName: parentUserDoc.data().lastName,
+            email: parentUserDoc.data().email,
+            image: parentUserDoc.data().image,
+            childAcceptedRequest: false,
+            parentAcceptedRequest: true,
+          },
+        },
+      });
+
+      return true;
+    } else {
+      // invalid role
+    }
+  } catch (error) {
+    console.error(
+      `Error linking users ${userId} and ${linkToUserId} with role ${role}. Error of: ${error}`
+    );
+    return false;
+  }
+};
+
+const handleProfileUpdate = async ({
+  id,
+  role,
+  firstName,
+  lastName,
+  email,
+  yearLevel,
+  subjects,
+  school,
+  interests,
+  tutoringGoal,
+}: {
+  id: string;
+  role: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  yearLevel: number;
+  subjects: string[];
+  school: string;
+  interests: string[];
+  tutoringGoal: string;
+}) => {
+  // logic for updating the profile
+  try {
+    // update user regardless of profile type
+    await updateDoc(doc(db, "users", id), {
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+    });
+
+    // student logic
+    if (role === "student") {
+      // update the student account
+      await updateDoc(doc(db, "students", id), {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        yearLevel: yearLevel,
+        subjects: subjects,
+        school: school,
+        interests: interests,
+        tutoringGoal: tutoringGoal,
+      });
+
+      // update the parent accounts that might be linked
+      // find the parents that have this account in their childrenShort
+      const q = query(
+        collection(db, "parents"),
+        where("childrenShort", "array-contains", id)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        querySnapshot.docs.forEach(async (myDoc) => {
+          await updateDoc(doc(db, "parents", myDoc.id), {
+            [`childrenLong.${id}.firstName`]: firstName,
+            [`childrenLong.${id}.lastName`]: lastName,
+            [`childrenLong.${id}.email`]: email,
+          });
+        });
+      }
+
+      return true;
+    } else if (role === "parent") {
+      // update the parent account
+      await updateDoc(doc(db, "parents", id), {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+      });
+
+      // update the student accounts that might be linked
+      // find the students that have this account in their parentsShort
+      const q = query(
+        collection(db, "students"),
+        where("parentsShort", "array-contains", id)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        querySnapshot.docs.forEach(async (myDoc) => {
+          await updateDoc(doc(db, "students", myDoc.id), {
+            [`parentsLong.${id}.firstName`]: firstName,
+            [`parentsLong.${id}.lastName`]: lastName,
+            [`parentsLong.${id}.email`]: email,
+          });
+        });
+      }
+
+      return true;
+    }
+  } catch (error) {
+    console.error("error updating profile: ", error);
+    return false;
+  }
+};
+
+const acceptLinkRequest = async ({
+  childId,
+  parentId,
+}: {
+  childId: string;
+  parentId: string;
+}) => {
+  try {
+    // already accepted by requester, but we can just update both
+    // updating the student doc
+    await updateDoc(doc(db, "students", childId), {
+      [`parentsLong.${parentId}.childAcceptedRequest`]: true,
+      [`parentsLong.${parentId}.parentAcceptedRequest`]: true,
+    });
+
+    // the same for the parentDoc
+    await updateDoc(doc(db, "parents", parentId), {
+      [`childrenLong.${childId}.childAcceptedRequest`]: true,
+      [`childrenLong.${childId}.parentAcceptedRequest`]: true,
+    });
+
+    return true;
+  } catch (error) {
+    console.error(
+      `Error accepting link request for student ${childId} with parent ${parentId} Error of: ${error}`
+    );
+    return false;
+  }
+};
+
+const unlinkAccounts = async ({
+  parentId,
+  childId,
+}: {
+  parentId: string;
+  childId: string;
+}) => {
+  // can only be done from parent account, simplifies logic
+  try {
+    // first need to remove the childId from the parent
+    await updateDoc(doc(db, "parents", parentId), {
+      childrenShort: arrayRemove(childId),
+      [`childrenLong.${childId}`]: deleteField(),
+    });
+
+    // now unlink from the student
+    await updateDoc(doc(db, "students", childId), {
+      parentsShort: arrayRemove(parentId),
+      [`parentsLong.${parentId}`]: deleteField(),
+    });
+
+    // if both successful, can return true
+    return true;
+  } catch (error) {
+    console.error(
+      `Error unlinking accounts ${parentId} and ${childId}. Error of: ${error}`
+    );
+    return false;
+  }
+};
+
+const rejectLinkRequest = async ({
+  childId,
+  parentId,
+}: {
+  childId: string;
+  parentId: string;
+}) => {
+  // Destroys the links between the parent and child accounts
+  // Can be done from both the parent or child account
+  try {
+    // first need to remove the childId from the parent
+    await updateDoc(doc(db, "parents", parentId), {
+      childrenShort: arrayRemove(childId),
+      [`childrenLong.${childId}`]: deleteField(),
+    });
+
+    // now unlink from the student
+    await updateDoc(doc(db, "students", childId), {
+      parentsShort: arrayRemove(parentId),
+      [`parentsLong.${parentId}`]: deleteField(),
+    });
+
+    // if both successful, can return true
+    return true;
+  } catch (error) {
+    console.error(
+      `Error unlinking accounts ${parentId} and ${childId}. Error of: ${error}`
+    );
+    return false;
+  }
+};
+
+const getSkillsFromDb = async ({ subject }: { subject: string }) => {
+  // returns all of the skills for the inputted subject
+  try {
+    if (["Biology"].includes(subject)) {
+      //
+      const subjectSnapshot = await getDocs(
+        query(
+          collection(db, "subjects"),
+          where("name", "==", subject),
+          limit(1)
+        )
+      );
+
+      // now need to get the skills from the subject
+      const skillsSnapshot = await getDocs(
+        collection(db, "subjects", subjectSnapshot.docs[0].id, "skills")
+      );
+
+      // now return these as an array of skills
+      return skillsSnapshot.docs.map((doc) => {
+        return { id: doc.id, ...doc.data() } as Skill;
+      });
+    } else {
+      console.warn("Could not retrieve skills for subject: " + subject);
+      return [];
+    }
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
+
+const createStudentSkillsInDb = async ({
+  subject,
+  student,
+  studentId,
+}: {
+  subject: string;
+  student: FirestoreStudent;
+  studentId: string;
+}) => {
+  // creates the studentSkills for the student
+  try {
+    // first need to get the skills for the subject
+    const skills = await getSkillsFromDb({ subject: subject });
+
+    if (skills.length === 0) {
+      return false;
+    } else {
+      // can declare a base studentSkill that contains the non-changing values for all student skills
+      const baseStudentSkill = {
+        email: student.email,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        masteryScore: 0,
+        needToRevise: false,
+        retentionScore: 0,
+        studentId: studentId,
+        subject: subject,
+      };
+      // now need to create the studentSkills
+      skills.forEach(async (skill) => {
+        // create the studentSkill
+        await addDoc(collection(db, "studentSkills"), {
+          areDependenciesMet: skill.dependencies.length === 0,
+          decayValue: skill.decayValue,
+          skill: skill.skill,
+          skillId: skill.id,
+          ...baseStudentSkill,
+        });
+      });
+    }
+
+    // got through it fine, so return true
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
 export {
   getSchoolClassSkillFromDB,
-  getStudentFromDB,
-  getStudentSkillFromDB,
-  getStudentSkillFromDBAll,
+  getStudentFromDb,
+  getStudentSkillFromDb,
   getTeacherFromDB,
   getSchoolClassFromDB,
   getAggregatedSkillsForClass,
@@ -682,4 +1149,11 @@ export {
   getTutoringSessionFromDb,
   insertTutoringSession,
   deleteTutoringSession,
+  getParentFromDb,
+  linkUsersInDb,
+  acceptLinkRequest,
+  handleProfileUpdate,
+  unlinkAccounts,
+  rejectLinkRequest,
+  createStudentSkillsInDb,
 };
