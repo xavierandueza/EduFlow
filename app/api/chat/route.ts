@@ -1,3 +1,4 @@
+/*
 import OpenAI from "openai";
 import { ChatCompletionMessageParam } from "openai/resources";
 import { OpenAIStream, StreamingTextResponse } from "ai";
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
           /*console.log(
             "Last feedback point index:" +
               (3 + onQuestionLoopCounter * 2 + onFeedbackLoopCounter * 2),
-          );*/
+          );
           relevantChatMessage =
             relevantMessages[
               3 + onQuestionLoopCounter * 2 + onFeedbackLoopCounter * 2
@@ -666,3 +667,4 @@ export async function POST(req: Request) {
     throw e;
   }
 }
+*/
