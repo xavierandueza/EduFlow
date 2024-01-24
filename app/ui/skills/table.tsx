@@ -1,7 +1,7 @@
 // import Image from 'next/image';
 import NeedToReviseStatus from "./status";
 // import { formatDateToLocal, formatCurrency } from '../../lib/utils';
-import { getStudentSkillFromDBAll } from "../../utils/databaseFunctionsFirestore";
+import { getStudentSkillFromDb } from "../../utils/databaseFunctionsFirestore";
 import ProgressBar from "../../../components/ProgressBar";
 
 export default async function SkillsTable({
@@ -13,7 +13,7 @@ export default async function SkillsTable({
   currentPage: number;
   email: string;
 }) {
-  const studentSkills = await getStudentSkillFromDBAll(email);
+  const studentSkills = await getStudentSkillFromDb(email);
   console.log(studentSkills[0]);
 
   return (

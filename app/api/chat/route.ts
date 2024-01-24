@@ -3,7 +3,7 @@ import { ChatCompletionMessageParam } from "openai/resources";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import {
   getSchoolClassSkillFromDB,
-  getStudentFromDB,
+  getStudentFromDb,
   updateStudentSkillScore,
 } from "../../utils/databaseFunctionsFirestore";
 import {
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
       )) as SchoolClassSkill;
       // console.log("School class skill is: " + schoolClassSkill.skill);
 
-      const student = (await getStudentFromDB(
+      const student = (await getStudentFromDb(
         studentSkill.studentID
       )) as FirestoreStudent;
       // console.log("Student is: " + student);
@@ -294,7 +294,7 @@ export async function POST(req: Request) {
         studentSkill.skillID
       )) as SchoolClassSkill;
 
-      const student = (await getStudentFromDB(
+      const student = (await getStudentFromDb(
         studentSkill.studentID
       )) as FirestoreStudent;
 
