@@ -15,7 +15,6 @@ const Page = () => {
   const router = useRouter();
   const { data: session, status, update } = useSession();
   // used for swapping between the accounts of children - default of 0 for first child (most people only have 1)
-  const [childId, setChildId] = useState<string>();
   const [studentData, setStudentData] = useState<FirestoreStudent>(null);
 
   useEffect(() => {

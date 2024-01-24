@@ -53,7 +53,11 @@ const ProfileDetailCards = ({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">2 hours</div>
-            <Progress className="mt-2 h-4" value={50} />
+            <Progress
+              className="mt-2 h-4"
+              value={50}
+              indicatorColor="bg-dark-teal"
+            />
           </CardContent>
         </Card>
       </div>
@@ -94,7 +98,11 @@ const ProfileDetailCards = ({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">2 hours</div>
-            <Progress className="mt-2 h-4" value={50} />
+            <Progress
+              className="mt-2 h-4"
+              value={50}
+              indicatorColor="bg-dark-teal"
+            />
           </CardContent>
         </Card>
       </div>

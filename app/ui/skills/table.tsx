@@ -13,7 +13,8 @@ export default async function SkillsTable({
   currentPage: number;
   email: string;
 }) {
-  const studentSkills = await getStudentSkillFromDb(email);
+  // const studentSkills = await getStudentSkillFromDb(email);
+  const studentSkills = [];
   console.log(studentSkills[0]);
 
   return (

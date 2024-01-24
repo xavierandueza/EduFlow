@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { db } from "../../app/firebase";
 import {
   getSchoolClassSkillFromDB,
-  getStudentSkillFromDB,
+  getStudentSkillFromDb,
 } from "../../app/utils/databaseFunctionsFirestore";
 import { FirestoreStudentSkill } from "../../app/utils/interfaces";
 
@@ -33,9 +33,10 @@ async function checkDependencies(studentSkill: FirestoreStudentSkill) {
       invalidDependenciesScores: [],
     };
 
+    /*
     for (const dependency of returnedSchoolClassSkill.dependencies) {
       // get the dependent student skill score
-      const dependencyStudentSkill = await getStudentSkillFromDB(
+      const dependencyStudentSkill = await getStudentSkillFromDb(
         null,
         studentSkill.email,
         dependency
@@ -51,6 +52,7 @@ async function checkDependencies(studentSkill: FirestoreStudentSkill) {
         );
       }
     }
+    */
 
     return dependencies;
   }

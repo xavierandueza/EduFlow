@@ -97,8 +97,8 @@ export interface FirestoreStudentSkill {
   firstName: string;
   lastName: string;
   subject: string;
-  schoolClass: string;
-  schoolClassID: string;
+  schoolClass?: string;
+  schoolClassID?: string;
   skill: string;
   skillID: string;
   masteryScore: number;

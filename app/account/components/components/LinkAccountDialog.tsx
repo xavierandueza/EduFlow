@@ -239,10 +239,6 @@ const LinkAccountDialog = ({
     }
   };
 
-  useEffect(() => {
-    console.log(linkOption);
-  }, [linkOption]);
-
   if (!id) {
     return <></>;
   } else {
