@@ -9,9 +9,16 @@ import {
   setDoc,
   doc,
   updateDoc,
+  getDocs,
+  query,
+  collection,
+  where,
+  limit,
+  addDoc,
 } from "firebase/firestore";
-import { Role } from "./utils/interfaces";
+import { FirestoreStudent, Role } from "./utils/interfaces";
 import { LinkedUser } from "./utils/interfaces";
+import { createStudentSkillsInDb } from "./utils/databaseFunctionsFirestore";
 
 export async function createUser({
   id,
@@ -64,7 +71,7 @@ export async function createUser({
   if (role.toLowerCase() === "student") {
     try {
       // Create student in Db
-      await setDoc(doc(db, "students", id), {
+      const studentDoc = {
         firstName: firstName,
         lastName: lastName,
         image: image,
@@ -75,7 +82,9 @@ export async function createUser({
         interests: interests,
         tutoringGoal: tutoringGoal,
         parentLink: parentLink ? parentLink.trim() : null,
-      });
+      } as FirestoreStudent;
+
+      await setDoc(doc(db, "students", id), studentDoc);
 
       if (parentLink) {
         // Now update the parent doc
@@ -95,6 +104,24 @@ export async function createUser({
           },
         });
       }
+
+      const createdStudentSkillsSuccessArray: boolean[] = [];
+      // Now update the parent doc
+      subjects.forEach(async (subject) => {
+        createdStudentSkillsSuccessArray.push(
+          await createStudentSkillsInDb({
+            subject: subject,
+            student: studentDoc,
+            studentId: id,
+          })
+        );
+      });
+
+      console.log(
+        "createdStudentSkillsSuccessArray: ",
+        createdStudentSkillsSuccessArray
+      );
+      console.log("subjects: ", subjects);
     } catch (error) {
       console.error("error updating student: ", error);
       throw error;

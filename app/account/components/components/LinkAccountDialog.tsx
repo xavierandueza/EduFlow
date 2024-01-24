@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { UserPlus, Loader2 } from "lucide-react";
+import { UserPlus, Loader2, Copy, Mail } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
@@ -209,6 +209,36 @@ const LinkAccountDialog = ({
     setLoading(false);
   };
 
+  // function to copy to clipboard
+  // This function will be responsible for copying the text
+  const copyToClipboard = async (text) => {
+    if ("clipboard" in navigator) {
+      return await navigator.clipboard.writeText(text);
+    } else {
+      // Fallback for older browsers
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "absolute";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+  };
+
+  const handleCopyClick = async () => {
+    const textToCopy = "www.edu-flow.com.au/account/link?id=" + id;
+    try {
+      await copyToClipboard(textToCopy);
+      // You can set some state to show a confirmation message if needed
+      console.log("Text copied to clipboard"); // Or handle the visual feedback
+    } catch (error) {
+      console.error("Failed to copy text: ", error);
+    }
+  };
+
   useEffect(() => {
     console.log(linkOption);
   }, [linkOption]);
@@ -319,6 +349,33 @@ const LinkAccountDialog = ({
                   )}
                 </form>
               </Form>
+            )}
+            {linkOption === "generateLink" && (
+              <div className="flex flex-col space-y-4 mt-4">
+                <div className="flex flex-row">
+                  <Input
+                    className="flex"
+                    readOnly
+                    type="text"
+                    value={"www.edu-flow.com.au/account/link?id=" + id}
+                  />
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="hover:bg-light-teal ml-1.5"
+                    onClick={() => handleCopyClick()}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="hover:bg-light-teal"
+                >
+                  <Mail className="h-4 w-4" />
+                </Button>
+              </div>
             )}
           </div>
         </DialogContent>

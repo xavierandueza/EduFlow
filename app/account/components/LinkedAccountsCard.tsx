@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import UserDisplay from "./UserDisplay";
 import {
   Card,
@@ -39,6 +39,7 @@ const LinkedAccountsCard = ({
   const [linkedAccounts, setLinkedAccounts] = useState<{
     [id: string]: LinkedUser;
   }>(null);
+  const hasAttemptedFetch = useRef(false);
 
   // Load in the relevant information on component load
   useEffect(() => {
@@ -48,24 +49,36 @@ const LinkedAccountsCard = ({
         const data = await getStudentFromDb({ id: userId, role: role });
         // set the linked accounts as just the parentsLong
         // console.log(data);
-        console.log(data.parentsLong);
-        console.log(Object.keys(data.parentsLong));
-        setLinkedAccounts(data.parentsLong as { [id: string]: LinkedUser });
+        // console.log(data.parentsLong);
+        // console.log(Object.keys(data.parentsLong));
+        if (data) {
+          setLinkedAccounts(data.parentsLong as { [id: string]: LinkedUser });
+          hasAttemptedFetch.current = true;
+        } else {
+          setLinkedAccounts(null);
+          hasAttemptedFetch.current = true;
+        }
       };
 
       // Only fetch if we don't have the data
-      if (!linkedAccounts) {
+      if (!hasAttemptedFetch) {
         fetchData();
       }
     } else if (role === "parent") {
       const fetchData = async () => {
         const data = await getParentFromDb({ id: userId, role: role });
         // set the linked accounts as just the childrenLong
-        setLinkedAccounts(data.childrenLong as { [id: string]: LinkedUser });
+        if (data) {
+          setLinkedAccounts(data.childrenLong as { [id: string]: LinkedUser });
+          hasAttemptedFetch.current = true;
+        } else {
+          setLinkedAccounts(null);
+          hasAttemptedFetch.current = true;
+        }
       };
 
       // Only fetch if we don't have the data
-      if (!linkedAccounts) {
+      if (!hasAttemptedFetch) {
         fetchData();
       }
     }

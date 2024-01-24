@@ -22,8 +22,8 @@ const links = [
     href: "/skills",
   },
   {
-    name: "Profile",
-    href: "/profile",
+    name: "Account",
+    href: "/account",
   },
 ];
 

@@ -11,6 +11,7 @@ import {
   FirestoreExtendedUser,
   TutoringSession,
   FirestoreParent,
+  Skill,
 } from "./interfaces";
 
 import { db } from "../firebase";
@@ -32,6 +33,7 @@ import {
   arrayUnion,
   arrayRemove,
   deleteField,
+  Firestore,
 } from "firebase/firestore";
 import { string } from "zod";
 
@@ -102,76 +104,75 @@ const getStudentFromDb = async ({ id, role }: { id: string; role: string }) => {
   }
 };
 
-async function getStudentSkillFromDB(
-  id?: string,
-  email?: string,
-  skill?: string,
-  firestoreDb = db
-) {
-  try {
-    // console.log("printing ID: ")
-    // console.log(id)
-    if (id) {
-      const docSnapshot = await getDoc(doc(firestoreDb, "studentSkills", id));
+const getStudentSkillFromDb = async ({
+  studentSkillId,
+  studentId,
+  firestoreDb = db,
+}: {
+  studentSkillId?: string;
+  studentId?: string;
+  firestoreDb?: Firestore;
+}): Promise<FirestoreStudentSkill[]> => {
+  // pass in a studentSkillId OR a studentId. StudentId gets all for the student.
 
-      if (docSnapshot.exists) {
-        return {
-          id: docSnapshot.id,
-          ...docSnapshot.data(),
-        } as FirestoreStudentSkill;
-      } else {
-        throw new Error("No studentSkill found");
-      }
-    } else if (email && skill) {
-      const q = query(
-        collection(firestoreDb, "studentSkills"),
-        where("email", "==", email),
-        where("skill", "==", skill),
-        limit(1)
+  if (studentSkillId) {
+    // retrieve just this specific studentSkillId
+    try {
+      const fetchedStudentSkill = await getDoc(
+        doc(firestoreDb, "studentSkills", studentSkillId)
       );
-      const querySnapshot = await getDocs(q);
 
-      if (!querySnapshot.empty) {
-        return {
-          id: querySnapshot.docs[0].id,
-          ...querySnapshot.docs[0].data(),
-        } as FirestoreStudentSkill;
-      } else {
-        throw new Error("No studentSkill found");
+      if (!fetchedStudentSkill.exists) {
+        console.error("No studentSkill found for id: " + studentSkillId);
+        return null;
       }
-    } else {
-      throw new Error("Cannot find unique studentSkill with inputted data");
+
+      return [
+        {
+          id: studentSkillId,
+          ...fetchedStudentSkill.data(),
+        },
+      ] as FirestoreStudentSkill[];
+    } catch (error) {
+      console.error(
+        `Error getting studentSkill document of id: ${studentSkillId}`,
+        error
+      );
+      return null;
     }
-  } catch (error) {
-    console.error(`Error getting studentSkill documents for id: ${id}`, error);
-    throw error;
-  }
-}
+  } else if (studentId) {
+    // retrieve all studentSkills for this studentId
+    try {
+      const studentSkills = await getDocs(
+        query(
+          collection(firestoreDb, "studentSkills"),
+          where("studentId", "==", studentId)
+        )
+      );
 
-async function getStudentSkillFromDBAll(email: string, firestoreDb = db) {
-  const q = query(
-    collection(firestoreDb, "studentSkills"),
-    where("email", "==", email)
-  );
+      if (studentSkills.empty) {
+        console.warn("No skills found for student ID: " + studentId);
+        return null;
+      }
 
-  try {
-    const querySnapshot = await getDocs(q);
-
-    if (!querySnapshot.empty) {
-      return querySnapshot.docs.map((doc) => {
+      // else we want to return the array
+      return studentSkills.docs.map((doc) => {
         return { id: doc.id, ...doc.data() } as FirestoreStudentSkill;
       });
-    } else {
-      throw new Error("No studentSkill found");
+    } catch (error) {
+      console.error(
+        `Error getting studentSkill documents for studentId: ${studentId}`,
+        error
+      );
+      return null;
     }
-  } catch (error) {
+  } else {
     console.error(
-      `Error getting all studentSkill documents of email ${email}`,
-      error
+      "No studentId or studentSkillId provided, cannot retrieve data"
     );
-    throw error;
+    return null;
   }
-}
+};
 
 async function getTeacherFromDB(email: string, firestoreDb = db) {
   const q = query(
@@ -1053,11 +1054,91 @@ const rejectLinkRequest = async ({
   }
 };
 
+const getSkillsFromDb = async ({ subject }: { subject: string }) => {
+  // returns all of the skills for the inputted subject
+  try {
+    if (["Biology"].includes(subject)) {
+      //
+      const subjectSnapshot = await getDocs(
+        query(
+          collection(db, "subjects"),
+          where("name", "==", subject),
+          limit(1)
+        )
+      );
+
+      // now need to get the skills from the subject
+      const skillsSnapshot = await getDocs(
+        collection(db, "subjects", subjectSnapshot.docs[0].id, "skills")
+      );
+
+      // now return these as an array of skills
+      return skillsSnapshot.docs.map((doc) => {
+        return { id: doc.id, ...doc.data() } as Skill;
+      });
+    } else {
+      console.warn("Could not retrieve skills for subject: " + subject);
+      return [];
+    }
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
+
+const createStudentSkillsInDb = async ({
+  subject,
+  student,
+  studentId,
+}: {
+  subject: string;
+  student: FirestoreStudent;
+  studentId: string;
+}) => {
+  // creates the studentSkills for the student
+  try {
+    // first need to get the skills for the subject
+    const skills = await getSkillsFromDb({ subject: subject });
+
+    if (skills.length === 0) {
+      return false;
+    } else {
+      // can declare a base studentSkill that contains the non-changing values for all student skills
+      const baseStudentSkill = {
+        email: student.email,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        masteryScore: 0,
+        needToRevise: false,
+        retentionScore: 0,
+        studentId: studentId,
+        subject: subject,
+      };
+      // now need to create the studentSkills
+      skills.forEach(async (skill) => {
+        // create the studentSkill
+        await addDoc(collection(db, "studentSkills"), {
+          areDependenciesMet: skill.dependencies.length === 0,
+          decayValue: skill.decayValue,
+          skill: skill.skill,
+          skillId: skill.id,
+          ...baseStudentSkill,
+        });
+      });
+    }
+
+    // got through it fine, so return true
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
 export {
   getSchoolClassSkillFromDB,
   getStudentFromDb,
-  getStudentSkillFromDB,
-  getStudentSkillFromDBAll,
+  getStudentSkillFromDb,
   getTeacherFromDB,
   getSchoolClassFromDB,
   getAggregatedSkillsForClass,
@@ -1074,4 +1155,5 @@ export {
   handleProfileUpdate,
   unlinkAccounts,
   rejectLinkRequest,
+  createStudentSkillsInDb,
 };

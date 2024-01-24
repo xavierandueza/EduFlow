@@ -1,12 +1,11 @@
 "use client";
-// can use middleware or in-page code to check if user is authenticated
-import UserCreationForm from "../../ui/account/UserCreationForm";
+import SignupCard from "./components/SignupCard";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const Page = () => {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -15,7 +14,7 @@ const Page = () => {
     } else if (status === "unauthenticated") {
       router.push("/api/auth/signin"); // Need to log in before accessing this page
     } else if (session?.user?.role) {
-      router.push("/account/profile");
+      router.push("/dashboard");
     } // else actually load the page
   }, [status, session, router]);
 
@@ -28,13 +27,9 @@ const Page = () => {
   }
 
   return (
-    <section className="py-24">
-      <div className="container">
-        <h1 className="text-2xl font-bold">Profile</h1>
-
-        <UserCreationForm />
-      </div>
-    </section>
+    <div className="bg-gray-50 min-h-screen">
+      <SignupCard session={session} updateSession={update} />
+    </div>
   );
 };
 

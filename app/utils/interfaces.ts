@@ -2,16 +2,16 @@ import { Session } from "next-auth";
 
 export interface Skill {
   subject: string;
-  curriculum_point: string;
+  curriculumPoint: string;
   skill: string;
-  skill_description: string;
-  key_ideas: string[];
-  key_idea_summaries: string[];
-  easy_questions: string[];
-  mdrt_questions: string[];
-  hard_questions: string[];
+  skillDescription: string;
+  keyIdeas: string[];
+  keyIdeasSummaries: string[];
   content: string;
   dependencies: string[];
+  decayValue: number;
+  questions: string[];
+  id: string;
   // ... any other properties
 }
 
@@ -75,6 +75,8 @@ export interface FirestoreStudent extends FirestoreStandardUser {
   interests?: string[];
   tutoringGoal?: string;
   subjects?: string[];
+  yearLevel?: number;
+  school?: string;
   parentsShort?: string[];
   parentsLong?: { [id: string]: LinkedUser };
   schoolClassesLong?: string[];

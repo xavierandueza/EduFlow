@@ -1,5 +1,4 @@
-import TopNav, { topNavHeight } from "@/app/ui/navigation/TopNav";
-import Footer from "@/app/ui/Footer";
+import { topNavHeight } from "@/app/ui/navigation/TopNav";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   /* 
@@ -9,7 +8,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   */
   return (
     <>
-      <TopNav />
       <div className="flex flex-col w-screen min-h-screen">
         <main
           style={{ paddingTop: topNavHeight }}
@@ -17,7 +15,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         >
           {children}
         </main>
-        <Footer />
       </div>
     </>
   );
